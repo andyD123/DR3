@@ -104,7 +104,6 @@
     <ClCompile Include="test.cpp" />
     <ClCompile Include="TestAccumulator.cpp" />
     <ClCompile Include="TestAllocator.cpp" />
-    <ClCompile Include="TestCurve.cpp" />
     <ClCompile Include="TestFilterSelect.cpp" />
     <ClCompile Include="TestViews.cpp" />
     <ClCompile Include="Test_binary_unitary_operations.cpp" />
@@ -329,6 +328,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ICC2022|Win32'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
   </ItemDefinitionGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

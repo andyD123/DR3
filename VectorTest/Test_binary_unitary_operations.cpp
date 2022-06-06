@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "../../Vectorisation/ExampleVectors/curve.h"
+
 #include "../Vectorisation/VecX/vec.h"
 #include "../Vectorisation/VecX/operations.h"
 #include "../Vectorisation/VecX/vec_bool_d.h"

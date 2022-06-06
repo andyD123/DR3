@@ -1,6 +1,5 @@
 #include "pch.h"
 
-#include "../../Vectorisation/ExampleVectors/curve.h"
 
 #include "../Vectorisation/VecX/vec.h"
 #include "../Vectorisation/VecX/operations.h"
@@ -16,9 +15,9 @@
 
 #include <numeric>
 
-//using namespace DRC::VecDb;
+using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
-using namespace DRC::VecD4D;
+//using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;

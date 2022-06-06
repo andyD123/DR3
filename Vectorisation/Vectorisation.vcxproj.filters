@@ -98,5 +98,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Vectorisation.ruleset" />
+    <None Include="..\VectorTest\VectorTest.vcxproj" />
+    <None Include="..\accumulateExample\accumulateExample.vcxproj" />
+    <None Include="..\GettingStarted\GettingStarted.vcxproj" />
+    <None Include="..\inverseCumNormalExample\inverseCumNormalExample.vcxproj" />
   </ItemGroup>
 </Project>

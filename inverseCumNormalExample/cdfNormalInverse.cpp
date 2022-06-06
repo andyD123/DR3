@@ -1,61 +1,37 @@
 #include "cdfNormalInverse.h"
 
-
-#include <algorithm>
-#include <random>
-#include <numeric>
-#include <iterator>
-#include <iostream>
-#include <vector>
-#include <chrono>
-#include <iomanip>  
-
-
-
-
-//#include "../Vectorisation/VecX/curve.h"
+/*
 #include "../Vectorisation/VecX/vec.h"
 #include "../Vectorisation/VecX/operations.h"
 #include "../Vectorisation/VecX/apply_operation.h"
 #include "../Vectorisation/VecX/vec_d.h"
 #include "../Vectorisation/VecX/vec_bool.h"
 #include "../Vectorisation/VecX/vec_view.h"
-
 #include "../Vectorisation/VecX/target_name_space.h"
 
+*/
+#include <algorithm>
+#include <numeric>
+/*
 #include <immintrin.h>
 
-//using namespace DRC::VecDb;
-//using namespace DRC::VecD2D;
-//using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
-//using namespace DRC::VecF16F;
-//using namespace DRC::VecF8F;
+#include <random>
 
-
-
-#include "cdfNormalInverse.h"
-
-//#include "norm.h"
-
-
-
-
-
-
-#include <chrono>
-
+#include <iterator>
 #include <iostream>
+#include <vector>
+#include <chrono>
+#include <iomanip>  
 #include <functional>
+*/
+
+
 
 double getnull(double)
 {
 	return 0.0;
 }
 
-
-
-//double sVML_invCumNormal(double x);
 
 
 

@@ -52,8 +52,6 @@ template <typename VecXX>
 VecXX calcCDFNormWichuraViewsAndFMA(VecXX& X)
 {
 	//wichura
-//	const static  double a[] = { 2509.0809287301226727 , 33430.575583588128105, 67265.770927008700853, 45921.953931549871457, 13731.693765509461125,  1971.5909503065514427, 133.14166789178437745,3.387132872796366608 };
-//	const static  double b[] = { 5226.495278852854561, 28729.085735721942674,    39307.89580009271061, 21213.794301586595867, 5394.1960214247511077,   687.1870074920579083, 42.313330701600911252 };
 	const static  double c[] = { 7.7454501427834140764e-4 , .0227238449892691845833 ,.24178072517745061177, 1.27045825245236838258 ,  3.64784832476320460504, 5.7694972214606914055, 4.6303378461565452959, 1.42343711074968357734 };
 	const static  double d[] = { 1.05075007164441684324e-9 , 5.475938084995344946e-4, .0151986665636164571966, .14810397642748007459, .68976733498510000455,  1.6763848301838038494,  2.05319162663775882187,1. };
 	const  static  double e[] = { 2.01033439929228813265e-7 ,   2.71155556874348757815e-5,   .0012426609473880784386, .026532189526576123093, .29656057182850489123,   1.7848265399172913358, 5.4637849111641143699, 6.6579046435011037772 };
@@ -62,40 +60,13 @@ VecXX calcCDFNormWichuraViewsAndFMA(VecXX& X)
 
 
 	/////////FMA Lambda ///////////////////////////
-	auto aclambdaMain = [=](const auto& p)
+	auto lambdaMain = [=](const auto& p)
 	{
-		//wichura local
-		/*
-		static  double a[] = { 2509.0809287301226727 , 33430.575583588128105, 67265.770927008700853, 45921.953931549871457, 13731.693765509461125,  1971.5909503065514427, 133.14166789178437745,3.387132872796366608 };
-		static  double b[] = { 5226.495278852854561, 28729.085735721942674,    39307.89580009271061, 21213.794301586595867, 5394.1960214247511077,   687.1870074920579083, 42.313330701600911252 };
-		static  double c[] = { 7.7454501427834140764e-4 , .0227238449892691845833 ,.24178072517745061177, 1.27045825245236838258 ,  3.64784832476320460504, 5.7694972214606914055, 4.6303378461565452959, 1.42343711074968357734 };
-		static  double d[] = { 1.05075007164441684324e-9 , 5.475938084995344946e-4, .0151986665636164571966, .14810397642748007459, .68976733498510000455,  1.6763848301838038494,  2.05319162663775882187,1. };
-		static  double e[] = { 2.01033439929228813265e-7 ,   2.71155556874348757815e-5,   .0012426609473880784386, .026532189526576123093, .29656057182850489123,   1.7848265399172913358, 5.4637849111641143699, 6.6579046435011037772 };
-		static  double f[] = { 2.04426310338993978564e-15 , 1.4215117583164458887e-7, 1.8463183175100546818e-5,  7.868691311456132591e-4, .0148753612908506148525,.13692988092273580531, .59983220655588793769, 1. };
-		*/
-
-		//auto X = p;
 		auto q = p - 0.5;
-
 		auto r = .180625 - q * q;
-
-		//	auto denom = 1. / (mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(b[0], r, b[1]), r, b[2]), r, b[3]), r, b[4]), r, b[5]), r, b[6]), r, 1));
-		//	auto num = (mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(a[0], r, a[1]), r, a[2]), r, a[3]), r, a[4]), r, a[5]), r, a[6]), r, a[7]) * q);
-
-
 		auto denom = 1. / (mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(5226.495278852854561, r, 28729.085735721942674), r, 39307.89580009271061), r, 21213.794301586595867), r, 5394.1960214247511077), r, 687.1870074920579083), r, 42.313330701600911252), r, 1));
 		auto num = (mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(2509.0809287301226727, r, 33430.575583588128105), r, 67265.770927008700853), r, 45921.953931549871457), r, 13731.693765509461125), r, 1971.5909503065514427), r, 133.14166789178437745), r, 3.387132872796366608) * q);
-
-
-
 		return denom * num;
-
-		//	X = (mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(a[0], r, a[1]), r, a[2]), r, a[3]), r, a[4]), r, a[5]), r, a[6]), r, a[7]) * q) /
-		//		mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(b[0], r, b[1]), r, b[2]), r, b[3]), r, b[4]), r, b[5]), r, b[6]), r, 1);
-
-
-		//	return X;
-
 	};
 
 
@@ -105,40 +76,19 @@ VecXX calcCDFNormWichuraViewsAndFMA(VecXX& X)
 	{
 		const auto p_low = 0.5 - 0.425;
 		const auto p_high = 1.0 - p_low;
-
 		return (p_high < p) || (p < p_low);
-
 	};
 
 
 	auto dolambdaLow = [=](auto r, auto p)
 	{
 		auto q = p - 0.5;
-		/*
-				r += -1.6;
-				auto	val = (mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(c[0], r, c[1]), r, c[2]), r, c[3]), r, c[4]), r, c[5]), r, c[6]), r, c[7])  /
-						mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(d[0], r, d[1]), r, d[2]), r, d[3]), r, d[4]), r, d[5]), r, d[6]), r, (decltype(p))(1.0));
-		*/
-
 		r += -1.6;
-		//	auto	val = (((((((r * c[0] + c[1]) * r + c[2]) * r + c[3]) * r + c[4]) * r + c[5]) * r + c[6]) * r + c[7])
-		//		/ (((((((r * d[0] + d[1]) * r + d[2]) * r + d[3]) * r + d[4]) * r + d[5]) * r + d[6]) * r + 1.);
-
-		//	auto	val = (((((((r * c[0] + c[1]) * r + c[2]) * r + c[3]) * r + c[4]) * r + c[5]) * r + c[6]) * r + c[7]);
-
-
 		auto	val = mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(c[0], r, c[1]), r, c[2]), r, c[3]), r, c[4]), r, c[5]), r, c[6]), r, c[7]);
-
-		//auto denom = 1.0/ (((((((r * d[0] + d[1]) * r + d[2]) * r + d[3]) * r + d[4]) * r + d[5]) * r + d[6]) * r + 1.);
 		auto denom = (decltype(p))(1.0) / mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(d[0], r, d[1]), r, d[2]), r, d[3]), r, d[4]), r, d[5]), r, d[6]), r, (decltype(p))(1.0));
-
-
 		val = val * denom;
-
-
 		auto valMult = iff(q < (decltype(p))(0.0), (decltype(p))(-1.0), (decltype(p))(1.0));
 		val *= valMult;
-
 		return val;
 	};
 
@@ -154,13 +104,12 @@ VecXX calcCDFNormWichuraViewsAndFMA(VecXX& X)
 		auto valMult = iff((p - 0.5) < (decltype(p))(0.0), (decltype(p))(-1.0), (decltype(p))(1.0));
 		val *= valMult;
 		return val;
-
 	};
 
 
 
 	//fast new version
-	auto tple = ApplyOperationAndFilter(aclambdaMain, isOuterRangelambda, X);
+	auto tple = ApplyOperationAndFilter(lambdaMain, isOuterRangelambda, X);
 
 	auto& res = std::get<0>(tple);
 	auto& outside = std::get<1>(tple);
@@ -203,8 +152,6 @@ template <typename VecXX>
 VecXX calcCDFNormWichuraViewsAndFMA2splits(VecXX& X)
 {
 	//wichura
-//	const static  double a[] = { 2509.0809287301226727 , 33430.575583588128105, 67265.770927008700853, 45921.953931549871457, 13731.693765509461125,  1971.5909503065514427, 133.14166789178437745,3.387132872796366608 };
-//	const static  double b[] = { 5226.495278852854561, 28729.085735721942674,    39307.89580009271061, 21213.794301586595867, 5394.1960214247511077,   687.1870074920579083, 42.313330701600911252 };
 	const static  double c[] = { 7.7454501427834140764e-4 , .0227238449892691845833 ,.24178072517745061177, 1.27045825245236838258 ,  3.64784832476320460504, 5.7694972214606914055, 4.6303378461565452959, 1.42343711074968357734 };
 	const static  double d[] = { 1.05075007164441684324e-9 , 5.475938084995344946e-4, .0151986665636164571966, .14810397642748007459, .68976733498510000455,  1.6763848301838038494,  2.05319162663775882187,1. };
 	const  static  double e[] = { 2.01033439929228813265e-7 ,   2.71155556874348757815e-5,   .0012426609473880784386, .026532189526576123093, .29656057182850489123,   1.7848265399172913358, 5.4637849111641143699, 6.6579046435011037772 };
@@ -217,15 +164,11 @@ VecXX calcCDFNormWichuraViewsAndFMA2splits(VecXX& X)
 	/////////FMA Lambda ///////////////////////////
 	auto aclambdaMain = [=](const auto& p)
 	{
-
 		auto q = p - 0.5;
 		auto r = .180625 - q * q;
-
 		auto denom = 1. / (mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(5226.495278852854561, r, 28729.085735721942674), r, 39307.89580009271061), r, 21213.794301586595867), r, 5394.1960214247511077), r, 687.1870074920579083), r, 42.313330701600911252), r, 1));
 		auto num = (mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(2509.0809287301226727, r, 33430.575583588128105), r, 67265.770927008700853), r, 45921.953931549871457), r, 13731.693765509461125), r, 1971.5909503065514427), r, 133.14166789178437745), r, 3.387132872796366608) * q);
-
 		return denom * num;
-
 	};
 
 
@@ -294,15 +237,12 @@ VecXX calcCDFNormWichuraViewsAndFMA2splits(VecXX& X)
  	ApplyUnitaryOperationWrite(doExtrema, extreme, res);
 	return res;
 
-
-
 }
 
 template <typename VecXX>
 VecXX calcCDFNormsSparse(VecXX& X)
 {
 
-	/// acklams inverse cdf normal
 	static double a[] = { 0.0,  -3.969683028665376e+01, 2.209460984245205e+02,-2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01,  2.506628277459239e+00 };
 	static double b[] = { 0.0, -5.447609879822406e+01,  1.615858368580409e+02, -1.556989798598866e+02,  6.680131188771972e+01, -1.328068155288572e+01 };
 	static double c[] = { 0.0,-7.784894002430293e-03,-3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 };
@@ -365,8 +305,6 @@ VecXX calcCDFNormsSparse(VecXX& X)
 template <typename VecXX>
 VecXX calcCDFNormsSparseFMA(VecXX& X)
 {
-
-	/// acklams inverse cdf normal
 	static double a[] = { 0.0,  -3.969683028665376e+01, 2.209460984245205e+02,-2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01,  2.506628277459239e+00 };
 	static double b[] = { 0.0, -5.447609879822406e+01,  1.615858368580409e+02, -1.556989798598866e+02,  6.680131188771972e+01, -1.328068155288572e+01 };
 	static double c[] = { 0.0,-7.784894002430293e-03,-3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 };
@@ -540,7 +478,6 @@ VecXX calcCDFNormsSparseFMAOnePass(VecXX& X)
 		return X;
 	};
 
-	//auto res = ApplyUnitaryOperation1(X, aclam_sparseOnePass);
 	auto res =ApplyTransformUR_XX(X, aclam_sparseOnePass);
 	return res;
 
@@ -626,9 +563,6 @@ VecXX calcCDFNormWithViewsAndFMA(VecXX& X)
 	const static double c[] = { 0.0,-7.784894002430293e-03,-3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 };
 	const static double d[] = { 0.0,  7.784695709041462e-03, 3.224671290700398e-01,  2.445134137142996e+00, 3.754408661907416e+00 };
 
-
-
-
 	/////////FMA Lambda ///////////////////////////
 	auto aclambdaMain = [=](auto p)
 	{
@@ -641,8 +575,6 @@ VecXX calcCDFNormWithViewsAndFMA(VecXX& X)
 		return X;
 
 	};
-
-
 
 	auto islambdaLow = [=](auto p)
 	{
@@ -765,6 +697,7 @@ VecXX calcCDFNormWithViewsAndFMAWriteFromViewCalc(VecXX& X)
 
 }
 
+//float version 
 template <typename VecXX>
 VecXX calcCDFNormBranchlessFloat(VecXX& X)
 {
@@ -810,45 +743,4 @@ VecXX calcCDFNormBranchlessFloat(VecXX& X)
 
 
 
-
-
-template <typename VecXX>
-VecXX calcCDFNormWithOperators(VecXX& X)
-{
-
-	/// acklams inverse cdf normal
-	static double a[] = { 0.0,  -3.969683028665376e+01, 2.209460984245205e+02,-2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01,  2.506628277459239e+00 };
-	static double b[] = { 0.0, -5.447609879822406e+01,  1.615858368580409e+02, -1.556989798598866e+02,  6.680131188771972e+01, -1.328068155288572e+01 };
-	static double c[] = { 0.0,-7.784894002430293e-03,-3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 };
-	static double d[] = { 0.0,  7.784695709041462e-03, 3.224671290700398e-01,  2.445134137142996e+00, 3.754408661907416e+00 };
-
-
-	auto p = X;
-	auto q = p - 0.5;
-	auto r = q * q;
-	X = (((((a[1] * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * r + a[6]) * q /
-		(((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + 1);
-
-
-	return X;
-
-	/*
-
-
-		ApplyUnitaryOperation1(X, aclambdaMain);
-
-	auto lambada = getLambdaBool(islambdaLow);
-	auto lowVw = ApplyFilterW(lambada, X); // a view
-	ApplyUnitaryOperationX(dolambdaLow, lowVw);
-	lowVw.write(res);
-
-	auto lambadaHi = getLambdaBool(islambdaHi);
-	auto hiVw = ApplyFilterW(lambadaHi, X); // a view
-	ApplyUnitaryOperationX(dolambdaHi, hiVw);
-	hiVw.write(res);
-
-
-	return res;
-	*/
-}
 
