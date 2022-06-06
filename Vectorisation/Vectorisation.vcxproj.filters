@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="VecWrapper">
+      <UniqueIdentifier>{06d8baf8-80f2-40a5-98f6-1cf93bfb3eaa}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="VecX\vec.h">
+      <Filter>VecWrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\vec_bool_d.h">
+      <Filter>VecWrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\vec_double.h">
+      <Filter>VecWrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\alloc_policy.h">
+      <Filter>VecWrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\apply_operation.h">
+      <Filter>VecWrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\vec_d.h">
+      <Filter>VecWrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\vec_bool.h">
+      <Filter>VecWrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\vec_view.h">
+      <Filter>VecWrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\operations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\target_name_space.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\instruction_traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\math_ops.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\boolean_operations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\accumulate_transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\binary_unitary_operations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\filter_select.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\vcl_latest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\unroll_operators.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\conditional_select_eval.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\alloc_policy_imp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\filter_pipe_and_join.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\error_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\dr3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="VecX\vec.cpp">
+      <Filter>VecWrapper</Filter>
+    </ClCompile>
+    <ClCompile Include="VecX\alloc_policy.cpp">
+      <Filter>VecWrapper</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Vectorisation.ruleset" />
+  </ItemGroup>
+</Project>
