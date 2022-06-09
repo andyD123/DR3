@@ -33,6 +33,39 @@ void doPerformanceComparison();
 void profileExample();
 
 
+
+template<typename T>
+bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3)
+{
+	bool  testOK = true;
+	const double ERR = 1e-15; //for examples
+	if (C1.size() != C2.size())
+	{
+		return false;
+	}
+
+	if (C3.size() != C2.size())
+	{
+		return false;
+	}
+
+	for (size_t i = 0; i < C3.size(); i++)
+	{
+		auto err1 = fabs((C1[i] - C2[i]) / (C2[i] + C1[i]));
+		auto err2 = fabs((C1[i] - C3[i]) / (C1[i] + C3[i]));
+
+		if ((err1 > ERR) || (err2 > ERR))
+		{
+			testOK = false;
+			std::cout << "\n err diff@ " << i << " err1 =" << err1 << ", err2 = " << err2 << "\n";
+			break;
+		}
+	}
+
+	return testOK;
+
+}
+
 //set instruction set via namespace in cdfNormalInverse.h
 int main()
 {
@@ -64,6 +97,9 @@ void doPerformanceComparison()
 		VecXX test(v);
 		auto test2 = test;
 
+		VecXX resultsWichura;
+		std::vector<double> resT(test.size(), .0);
+
 		{
 			auto startTme = std::chrono::high_resolution_clock::now();
 			for (long l = 0; l < loop; l++)
@@ -72,8 +108,8 @@ void doPerformanceComparison()
 			}
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
-			std::cout << SZ << " calcCDFNormsSparseFMA ," << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << " , evluations run , " << numOps(loop,SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec |,";// << std::endl;
+			std::cout << SZ  <<  "\n" << " calcCDFNormsSparseFMA ," << runtime.count() / 1000000000.0;//<< std::endl;
+			std::cout << " , evluations run , " << numOps(loop,SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec |, \n";// << std::endl;
 		}
 
 
@@ -87,7 +123,7 @@ void doPerformanceComparison()
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
 			std::cout << " calcCDFNormWithViews ," << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ", secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ", evals per sec |,";// << std::endl;
+			std::cout << ", secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ", evals per sec |, \n";// << std::endl;
 		}
 
 
@@ -101,7 +137,7 @@ void doPerformanceComparison()
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
 			std::cout << " calcCDFNormsSparseFMAOnePass ," << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ", evals per sec |, ";// << std::endl;
+			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ", evals per sec |, \n";// << std::endl;
 		}
 
 
@@ -110,12 +146,13 @@ void doPerformanceComparison()
 			auto startTme = std::chrono::high_resolution_clock::now();
 			for (long l = 0; l < loop; l++)
 			{
-				auto res =  calcCDFNormWichuraViewsAndFMA2splits(test);
+				//auto res
+				resultsWichura =  calcCDFNormWichuraViewsAndFMA2splits(test);
 			}
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
 			std::cout << " calcCDFNormWichuraViewsAndFMA time ," << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ", secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec |,";// << std::endl;
+			std::cout << ", secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec |,\n";// << std::endl;
 
 		}
 
@@ -129,7 +166,7 @@ void doPerformanceComparison()
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
 			std::cout << SZ << " calcCDFNormWithViewsAndFMA time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec | ,";// << std::endl;
+			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec | ,\n";// << std::endl;
 		}
 
 
@@ -142,29 +179,29 @@ void doPerformanceComparison()
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
 			std::cout << SZ << " calcCDFNormWithViewsAndFMAandViewCalcWrite time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec | ,";// << std::endl;
+			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec | ,\n";// << std::endl;
 		}
 
 		{
 
-			std::vector<double> res(test.size(), .0);
+
 			auto startTme = std::chrono::high_resolution_clock::now();
 			for (long l = 0; l < loop; l++)
 			{
 				auto cdfNormLambda = [](auto x) { return static_cast<double>(qnorm8(x) ); };
-				auto itRes = res.begin();
+				auto itRes = resT.begin();
 				std::transform(test.begin(), test.end(), itRes, cdfNormLambda);
 			}
 
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
 			std::cout << " transform  with lambda of a double,  time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << "  evals per sec |\n \n" << std::endl;
+			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << "  evals per sec |";
 		}
 
 
 		/*
-		// intel svnl called as lambda over vector, set vcl to lambda calling svml function  for target instruction set 
+		// intel svml called as lambda over vector, set vcl to lambda calling svml function  for target instruction set 
 		{
 			//SVML functions
 			//  auto vcl = [&](__m512d x) { return _mm512_cdfnorminv_pd(x);  };
@@ -186,8 +223,17 @@ void doPerformanceComparison()
 		}
 
 		*/
-
-
+		std::vector<VecXX::SCALA_TYPE> wch = resultsWichura;
+		
+		if (vectorsEqual(resT, resT, wch))
+		{
+			std::cout << "\n transform and WS241 MATCH \n";
+		}
+		else
+		{
+			std::cout << "\n FAIL transform and WS241 DO NOT MATCH \n";
+		}
+		std::cout << " | \n \n" << std::endl;
 	}
 
 }
