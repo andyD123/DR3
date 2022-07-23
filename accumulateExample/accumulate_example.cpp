@@ -24,7 +24,7 @@ Those ending in F have float type as underlying, those ending with D have a doub
 The project is set to compile using the AVX512  enhanced instruction set. The namespace selection 
 choses the type of the intrinsics that are used to instantiate lambdas.
 
-If your hardware does not support AVX512 chose the next level down AVX2 and dont avoid using namespaces 
+If your hardware does not support AVX512 chose the next level down AVX2 and avoid using namespaces 
 DRC::VecD8D or DRC::VecF8F which will cause generation of code with instructions that your computer doesn't support. 
 
 check device manager/processor to determine what processor you have and check against web site 
@@ -43,9 +43,9 @@ precision of results compare for float types is incorrect.
 
 //Using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-//using namespace DRC::VecD4D;	//avx2   double
+using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-using namespace DRC::VecD8D;  //avx512 double
+//using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
 
 
@@ -169,16 +169,16 @@ int main()
  //Uncomment  a function to play with
 
 	//	testMemCpy2(); 
-	     doMax();
+	 doMax();
 	//	doSum(); // stl slower with intel  stl slower
-	//  doInnerProd();
+	//    doInnerProd();
 	//	doTransform();
 	// 	doSumSqrs();
-	//    khanAccumulation();
+	//  khanAccumulation();
 	//	testBinarySelection(); //select between constants
 	//	testBinarySelection1();//select between light functions
 	//	testBinarySelection2(); //medium
-	//  testBinarySelection3(); //heavy	
+	//    testBinarySelection3(); //heavy	
 	//	doCountIf();
 
 
@@ -367,7 +367,7 @@ void doSum()
 
 		auto writeResults = [&](auto res) {std::cout << "size" << SZ << "," << runName << " result =, " << res << ", " << " Number of operations, " << numOps(TEST_LOOP_SZ, SZ) << ", run time  =, " << time << ", rate  =, " << numOps(TEST_LOOP_SZ, SZ) / time << ", , "; };
 
-		{	runName = "For loop accumulate";
+		{	runName = "\n For loop accumulate";
 			{
 				TimerGuard timer(time);
 				{
@@ -384,7 +384,7 @@ void doSum()
 			writeResults(res);
 		}
 
-		{	runName = "std::accumulate";
+		{	runName = "\n std::accumulate";
 			{
 				TimerGuard timer(time);
 				{
@@ -397,7 +397,7 @@ void doSum()
 			writeResults(res);
 		}
 
-		{	runName = "DR3 reduce";
+		{	runName = "\n DR3 reduce";
 			{  	auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
 				TimerGuard timer(time);
 				{

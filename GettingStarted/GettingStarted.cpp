@@ -54,12 +54,12 @@ int main()
 
  //    transformReduce();
 
-      branching();
- //   filtersAndViews();
+//      branching();
+//    filtersAndViews();
 
  //   complexExampleOfJoiningfiltersAndViews();
 
- //   experimentalAAD();
+    experimentalAAD();
 
 }
 
@@ -421,10 +421,13 @@ void filtersAndViews()
 {
     std::vector<double> stlVec;
     auto  test = getVector(1000);
+
+    stlVec = test;
     //must be boolean lambda
-    auto evenLmbda = [](auto x) { return ((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) <= VecXX::INS(0.)); };
+    auto evenLmbda = [](auto x) { return ((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) == VecXX::INS(0.0)); };
 
     auto view = filter(evenLmbda, test);
+    stlVec = view;
     auto SQR = [](auto x) {return x * x; };
 
    // ApplyUnitaryOperation(SQR, view);
