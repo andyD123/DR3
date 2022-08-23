@@ -263,8 +263,8 @@ int main()
 
 	//	testMemCpy2(); 
 	// doMax();
-	//	doSum(); // stl slower with intel  stl slower
-	    doInnerProd();
+		doSum(); // stl slower with intel  stl slower
+	//  doInnerProd();
 	//	doTransform();
 	// 	doSumSqrs();
 	//  khanAccumulation();
@@ -663,6 +663,7 @@ void doInnerProd()
 
 }
 
+/*
 void doSumSqrs()
 {
 	const int TEST_LOOP_SZ = 1000;
@@ -713,6 +714,104 @@ void doSumSqrs()
 		}
 	}
 }
+
+*/
+
+
+void doSumSqrs()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto inner_prod_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		//auto v2 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = inner_product(v1.cbegin(), v1.cend(), v1.cbegin(), zero);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = inner_product(v1.cbegin(), v1.cend(), v1.cbegin(), zero);
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+	auto DR3_inner_prod = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX t1(v1);
+
+
+		{
+			auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+			auto Mult = [](auto X, auto Y) { return X * Y; };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = transformReduce(t1, t1, Mult, Sum);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = transformReduce(t1, t1, Mult, Sum);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, inner_prod_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_inner_prod, TEST_LOOP_SZ);
+	auto stats_DR3_inner_prod = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "STL inner product sum sqrs , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t DR3 inner product sum sqrs , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << " +- " << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+
+
+
+}
+
+
 
 void khanAccumulation()
 {
