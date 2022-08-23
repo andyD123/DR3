@@ -9,6 +9,7 @@
 #include <vector>
 #include <chrono>
 #include <iomanip>  
+#include <map>
 
 
 
@@ -43,9 +44,9 @@ precision of results compare for float types is incorrect.
 
 //Using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-using namespace DRC::VecD4D;	//avx2   double
+//using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-//using namespace DRC::VecD8D;  //avx512 double
+using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
 
 
@@ -120,17 +121,45 @@ bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std
 
 }
 
+bool valuesAreEqual(double x, double y,double tol =  1e-14)
+{
+	auto err1 = fabs((x - y) / (x + y));
+
+	return (err1 > tol) ? false : true;
+}
+
 
 auto getRandomShuffledVector(int SZ)
 {
 	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
-	std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
-	for (int i = 0; i < SZ; i++) { v[i] += FloatType(SZ / 2) + i; }//{ v[i] += FloatType(SZ/2) - i; }
-	std::random_device rd;
-	std::mt19937 g(rd());
-	std::shuffle(begin(v), end(v), g);
-	return v;
+
+
+	static std::map<int, std::vector<FloatType> > vectors;
+
+	if (SZ < 0)
+	{
+		vectors.clear();
+		SZ = 0;
+	}
+
+
+	if (vectors.find(SZ) != vectors.end())
+	{
+		return vectors[SZ];
+	}
+	else
+	{
+		std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+		for (int i = 0; i < SZ; i++) { v[i] += FloatType(SZ / 2) + i; }
+		std::random_device rd;
+		std::mt19937 g(rd());
+		std::shuffle(begin(v), end(v), g);
+		vectors[SZ] = v;
+		return v;
+	}
 }
+
+
 
 
 auto numOps = [](int TEST_LOOP_SZ, int SZ) { return  static_cast<int>(double(TEST_LOOP_SZ) * double(SZ)); };
@@ -140,6 +169,70 @@ double getnull(double)
 {
 	return 0.0;
 }
+
+using Calc_Values = std::map<int, double>;
+using  Mapped_Performance_Results = std::map<int, std::vector<double> >; // array size  v vector<throughput for runs>
+using Mapped_Stats = std::map<int, std::pair<double, double> >; // size -.pair ( throughput ,  std dev of through put)
+
+struct RunResults
+{
+	Mapped_Performance_Results m_raw_results;
+	Calc_Values  m_calc_results;
+};
+
+
+auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
+{
+
+	RunResults results;
+
+	for (int j = 0; j < testRepeats; ++j)
+	{
+		int VEC_SZ = vec_start_size;
+		for (; VEC_SZ < vec_maxSZ; VEC_SZ += vec_stepSZ)
+		{
+			auto res = func(VEC_SZ, testLoopSZ);
+			auto calculation_rate = res.second;
+			auto calc_value = res.first;
+			results.m_raw_results[VEC_SZ].push_back(calculation_rate);
+			if (j == 0)
+			{
+				results.m_calc_results[VEC_SZ] = calc_value;
+			}
+		}
+	}
+	return results;
+};
+
+
+auto performanceStats = [](const Mapped_Performance_Results& raw_results)
+{
+
+	Mapped_Stats stats;
+
+	for (const auto& item : raw_results)
+	{
+		double sum = 0;
+		double sum_sqrd = 0;
+		double N = 0.0;
+		for (const auto run_rate : item.second)
+		{
+			sum += run_rate;
+			sum_sqrd += (run_rate * run_rate);
+			N++;
+		}
+
+		double avg = sum / N;
+		double varSqrd = sum_sqrd + (avg * avg * N) - (2.0 * avg * sum);
+		double var = std::sqrt(varSqrd / (N - 1.));
+
+		stats[item.first] = { avg ,var };
+
+	}
+	return stats;
+};
+
+
 
 
 //example functions fwd decl
@@ -169,9 +262,9 @@ int main()
  //Uncomment  a function to play with
 
 	//	testMemCpy2(); 
-	 doMax();
+	// doMax();
 	//	doSum(); // stl slower with intel  stl slower
-	//    doInnerProd();
+	    doInnerProd();
 	//	doTransform();
 	// 	doSumSqrs();
 	//  khanAccumulation();
@@ -479,57 +572,95 @@ void doTransform()
 void doInnerProd()
 {
 
-	const int TEST_LOOP_SZ = 1000;
+	const long TEST_LOOP_SZ =  1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
 	auto zero = InstructionTraits<VecXX::INS>::nullValue;
 
-	for (long SZ = 200; SZ < 60000; SZ += 200)
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto inner_prod_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
 	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto v2 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = inner_product(v1.cbegin(), v1.cend(), v2.cbegin(), zero);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = inner_product(v1.cbegin(), v1.cend(), v2.cbegin(), zero);
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+	auto DR3_inner_prod = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
 
 		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
 		auto v2 = getRandomShuffledVector(SZ); // std stl vector double or float 
 		VecXX t1(v1);
 		VecXX t2(v2);
 
+		{	
+			auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+			auto Mult = [](auto X, auto Y) { return X * Y; };
 
-
-		double time = 0.;
-		auto runName = "";
-		volatile  double res = 0.;
-
-		auto writeResults = [&](auto res) {std::cout << "size" << SZ << "," << runName << " result =, " << res << ", " << " Number of operations, " << numOps(TEST_LOOP_SZ, SZ) << ", run time  =, " << time << ", rate  =, " << numOps(TEST_LOOP_SZ, SZ) / time << ", , "; };
-
-
-		{	runName = "std::inner_product";
+			//warm up
+			for (long l = 0; l < 100; l++)
 			{
-				TimerGuard timer(time);
+				res = transformReduce(t1, t2, Mult, Sum);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
 				{
-					for (long l = 0; l < TEST_LOOP_SZ; l++)
-					{
-						res = inner_product(v1.cbegin(), v1.cend(), v2.cbegin(), zero);
-					}
+					res = transformReduce(t1, t2, Mult, Sum);
 				}
 			}
-			writeResults(res);
 		}
+		return std::make_pair(res , numOps(TEST_LOOP_SZ, SZ) / time );
+
+	};
 
 
-		{	runName = "DR3 transformReduce";
-			{	auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
-			    auto Mult = [](auto X, auto Y) { return X * Y; };
-				TimerGuard timer(time);
-				{
-					for (long l = 0; l < TEST_LOOP_SZ; l++)
-					{
-						res =transformReduce(t1, t2, Mult, Sum);
-					}
-				}
-			}
-			writeResults(res);
-			std::cout << "\n";
+	
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize,vectorStepSize, maxVectorSize, inner_prod_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
 
-		}
 
+	auto dr3_raw_results  =  runFunctionOverDifferentSize(repeatRuns, minVectorSize,vectorStepSize, maxVectorSize, DR3_inner_prod, TEST_LOOP_SZ);
+	auto stats_DR3_inner_prod = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "STL inner product , size " <<  elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t DR3 inner product , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << " +- " << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
+
+	
+
 }
 
 void doSumSqrs()
