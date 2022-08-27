@@ -129,12 +129,16 @@ bool valuesAreEqual(double x, double y,double tol =  1e-14)
 }
 
 
-auto getRandomShuffledVector(int SZ)
+auto getRandomShuffledVector(int SZ, int instance_number=0)
 {
 	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
 
 
 	static std::map<int, std::vector<FloatType> > vectors;
+
+
+	int key = 10 * SZ + instance_number;
+	//store vectors with key 10 times size  and add on 0-9 integer for instance of different random vector
 
 	if (SZ < 0)
 	{
@@ -143,9 +147,9 @@ auto getRandomShuffledVector(int SZ)
 	}
 
 
-	if (vectors.find(SZ) != vectors.end())
+	if (vectors.find(key) != vectors.end())
 	{
-		return vectors[SZ];
+		return vectors[key];
 	}
 	else
 	{
@@ -154,7 +158,7 @@ auto getRandomShuffledVector(int SZ)
 		std::random_device rd;
 		std::mt19937 g(rd());
 		std::shuffle(begin(v), end(v), g);
-		vectors[SZ] = v;
+		vectors[key] = v;
 		return v;
 	}
 }
@@ -262,9 +266,9 @@ int main()
  //Uncomment  a function to play with
 
 	//	testMemCpy2(); 
-	// doMax();
-		doSum(); // stl slower with intel  stl slower
-	//  doInnerProd();
+	//    doMax();
+	//	doSum(); // stl slower with intel  stl slower
+	  doInnerProd();
 	//	doTransform();
 	// 	doSumSqrs();
 	//  khanAccumulation();
@@ -440,6 +444,7 @@ void doMax()
 	}
 }
 
+/*
 //sums all elements in a vector
 void doSum()
 {
@@ -506,6 +511,87 @@ void doSum()
 
 	}
 }
+
+
+*/
+
+
+
+
+//sums all elements in a vector
+void doSum()
+{
+	const auto zero = InstructionTraits<VecXX::INS>::nullValue;
+	const int TEST_LOOP_SZ = 1000;
+
+
+
+
+	for (int SZ = 200; SZ < 60000; SZ += 200)
+	{
+		auto v = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX test(v);
+
+		double time = 0.;
+		auto runName = "";
+		volatile  double res = 0.;
+
+		auto writeResults = [&](auto res) {std::cout << "size" << SZ << "," << runName << " result =, " << res << ", " << " Number of operations, " << numOps(TEST_LOOP_SZ, SZ) << ", run time  =, " << time << ", rate  =, " << numOps(TEST_LOOP_SZ, SZ) / time << ", , "; };
+
+		{	runName = "\n For loop accumulate";
+		{
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = 0.;
+					for (auto x : v)
+					{
+						res += x;
+					}
+				}
+			}
+		}
+		writeResults(res);
+		}
+
+		{	runName = "\n std::accumulate";
+		{
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = std::accumulate(v.begin(), v.end(), zero);
+				}
+			}
+		}
+		writeResults(res);
+		}
+
+		{	runName = "\n DR3 reduce";
+		{  	auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+		TimerGuard timer(time);
+		{
+			for (long l = 0; l < TEST_LOOP_SZ; l++)
+			{
+				res = reduce(test, Sum, zero, true);
+			}
+		}
+		}
+		writeResults(res);
+		std::cout << "\n";
+		}
+
+	}
+}
+
+
+
+
+
+
+
+
 
 
 void doTransform()
@@ -587,8 +673,8 @@ void doInnerProd()
 		double time = 0.;
 		volatile  double res = 0.;
 
-		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
-		auto v2 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto v1 = getRandomShuffledVector(VEC_SZ,0); // std stl vector double or float 
+		auto v2 = getRandomShuffledVector(VEC_SZ,1); // std stl vector double or float 
 
 		{
 			//warm up
@@ -613,8 +699,8 @@ void doInnerProd()
 		double time = 0.;
 		volatile  double res = 0.;
 
-		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
-		auto v2 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		auto v1 = getRandomShuffledVector(SZ,0); // std stl vector double or float 
+		auto v2 = getRandomShuffledVector(SZ,1); // std stl vector double or float 
 		VecXX t1(v1);
 		VecXX t2(v2);
 
