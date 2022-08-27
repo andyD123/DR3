@@ -42,11 +42,11 @@ precision of results compare for float types is incorrect.
 
 //pick an instruction set for intrinsics by selecting a name space
 
-//Using namespace DRC::VecDb;
+//using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-//using namespace DRC::VecD4D;	//avx2   double
+ using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-using namespace DRC::VecD8D;  //avx512 double
+//using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
 
 
@@ -267,8 +267,8 @@ int main()
 
 	//	testMemCpy2(); 
 	//    doMax();
-	//	doSum(); // stl slower with intel  stl slower
-	  doInnerProd();
+		doSum(); // stl slower with intel  stl slower
+	//  doInnerProd();
 	//	doTransform();
 	// 	doSumSqrs();
 	//  khanAccumulation();
@@ -517,7 +517,7 @@ void doSum()
 
 
 
-
+/*
 //sums all elements in a vector
 void doSum()
 {
@@ -584,8 +584,95 @@ void doSum()
 
 	}
 }
+*/
+
+void doSum()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto accumulate_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ, 0); 
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = std::accumulate(v1.begin(), v1.end(), zero);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = std::accumulate(v1.begin(), v1.end(), zero);
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+	auto DR3_accumulate = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(SZ, 0); // std stl vector double or float 
+		VecXX t1(v1);
+		{
+			auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = reduce(t1, Sum, zero, true);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = reduce(t1, Sum, zero, true);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
 
 
+
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, accumulate_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate, TEST_LOOP_SZ);
+	auto stats_DR3_inner_prod = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << " std::accumulate , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t DR3 accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << " +- " << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+
+
+
+}
 
 
 
