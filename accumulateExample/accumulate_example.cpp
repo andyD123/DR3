@@ -584,7 +584,9 @@ void doSum()
 
 	}
 }
+//
 */
+
 
 void doSum()
 {
@@ -624,6 +626,41 @@ void doSum()
 		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
 	};
 
+
+	auto accumulate_for_each = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ, 0);
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = 0.;
+				for (auto x : v1)
+				{
+					res += x;
+				}
+
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = 0.;
+					for (auto x : v1)
+					{
+						res += x;
+					}
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
 	auto DR3_accumulate = [&](int SZ, long TEST_LOOP_SZ)
 	{
 		double time = 0.;
@@ -651,10 +688,12 @@ void doSum()
 
 	};
 
+	auto run_res_for_each = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, accumulate_for_each, TEST_LOOP_SZ);
+	auto stats_foreach = performanceStats(run_res_for_each.m_raw_results);
 
 
-	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, accumulate_run, TEST_LOOP_SZ);
-	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+	auto run_res_stl = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, accumulate_run, TEST_LOOP_SZ);
+	auto stats_stl = performanceStats(run_res_stl.m_raw_results);
 
 
 	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate, TEST_LOOP_SZ);
@@ -662,17 +701,17 @@ void doSum()
 
 
 	//print out results
-	for (const auto& elem : stats_inner_prod)
+	for (const auto& elem : stats_stl)
 	{
+		auto  forLoop = run_res_for_each.m_calc_results[elem.first]; 
 		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
-		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto  valStl = run_res_stl.m_calc_results[elem.first];
 		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
-		std::cout << " std::accumulate , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t DR3 accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << " +- " << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
+		std::cout << "forloop , size " << elem.first << " , " << stats_foreach[elem.first].first << " +- " << stats_foreach[elem.first].second << "\t \t  std::accumulate , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t DR3 accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << " +- " << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
 
-
-
 }
+
 
 
 
