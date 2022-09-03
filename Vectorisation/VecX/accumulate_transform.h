@@ -837,7 +837,7 @@ Vec<INS_VEC>  ApplyTransformUR_X(const Vec<INS_VEC>& rhs1, OP& oper)
 		RES3.store_a(pRet + i + width * 3);
 	}
 
-	for (; i <= rhsSZ -width; i += width)
+	for (; i <= impSZ -width; i += width)
 	{
 		RHS1.load_a(pRhs1 + i);
 		RES = oper(RHS1);
@@ -901,7 +901,7 @@ void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 		RES3.store_a(pRet + i + width * 3);
 	}
 
-	for (; i <= rhsSZ - width; i += width)
+	for (; i <= impSZ - width; i += width)
 	{
 		RHS1.load_a(pRhs1 + i);
 		RES = oper(RHS1);
@@ -970,7 +970,7 @@ VecView<INS_VEC> ApplyTransformUR_X(const VecView<INS_VEC>& rhs1, OP& oper)
 		RES3.store_a(pRet + i + width * 3);
 	}
 
-	for (; i <= rhsSZ - width; i += width)
+	for (; i <= impSZ - width; i += width)
 	{
 		RHS1.load_a(pRhs1 + i);
 		RES = oper(RHS1);
@@ -1070,7 +1070,7 @@ Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
 		RES7.store_a(pRet + i + width * 7);
 	}
 
-	for (; i <= rhsSZ -width; i += width)
+	for (; i <= impSZ -width; i += width)
 	{
 		RHS1.load_a(pRhs1 + i);
 		RES = oper(RHS1);
@@ -1154,7 +1154,7 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, const Vec<INS_VE
 		RES3.store_a(pRet + i +3*width);
 	}
 
-	for (; i <= rhsSZ - width; i += width)
+	for (; i <= impSZ - width; i += width)
 	{
 		LHS.load_a(pLhs + i);
 		RHS.load_a(pRhs + i);
@@ -1228,7 +1228,7 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(typename InstructionTraits<INS_VEC>::Floa
 		RES3.store_a(pRet + i + 3 * width);
 	}
 
-	for (; i <= rhsSZ - width; i += width)
+	for (; i <= impSZ - width; i += width)
 	{
 		RHS.load_a(pRhs + i);
 		RES = oper(LHS, RHS);
@@ -1301,7 +1301,7 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, typename Instruc
 		RES3.store_a(pRet + i + 3 * width);
 	}
 
-	for (; i <= rhsSZ - width; i += width)
+	for (; i <= impSZ - width; i += width)
 	{
 		LHS.load_a(pLhs + i);
 		RES = oper(LHS, RHS);
@@ -1396,7 +1396,7 @@ Vec<INS_VEC>  ApplySelectTransformUR_X(const Vec<INS_VEC>& rhs1, OP& cond, OPER_
 		RES3.store_a(pRet + i + width * 3);
 	}
 
-	for (; i <= rhsSZ - width; i += width)
+	for (; i <= impSZ - width; i += width)
 	{
 		RHS.load_a(pRhs1 + i);
 		TRU = trueOper(RHS);
@@ -1487,7 +1487,7 @@ Vec<INS_VEC>  ApplySelectTransformUR_XC(const Vec<INS_VEC>& rhs1, OP& cond, type
 		RES3.store_a(pRet + i + width * 3);
 	}
 
-	for (; i <= rhsSZ - width; i += width)
+	for (; i <= impSZ - width; i += width)
 	{
 		RHS.load_a(pRhs1 + i);
 		RES = select(cond(RHS), TRU, FLS);
