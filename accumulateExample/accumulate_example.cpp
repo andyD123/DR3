@@ -9,6 +9,7 @@
 #include <vector>
 #include <chrono>
 #include <iomanip>  
+#include <thread>
 #include <map>
 
 
@@ -44,7 +45,7 @@ precision of results compare for float types is incorrect.
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
- using namespace DRC::VecD4D;	//avx2   double
+using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
 //using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
@@ -185,6 +186,23 @@ struct RunResults
 };
 
 
+class TimerGuard
+{
+	double& m_runTime;
+	std::chrono::steady_clock::time_point  m_startTme;
+
+public:
+	TimerGuard(double& runTime) : m_runTime(runTime), m_startTme(std::chrono::high_resolution_clock::now()) { runTime = 0.; }
+
+	~TimerGuard()
+	{
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto runtime = endTime - m_startTme;
+		m_runTime = runtime.count() / billion;
+	}
+};
+
+
 auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
 {
 
@@ -207,6 +225,31 @@ auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int 
 	}
 	return results;
 };
+
+
+auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
+{
+
+	RunResults results;
+
+	for (int j = 0; j < testRepeats; ++j)
+	{
+		int VEC_SZ = vec_start_size;
+		for (; VEC_SZ < vec_maxSZ; VEC_SZ += vec_stepSZ)
+		{
+			auto res = func(VEC_SZ, testLoopSZ);
+			auto calculation_rate = res.second;
+			auto calc_value = res.first;
+			results.m_raw_results[VEC_SZ].push_back(calculation_rate);
+			//if (j == 0)
+			//{
+			//	results.m_calc_results[VEC_SZ] = calc_value;
+			//}
+		}
+	}
+	return results;
+};
+
 
 
 auto performanceStats = [](const Mapped_Performance_Results& raw_results)
@@ -248,11 +291,17 @@ void    doInnerProd();
 void	doTransform();
 void 	doSumSqrs();
 void    khanAccumulation();
-void	testBinarySelection();
-void	testBinarySelection1();
+
+void	binarySelectionBetweenConst();
+void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of of operations
 void	testBinarySelection2();
+void    binarySelectionBetweenMiddleWeightFunction();
 void    testBinarySelection3();
+void	binarySelectionBetweenHeavyWeightFunction();
 void	doCountIf();
+
+
+void doAVXMax512Dance();
 
 
 
@@ -264,19 +313,54 @@ int main()
 {
 
  //Uncomment  a function to play with
-
-	//	testMemCpy2(); 
-	//    doMax();
-		doSum(); // stl slower with intel  stl slower
-	//  doInnerProd();
+ // 
+ //  transform 
 	//	doTransform();
-	// 	doSumSqrs();
-	//  khanAccumulation();
-	//	testBinarySelection(); //select between constants
+
+	std::cout << "\n \n \n \n testMemCpy2() \n" << std::endl;
+		testMemCpy2(); 
+//accumulate 
+// 
+		std::cout << "\n \n \n \n doSum() \n" << std::endl;
+    	doSum(); // stl slower with intel  stl slower
+
+		std::cout << "\n \n \n \n doMax() \n"  << std::endl;
+	    doMax();
+
+//	    doAVXMax512Dance();
+
+//transform accum
+		std::cout << "\n \n \n \n doInnerProd() \n" << std::endl;
+	  doInnerProd();
+
+
+	  std::cout << "\n \n \n \n doSumSqrs() \n" << std::endl;
+		doSumSqrs();
+// lambda capture
+
+	 std::cout << "\n \n \n \n khanAccumulation() \n" << std::endl;
+	 khanAccumulation();
+
+// branching
+	 std::cout << "\n \n \n \n binarySelectionBetweenConst() \n" << std::endl;
+
+	binarySelectionBetweenConst(); //select between constants
+
+
+	std::cout << "\n \n \n \n binarySelectionBetweenLinearFunction() \n" << std::endl;
 	//	testBinarySelection1();//select between light functions
+	binarySelectionBetweenLinearFunction();
+
+	std::cout << "\n \n \n \n binarySelectionBetweenMiddleWeightFunction() \n" << std::endl;
 	//	testBinarySelection2(); //medium
-	//    testBinarySelection3(); //heavy	
-	//	doCountIf();
+	binarySelectionBetweenMiddleWeightFunction();
+
+	std::cout << "\n \n \n \n binarySelectionBetweenHeavyWeightFunction() \n" << std::endl;
+	//  testBinarySelection3(); //heavy	
+	binarySelectionBetweenHeavyWeightFunction();
+	
+	std::cout << "\n \n \n \n doCountIf() \n" << std::endl;
+	doCountIf();
 
 
 
@@ -376,24 +460,10 @@ void testMemCpy2()
 	}
 }
 
-class TimerGuard
-{
-	double& m_runTime;
-	std::chrono::steady_clock::time_point  m_startTme;
-
-public:
-	TimerGuard(double& runTime) : m_runTime(runTime), m_startTme(std::chrono::high_resolution_clock::now()) { runTime = 0.; }
-
-	~TimerGuard()
-	{
-		auto endTime = std::chrono::high_resolution_clock::now();
-		auto runtime = endTime - m_startTme;
-		m_runTime = runtime.count() / billion;
-	}
-};
 
 
 //finds the max value in a vector
+/*
 void doMax()
 {
 	const int TEST_LOOP_SZ = 1000;
@@ -443,6 +513,8 @@ void doMax()
 		}
 	}
 }
+
+*/
 
 /*
 //sums all elements in a vector
@@ -714,12 +786,117 @@ void doSum()
 
 
 
+void doMax()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	/*
+	const int maxVectorSize = 4400;
+	const int minVectorSize = 3800;
+	const long TEST_LOOP_SZ = 100000;
+	const int vectorStepSize = 8;
+	const int repeatRuns = 10;
+	*/
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto accumulate_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		//auto v = getRandomShuffledVector(SZ); // std stl vector double or float 
+		auto v1 = getRandomShuffledVector(VEC_SZ, 0);
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = *std::max_element(v1.begin(), v1.end());
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = *std::max_element(v1.begin(), v1.end());
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+	auto DR3_accumulate = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+
+		// generic lambda for max either calling a max instruction or doing a selection with iff
+	//	 auto mxDbl = [](auto lhs, auto rhs) { return max(lhs, rhs); };
+		auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); }; //using iff fastest 
+
+		auto v1 = getRandomShuffledVector(SZ, 0); // std stl vector double or float 
+		VecXX vec(v1);
+		{
+			
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = reduce(vec, mxDbl);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = reduce(vec, mxDbl);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+
+	auto run_res_stl = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, accumulate_run, TEST_LOOP_SZ);
+	auto stats_stl = performanceStats(run_res_stl.m_raw_results);
+
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate, TEST_LOOP_SZ);
+	auto stats_DR3_perf = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& perf_stl : stats_stl)
+	{
+		
+		auto  valDr3 = dr3_raw_results.m_calc_results[perf_stl.first];
+		auto  valStl = run_res_stl.m_calc_results[perf_stl.first];
+		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout <<"  std::max_element, size " << perf_stl.first << ", " << perf_stl.second.first << " + -" << perf_stl.second.second << "\t \t DR3 reduce, size " << perf_stl.first << ", " << stats_DR3_perf[perf_stl.first].first << " + -" << stats_DR3_perf[perf_stl.first].second << ", numerical check : " << strMatch << "\n";
+	}
+
+
+}
 
 
 
 
 
 
+
+
+
+/*
 void doTransform()
 {
 
@@ -730,7 +907,7 @@ void doTransform()
 		auto v = getRandomShuffledVector(SZ); // std stl vector double or float 
 		auto targetVec = v;
 		auto transformVec = v;
-		VecXX test(v);
+		const VecXX test(v);
 		auto SQR = [](auto rhs) { return rhs * rhs; };
 
 		double time = 0.;
@@ -752,19 +929,26 @@ void doTransform()
 
 		}
 
+
 		{	runName = "DR3 transform";
 			VecXX res;
-
+			
 			{
 				TimerGuard timer(time);
 				{
 					for (long l = 0; l < TEST_LOOP_SZ; l++)
 					{
+						//res = transformXX(SQR, test);
+						//res = transform1(SQR, test);
 						res = transform(SQR, test);
 					}
 				}
 			}
+		
+			
 			writeResults();
+
+
 			transformVec = res;
 			
 			bool testOK = vectorsEqual(transformVec, transformVec, targetVec);
@@ -777,9 +961,121 @@ void doTransform()
 				std::cout << " FAIL results dont match";
 			}
 			std::cout << "\n";
+			
 		}
 	}
 }
+*/
+
+//
+
+void doTransform() //best with avx2 
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 400;
+	const int maxVectorSize = 60000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto stl_transform = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		auto v = getRandomShuffledVector(VEC_SZ, 0); // std stl vector double or float 
+		auto targetVec = v;
+		volatile auto transformVec = v;
+		VecXX test(v);
+		auto SQR = [](auto rhs) { return rhs * rhs; };
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				std::transform(v.begin(), v.end(), targetVec.begin(), SQR);
+				//res = inner_product(v1.cbegin(), v1.cend(), v2.cbegin(), zero);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					std::transform(v.begin(), v.end(), targetVec.begin(), SQR);
+
+				}
+			}
+		}
+		return  std::make_pair(targetVec, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+	auto DR3_transform = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		auto v = getRandomShuffledVector(VEC_SZ, 0); // std stl vector double or float 
+		auto targetVec = v;
+		auto res = v;
+		const VecXX test(v);
+		auto SQR = [](auto rhs) { return rhs * rhs; };
+
+
+		{
+			auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+			auto Mult = [](auto X, auto Y) { return X * Y; };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				//res = transformXX(SQR, test);
+				res = transform(SQR, test);
+
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = transform(SQR, test);
+					//res = transformXX(SQR, test);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+
+	};
+
+	auto dr3_raw_results = runFunctionOverDifferentSizeVec(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_transform, TEST_LOOP_SZ);
+	auto stats_DR3 = performanceStats(dr3_raw_results.m_raw_results);
+
+	auto run_res_innerProd = runFunctionOverDifferentSizeVec(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+
+
+
+
+	//print out results
+
+	for (const auto& elem : stats_inner_prod)
+	{
+		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = "TO DO";// vectorsEqual(valDr3, valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "STL transform , size " << elem.first << " , " << stats_inner_prod[elem.first].first << " +- " << stats_inner_prod[elem.first].second << "\t \t DR3 transform , size " << elem.first << " , " << stats_DR3[elem.first].first << " +- " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+	
+	
+
+
+
+}
+//
+
+
+
+
 
 void doInnerProd()
 {
@@ -1024,7 +1320,7 @@ void doSumSqrs()
 }
 
 
-
+/*
 void khanAccumulation()
 {
 	long loop = 10000;
@@ -1086,8 +1382,126 @@ void khanAccumulation()
 	}
 }
 
+*/
 
-void testBinarySelection()
+
+
+
+void khanAccumulation()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+
+	auto stl_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		double relative_error = 0.;
+		VecXX test(VecXX::scalar(1.0 / 6.0), VEC_SZ);
+		std::vector<InstructionTraits<VecXX::INS>::FloatType> v1 = test;
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				
+				res = std::accumulate(begin(v1), end(v1), zero);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = std::accumulate(begin(v1), end(v1), zero);
+				}
+			}
+
+			relative_error = (VEC_SZ / 6. - res) / res;
+		}
+		return  std::make_pair(relative_error, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+
+	};
+
+	auto DR3_reduce = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double relative_error = 0.;
+		auto NULL_Vec = VecXX::INS(0.0);
+		const auto zero = InstructionTraits<VecXX::INS>::nullValue;
+		//lambdas
+		auto KhanAddV = [c = NULL_Vec](auto sum, auto rhs) mutable
+		{
+			auto y = rhs - c;
+			auto t = sum + y;
+			c = (t - sum);
+			c = c - y;
+			sum = t;
+			return t;
+		};
+
+
+		double time = 0.;
+		volatile  double res = 0.;
+		VecXX t1(VecXX::scalar(1.0 / 6.0), VEC_SZ);
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = reduce(t1, KhanAddV, zero);
+
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = reduce(t1, KhanAddV, zero);
+				}
+
+			}
+		}
+
+		relative_error = (VEC_SZ / 6. - res) / res;
+		return std::make_pair(relative_error, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+
+	};
+
+
+
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_reduce, TEST_LOOP_SZ);
+	auto stats_DR3_inner_prod = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		//auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "STL accumulate , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second <<"relative err"<< valStl << "\t \t DR3 khan accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << " +- " << stats_DR3_inner_prod[elem.first].second << ", relative err " << valDr3 << "\n";
+	}
+
+
+
+}
+
+
+
+
+/*
+
+void binarySelectionBetweenConst()
 {
 	
 	const int TEST_LOOP_SZ = 1000;
@@ -1107,6 +1521,8 @@ void testBinarySelection()
 		auto half = VecXX::scalar(0.5);
 
 		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+
 
 
 		auto truVal = one;
@@ -1155,8 +1571,139 @@ void testBinarySelection()
 
 	}
 }
+*/
 
 
+void binarySelectionBetweenConst()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+	auto one = VecXX::scalar(1.0);
+	auto two = VecXX::scalar(2.0);
+	auto half = VecXX::scalar(0.5);
+	auto truVal = one;
+	auto falseVal = two;
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto for_loop_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto C = v1;
+		//use auto on scalars so we can switch between float and double instruction sets too
+
+
+		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				for (int k = 0; k < VEC_SZ; k++)
+				{
+					auto x = v1[k];
+					if ((x - two * floor(x * half)) >= one)
+					{
+						C[k] = one;
+					}
+					else
+					{
+						C[k] = two;
+					}
+				}
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					for (int k = 0; k < VEC_SZ; k++)
+					{
+						auto x = v1[k];
+						if ((x - two * floor(x * half)) >= one)
+						{
+							C[k] = one;
+						}
+						else
+						{
+							C[k] = two;
+						}
+					}
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+	auto DR3_select = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		auto one = VecXX::scalar(1.0);
+		auto two = VecXX::scalar(2.0);
+
+		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX testVec(v1);
+
+
+		{
+			auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				auto res = select(MyOddLmbda, testVec, truVal, falseVal); //was ApplySelectionOperationC
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					auto res = select(MyOddLmbda, testVec, truVal, falseVal);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, for_loop_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_select, TEST_LOOP_SZ);
+	auto stats_DR3_inner_prod = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = "TO DO";//"valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "for loop binarySelectionBetweenConst , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t DR3 binarySelectionBetweenConst , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << " +- " << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+
+
+
+}
+////////
+
+
+
+
+/*
 //selecting between very light weight functions
 void testBinarySelection1()
 {
@@ -1273,7 +1820,193 @@ void testBinarySelection1()
 
 
 }
+*/
 
+//binarySelectionBetweenLinearFunction
+
+void binarySelectionBetweenLinearFunction()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+	auto one = VecXX::scalar(1.0);
+	auto two = VecXX::scalar(2.0);
+	auto half = VecXX::scalar(0.5);
+	auto truVal = one;
+	auto falseVal = two;
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto for_loop_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto C = v1;
+		//use auto on scalars so we can switch between float and double instruction sets too
+
+
+		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				for (int k = 0; k < VEC_SZ; k++)
+				{
+					auto x = v1[k];
+					if ((x - two * floor(x * half)) >= one)
+					{
+						C[k] = (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));
+					}
+					else
+					{
+						C[k] = x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));
+					}
+				}
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					for (int k = 0; k < VEC_SZ; k++)
+					{
+						auto x = v1[k];
+						if ((x - two * floor(x * half)) >= one)
+						{
+							C[k] = one;
+						}
+						else
+						{
+							C[k] = two;
+						}
+					}
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+	auto stl_transform_with_branch_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto C = v1;
+		//use auto on scalars so we can switch between float and double instruction sets too
+
+
+		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				std::transform(v1.begin(), v1.end(), C.begin(),
+					[&](auto x)
+					{
+						if (MyOddLmbda(x))
+						{
+							return (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));
+						}
+						return x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));
+					}
+				);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					std::transform(v1.begin(), v1.end(), C.begin(),
+						[&](auto x)
+						{
+							if (MyOddLmbda(x))
+							{
+								return (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));
+							}
+							return x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));
+						}
+					);
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+
+	auto DR3_select = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		auto one = VecXX::scalar(1.0);
+		auto two = VecXX::scalar(2.0);
+		// making sure scalar constants are coerced to type of  float associated with chosen instruction set for ease opf switching sets
+		auto trueLambda = [](auto x) { return  (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));  };
+		auto falseLambda = [](auto x) { return  x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));  };
+
+		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX testVec(v1);
+
+
+		{
+			auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				auto res = selectTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					auto res = selectTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, for_loop_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+	auto run_transformBranchy = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform_with_branch_run, TEST_LOOP_SZ);
+	auto stats_transform_branchy = performanceStats(run_transformBranchy.m_raw_results);
+
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_select, TEST_LOOP_SZ);
+	auto stats_DR3 = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		//auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		//auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = "TO DO";//"valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "for loop binarySelectionBetweenSimpleFunctions , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t stl transform branchy lambda  , size " << elem.first << " , " << stats_transform_branchy[elem.first].first << " +- " << stats_transform_branchy[elem.first].second << "\t \t DR3 binarySelectionBetweenVSimpleLambda , size " << elem.first << " , " << stats_DR3[elem.first].first << " +- " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+
+
+
+}
 
 //selecting between middle weight functions
 void testBinarySelection2()
@@ -1281,7 +2014,7 @@ void testBinarySelection2()
 	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
 	const int TEST_LOOP_SZ = 1000;
 
-	for (long SZ = 200; SZ < 60000; SZ += 200)
+	for (long SZ = 200; SZ < 20000; SZ += 200)
 	{
 
 		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float
@@ -1392,6 +2125,244 @@ void testBinarySelection2()
 
 }
 
+void binarySelectionBetweenMiddleWeightFunction()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+	auto one = VecXX::scalar(1.0);
+	auto two = VecXX::scalar(2.0);
+	auto half = VecXX::scalar(0.5);
+
+
+	auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
+	/// from acklams inverse cdf normal
+	static FloatType a[] = { 0.0,  -3.969683028665376e+01, 2.209460984245205e+02,-2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01,  2.506628277459239e+00 };
+	static FloatType b[] = { 0.0, -5.447609879822406e+01,  1.615858368580409e+02, -1.556989798598866e+02,  6.680131188771972e+01, -1.328068155288572e+01 };
+	static FloatType c[] = { 0.0,-7.784894002430293e-03,-3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 };
+	static FloatType d[] = { 0.0,  7.784695709041462e-03, 3.224671290700398e-01,  2.445134137142996e+00, 3.754408661907416e+00 };
+
+
+	auto trueLambda = [&](auto q)
+	{
+		auto X = (((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) /
+			((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + VecXX::scalar(1.0));
+		return X;
+	};
+
+
+	auto falseLambda = [&](auto q)
+	{
+		auto X = (((((a[1] * q + a[2]) * q + a[3]) * q + a[4]) * q + a[5]) * q + a[6]) /
+			((((b[1] * q + b[2]) * q + b[3]) * q + b[4]) * q + VecXX::scalar(1.0));
+		return X;
+	};
+
+
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto for_loop_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto C = v1;
+		//use auto on scalars so we can switch between float and double instruction sets too
+
+
+		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				for (int k = 0; k < VEC_SZ; k++)
+				{
+					auto x = v1[k];
+					if ((x - two * floor(x * half)) >= one)
+					{
+						C[k] = trueLambda(x);
+					}
+					else
+					{
+						C[k] = falseLambda(x);
+					}
+				}
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					for (int k = 0; k < VEC_SZ; k++)
+					{
+						auto x = v1[k];
+						if ((x - two * floor(x * half)) >= one)
+						{
+							C[k] = trueLambda(x);
+						}
+						else
+						{
+							C[k] = falseLambda(x);
+						}
+					}
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+	auto stl_transform_with_branch_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto C = v1;
+		//use auto on scalars so we can switch between float and double instruction sets too
+
+
+		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				std::transform(v1.begin(), v1.end(), C.begin(),
+					[&](auto x)
+					{
+						return MyOddLmbda(x) ? trueLambda(x) : falseLambda(x);
+					}
+				);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					std::transform(v1.begin(), v1.end(), C.begin(),
+						[&](auto x)
+						{
+							return MyOddLmbda(x) ? trueLambda(x) : falseLambda(x);
+						}
+					);
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+
+	auto DR3_select = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		auto one = VecXX::scalar(1.0);
+		auto two = VecXX::scalar(2.0);
+		// making sure scalar constants are coerced to type of  float associated with chosen instruction set for ease opf switching sets
+		//auto trueLambda = [](auto x) { return  (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));  };
+		//auto falseLambda = [](auto x) { return  x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));  };
+
+		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX testVec(v1);
+
+
+		{
+			auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				auto res = selectTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					auto res = selectTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+
+	auto DR3_filterTransdform = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		auto one = VecXX::scalar(1.0);
+		auto two = VecXX::scalar(2.0);
+		// making sure scalar constants are coerced to type of  float associated with chosen instruction set for ease opf switching sets
+		//auto trueLambda = [](auto x) { return  (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));  };
+		//auto falseLambda = [](auto x) { return  x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));  };
+
+		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX testVec(v1);
+
+
+		{
+			auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				auto res = filterTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					auto res = filterTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, for_loop_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+	//auto run_transformBranchy = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform_with_branch_run, TEST_LOOP_SZ);
+	//auto stats_transform_branchy = performanceStats(run_transformBranchy.m_raw_results);
+
+	auto dr3_raw_resultsFilter = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_filterTransdform, TEST_LOOP_SZ);
+	auto stats_DR3_filter = performanceStats(dr3_raw_resultsFilter.m_raw_results);
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_select, TEST_LOOP_SZ);
+	auto stats_DR3 = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		//auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		//auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = "TO DO";//"valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "for loop binarySelectionBetweenSimpleFunctions , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t DR3 filter_transform medium weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << " +- " << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection medium Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << " +- " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+
+
+
+}
 
 
 //heavy weight one odd lambda  functions
@@ -1400,7 +2371,7 @@ void testBinarySelection3()
 	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
 	const int TEST_LOOP_SZ = 1000;
 
-	for (long SZ = 200; SZ < 60000; SZ += 200)
+	for (long SZ = 200; SZ < 20000; SZ += 200)
 	{
 
 		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float
@@ -1511,6 +2482,251 @@ void testBinarySelection3()
 }
 
 
+void binarySelectionBetweenHeavyWeightFunction()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+	auto one = VecXX::scalar(1.0);
+	auto two = VecXX::scalar(2.0);
+	auto half = VecXX::scalar(0.5);
+
+
+	auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
+	/// from acklams inverse cdf normal
+	static FloatType a[] = { 0.0,  -3.969683028665376e+01, 2.209460984245205e+02,-2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01,  2.506628277459239e+00 };
+	static FloatType b[] = { 0.0, -5.447609879822406e+01,  1.615858368580409e+02, -1.556989798598866e+02,  6.680131188771972e+01, -1.328068155288572e+01 };
+	static FloatType c[] = { 0.0,-7.784894002430293e-03,-3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 };
+	static FloatType d[] = { 0.0,  7.784695709041462e-03, 3.224671290700398e-01,  2.445134137142996e+00, 3.754408661907416e+00 };
+
+
+	auto trueLambda = [&](auto q)
+	{
+		auto X = (((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) /
+			((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + VecXX::scalar(1.0));
+		return X;
+	};
+
+	/*
+	auto falseLambda = [&](auto q)
+	{
+		auto X = (((((a[1] * q + a[2]) * q + a[3]) * q + a[4]) * q + a[5]) * q + a[6]) /
+			((((b[1] * q + b[2]) * q + b[3]) * q + b[4]) * q + VecXX::scalar(1.0));
+		return X;
+	};
+	*/
+
+	auto falseLambdaS = [](auto x) { return exp(-sin(x / VecXX::scalar(20.))) + VecXX::scalar(1.0) / (VecXX::scalar(1.0) + exp(x * (sin(x * VecXX::scalar(3.7) + VecXX::scalar(12.2) / x))));  };
+
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto for_loop_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto C = v1;
+		//use auto on scalars so we can switch between float and double instruction sets too
+
+
+		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				for (int k = 0; k < VEC_SZ; k++)
+				{
+					auto x = v1[k];
+					if ((x - two * floor(x * half)) >= one)
+					{
+						C[k] = trueLambda(x);
+					}
+					else
+					{
+						C[k] = falseLambdaS(x);
+					}
+				}
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					for (int k = 0; k < VEC_SZ; k++)
+					{
+						auto x = v1[k];
+						if ((x - two * floor(x * half)) >= one)
+						{
+							C[k] = trueLambda(x);
+						}
+						else
+						{
+							C[k] = falseLambdaS(x);
+						}
+					}
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+	auto stl_transform_with_branch_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto C = v1;
+		//use auto on scalars so we can switch between float and double instruction sets too
+
+
+		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+		{
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				std::transform(v1.begin(), v1.end(), C.begin(),
+					[&](auto x)
+					{
+						return MyOddLmbda(x) ? trueLambda(x) : falseLambdaS(x);
+					}
+				);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					std::transform(v1.begin(), v1.end(), C.begin(),
+						[&](auto x)
+						{
+							return MyOddLmbda(x) ? trueLambda(x) : falseLambdaS(x);
+						}
+					);
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+
+	auto DR3_select = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		auto one = VecXX::scalar(1.0);
+		auto two = VecXX::scalar(2.0);
+		// making sure scalar constants are coerced to type of  float associated with chosen instruction set for ease opf switching sets
+		//auto trueLambda = [](auto x) { return  (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));  };
+		//auto falseLambda = [](auto x) { return  x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));  };
+
+		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX testVec(v1);
+
+
+		{
+			auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				auto res = selectTransform(MyOddLmbda, testVec, trueLambda, falseLambdaS);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					auto res = selectTransform(MyOddLmbda, testVec, trueLambda, falseLambdaS);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+
+	auto DR3_filterTransdform = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		auto one = VecXX::scalar(1.0);
+		auto two = VecXX::scalar(2.0);
+		// making sure scalar constants are coerced to type of  float associated with chosen instruction set for ease opf switching sets
+		//auto trueLambda = [](auto x) { return  (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));  };
+		//auto falseLambda = [](auto x) { return  x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));  };
+
+		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX testVec(v1);
+
+
+		{
+			auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				auto res = filterTransform(MyOddLmbda, testVec, trueLambda, falseLambdaS);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					auto res = filterTransform(MyOddLmbda, testVec, trueLambda, falseLambdaS);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, for_loop_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+	//auto run_transformBranchy = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform_with_branch_run, TEST_LOOP_SZ);
+	//auto stats_transform_branchy = performanceStats(run_transformBranchy.m_raw_results);
+
+	auto dr3_raw_resultsFilter = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_filterTransdform, TEST_LOOP_SZ);
+	auto stats_DR3_filter = performanceStats(dr3_raw_resultsFilter.m_raw_results);
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_select, TEST_LOOP_SZ);
+	auto stats_DR3 = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		//auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		//auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = "TO DO";//"valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "for loop binarySelectionBetweenSimpleAndHeavyFunctions , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second << "\t \t DR3 filter_transform heavy weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << " +- " << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection heavy Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << " +- " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+
+
+
+}
+
+
+
+
+/*
 void doCountIf()
 {
 
@@ -1569,8 +2785,140 @@ void doCountIf()
 	}
 }
 
+*/
 
 
+void doCountIf()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+	auto one = VecXX::scalar(1.0);
+	auto two = VecXX::scalar(2.0);
+	auto half = VecXX::scalar(0.5);
+
+
+	auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
+	/// from acklams inverse cdf normal
+
+
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto std_count_if = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto C = v1;
+		//use auto on scalars so we can switch between float and double instruction sets too
+
+
+		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
+
+		volatile auto resStl = 0.0;
+
+		{
+
+			auto isOdd = [](auto x) {
+				auto y = (x - (2. * floor(x * 0.5)));
+				if (y >= 1.0)
+					return false;
+				else return true;
+			};
+
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				resStl = std::count_if(begin(v1), end(v1), isOdd);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					resStl = std::count_if(begin(v1), end(v1), isOdd);
+				}
+			}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+
+
+	auto DR3_count_if = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		auto one = VecXX::scalar(1.0);
+		auto two = VecXX::scalar(2.0);
+		// making sure scalar constants are coerced to type of  float associated with chosen instruction set for ease opf switching sets
+		//auto trueLambda = [](auto x) { return  (x * VecXX::scalar(3.7) + VecXX::scalar(16.2));  };
+		//auto falseLambda = [](auto x) { return  x * ((x * VecXX::scalar(3.5)) + VecXX::scalar(12.2));  };
+
+		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		VecXX test(v1);
+
+		auto Add = [](auto x, auto y) { return  x + y;  };
+		
+
+		{
+
+			auto oneIfOddLmbda = [](auto x) { return  iff((x - (VecXX::INS(2.0) * floor(x * VecXX::INS(0.5)))) >= VecXX::INS(1.0), VecXX::INS(1.0), VecXX::INS(0.0)); };
+			auto Add = [](auto x, auto y) { return  x + y;  };
+			//warm up
+			for (long l = 0; l < 100; l++)
+			{
+				res = transformReduce(test, oneIfOddLmbda, Add);
+			}
+
+			TimerGuard timer(time);
+			{
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
+				{
+					res = transformReduce(test, oneIfOddLmbda, Add);
+				}
+			}
+		}
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+	auto stl_run_res = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, std_count_if, TEST_LOOP_SZ);
+	auto stats_stl_count = performanceStats(stl_run_res.m_raw_results);
+
+	//auto run_transformBranchy = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform_with_branch_run, TEST_LOOP_SZ);
+	//auto stats_transform_branchy = performanceStats(run_transformBranchy.m_raw_results);
+
+	//auto dr3_raw_resultsFilter = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_filterTransdform, TEST_LOOP_SZ);
+	//auto stats_DR3_filter = performanceStats(dr3_raw_resultsFilter.m_raw_results);
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_count_if, TEST_LOOP_SZ);
+	auto stats_DR3 = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_stl_count)
+	{
+		//auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
+		//auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = "TO DO";//"valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "std count if , size " << elem.first << " , " << elem.second.first << " +- " << elem.second.second <<  "\t \t DR3 count if using transform reduce , size " << elem.first << " , " << stats_DR3[elem.first].first << " +- " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+
+
+
+}
 
 
 
