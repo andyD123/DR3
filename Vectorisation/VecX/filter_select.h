@@ -411,7 +411,8 @@ std::tuple< Vec<INS_VEC>, VecView<INS_VEC>, VecView<INS_VEC> > ApplyOperationAnd
 	Vec<INS_VEC> result(in.size());
 	auto pRes = result.start();
 	auto pRhs = in.start();
-	int sz = static_cast<int>(in.size());
+	//int sz = static_cast<int>(in.size());
+	int sz = static_cast<int>(in.paddedSize());
 
 	int  psn1 = 0;
 	int  psn2 = 0;
