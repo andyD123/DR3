@@ -41,6 +41,14 @@ Vec<INS_VEC>  transformXX(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
 }
 
 
+template<typename LAMBDA, typename INS_VEC>
+void  transform(LAMBDA& lambda, const Vec<INS_VEC>& inputVec,  Vec<INS_VEC>& outVec)
+{
+	return  ApplyUnitaryOperation(inputVec, outVec, lambda);
+}
+
+
+
 
 //not unrolled x1
 template<typename LAMBDA, typename INS_VEC>

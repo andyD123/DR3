@@ -55,7 +55,7 @@ public:
 
 auto getRandomShuffledVectorxxx(int SZ, int instance_number = 0)
 {
-	using FloatType = double; // typename InstructionTraits<VecXX::INS>::FloatType;
+	//using FloatType = double; // typename InstructionTraits<VecXX::INS>::FloatType;
 
 
 	static std::map<int, std::vector<double> > vectors;
@@ -117,7 +117,7 @@ void doAVXMax512Dance()
 	const int minVectorSize = 400;
 	*/
 
-	const int sleepTime = 10000.;/// 10 seconds
+	//const double sleepTime = 10000.;/// 10 seconds
 
 
 	const int maxVectorSize = 4400;
@@ -126,7 +126,7 @@ void doAVXMax512Dance()
 	const int vectorStepSize = 8;
 	const int repeatRuns = 10;
 
-	auto zero = 0.0;// InstructionTraits<VecXX::INS>::nullValue;
+	//auto zero = 0.0;// InstructionTraits<VecXX::INS>::nullValue;
 
 	getRandomShuffledVectorxxx(-1); // reset  random input vectors
 

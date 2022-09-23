@@ -618,6 +618,31 @@ Vec<INS_VEC> ApplyUnitaryOperation(const Vec<INS_VEC>& rhs, OP& oper)
 
 
 template< typename INS_VEC, typename OP>
+void ApplyUnitaryOperation(const Vec<INS_VEC>& rhs, Vec<INS_VEC>& res ,OP& oper)
+{
+	assert(res.size() == rhs.size());
+	check_vector(res);
+	check_vector(rhs);
+	if (rhs.isScalar())
+	{
+		res = ApplyUnitaryOperation<INS_VEC, OP>(rhs.getScalarValue(), oper);
+		return;
+	}
+
+	auto pRes = res.start();
+	auto pRhs = rhs.start();
+	int sz = rhs.paddedSize();
+
+	Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
+
+}
+
+
+
+
+
+
+template< typename INS_VEC, typename OP>
 Vec<INS_VEC> ApplyUnitaryOperation1(const Vec<INS_VEC>& rhs, OP& oper)
 {
 	check_vector(rhs);
