@@ -144,25 +144,32 @@ VecXX calcCDFNormWichuraViewsAndFMA(VecXX& X)
 	upper = ApplyBinaryOperation(dolambdaHi, upper, upper_p);
 	upper.write(res);
 	return res;
-
 }
 
 
 template <typename VecXX>
-VecXX calcCDFNormWichuraViewsAndFMA2splits(VecXX& X)
+VecXX calcCDFNormWichuraViewsAndFMA2splits(const VecXX& inputVecX)
 {
-	//wichura
-	const static  double c[] = { 7.7454501427834140764e-4 , .0227238449892691845833 ,.24178072517745061177, 1.27045825245236838258 ,  3.64784832476320460504, 5.7694972214606914055, 4.6303378461565452959, 1.42343711074968357734 };
-	const static  double d[] = { 1.05075007164441684324e-9 , 5.475938084995344946e-4, .0151986665636164571966, .14810397642748007459, .68976733498510000455,  1.6763848301838038494,  2.05319162663775882187,1. };
-	const  static  double e[] = { 2.01033439929228813265e-7 ,   2.71155556874348757815e-5,   .0012426609473880784386, .026532189526576123093, .29656057182850489123,   1.7848265399172913358, 5.4637849111641143699, 6.6579046435011037772 };
-	const static  double f[] = { 2.04426310338993978564e-15 , 1.4215117583164458887e-7, 1.8463183175100546818e-5,  7.868691311456132591e-4, .0148753612908506148525,.13692988092273580531, .59983220655588793769, 1. };
-
-
+	//Extrema boundary constants
 	constexpr auto ExtrmMin =0.00000000001388;// exp(-25.0);
 	constexpr auto ExtrmMax = 1. - ExtrmMin;
 
-	/////////FMA Lambda ///////////////////////////
-	auto aclambdaMain = [=](const auto& p)
+	// region test lambdas
+	auto isExtremeLambda = [&](auto p)
+	{
+		return (p < ExtrmMin) || (p > ExtrmMax);
+	};
+
+	auto isOuterRangelambda = [&](auto p)
+	{
+		constexpr auto p_low = 0.5 - 0.425;
+		constexpr auto p_high = 1.0 - p_low;
+		return ((p_high < p) && (ExtrmMax > p)) || ((p > ExtrmMin) && (p < p_low));
+
+	};
+
+	//region evaluation lambdas
+	auto centralRegionLambda = [](auto p)
 	{
 		auto q = p - 0.5;
 		auto r = .180625 - q * q;
@@ -171,9 +178,30 @@ VecXX calcCDFNormWichuraViewsAndFMA2splits(VecXX& X)
 		return denom * num;
 	};
 
-
-	auto doExtrema = [=]( auto p)
+	auto outerRegionlambda = [](auto p)
 	{
+		//wichura polynomial coefficients
+		constexpr static  double c[] = { 7.7454501427834140764e-4 , .0227238449892691845833 ,.24178072517745061177, 1.27045825245236838258 ,  3.64784832476320460504, 5.7694972214606914055, 4.6303378461565452959, 1.42343711074968357734 };
+		constexpr static  double d[] = { 1.05075007164441684324e-9 , 5.475938084995344946e-4, .0151986665636164571966, .14810397642748007459, .68976733498510000455,  1.6763848301838038494,  2.05319162663775882187,1. };
+		auto  r = min(p, 1 - p);
+		r = sqrt(-log(r));
+
+		auto q = p - 0.5;
+		r += -1.6;
+		auto denom = (decltype(p))(1.0) / mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(d[0], r, d[1]), r, d[2]), r, d[3]), r, d[4]), r, d[5]), r, d[6]), r, (decltype(p))(1.0));
+		auto	val = mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(c[0], r, c[1]), r, c[2]), r, c[3]), r, c[4]), r, c[5]), r, c[6]), r, c[7]);	
+		val = val * denom;
+		auto valMult = iff(q < (decltype(p))(0.0), (decltype(p))(-1.0), (decltype(p))(1.0));
+		val *= valMult;
+		return val;
+	};
+
+
+	auto extremaRegionLambda = []( auto p)
+	{
+		//wichura polynomial coefficients
+		constexpr static  double e[] = { 2.01033439929228813265e-7 ,   2.71155556874348757815e-5,   .0012426609473880784386, .026532189526576123093, .29656057182850489123,   1.7848265399172913358, 5.4637849111641143699, 6.6579046435011037772 };
+		constexpr static  double f[] = { 2.04426310338993978564e-15 , 1.4215117583164458887e-7, 1.8463183175100546818e-5,  7.868691311456132591e-4, .0148753612908506148525,.13692988092273580531, .59983220655588793769, 1. };
 
 		auto  r = min(p, 1 - p);
 		r = sqrt(-log(r));
@@ -192,52 +220,35 @@ VecXX calcCDFNormWichuraViewsAndFMA2splits(VecXX& X)
 
 	};
 
-	auto isExtremeLambda = [=](auto p)
-	{
-		return (p < ExtrmMin) || (p > ExtrmMax);
-	};
 
-	auto isOuterRangelambda = [=](auto p)
-	{
-		constexpr auto p_low = 0.5 - 0.425;
-		constexpr auto p_high = 1.0 - p_low;
+    // Apply central region lambda to all elements and filter outer range and extrema range elements to views
+	// return all inside a tupple. 
+	auto tple = ApplyOperationAndFilter(centralRegionLambda, isOuterRangelambda, isExtremeLambda, inputVecX);
 
-		return ((p_high < p) && (ExtrmMax > p)) || ((p > ExtrmMin) && (p < p_low));
+	auto& res = std::get<0>(tple);  // main result initially filed with values from applying central Region Lambda
+	auto& outside = std::get<1>(tple); // view containing outer range elements
+	auto& extreme = std::get<2>(tple); // view containing extreme range elements ( usually empty)
 
-	};
-
-	auto dolambdaLowNew = [=](auto p)
-	{
-		auto  r = min(p, 1 - p);
-		r = sqrt(-log(r));
-
-		auto q = p - 0.5;
-		r += -1.6;
-		auto	val = mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(c[0], r, c[1]), r, c[2]), r, c[3]), r, c[4]), r, c[5]), r, c[6]), r, c[7]);
-		auto denom = (decltype(p))(1.0) / mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(d[0], r, d[1]), r, d[2]), r, d[3]), r, d[4]), r, d[5]), r, d[6]), r, (decltype(p))(1.0));
-		val = val * denom;
-
-		auto valMult = iff(q < (decltype(p))(0.0), (decltype(p))(-1.0), (decltype(p))(1.0));
-		val *= valMult;
-		return val;
-	};
-
-	auto tple = ApplyOperationAndFilter(aclambdaMain, isOuterRangelambda, isExtremeLambda, X);
-
-	auto& res = std::get<0>(tple);
-	auto& outside = std::get<1>(tple);
-	auto& extreme = std::get<2>(tple);
-
-	ApplyUnitaryOperationWrite(dolambdaLowNew, outside, res);
+	// use outerRegionLambda to transform  filtered  outer range values in  the view (outside) and write the results directly to result object res
+	ApplyUnitaryOperationWrite(outerRegionlambda, outside, res);
     if (extreme.size() < 1)
 	{
 		return res;
 	}
 
- 	ApplyUnitaryOperationWrite(doExtrema, extreme, res);
+	//  transform values filtered to the extrema view using  lambda  extremaRegionLambda  and write transformed values to res
+ 	ApplyUnitaryOperationWrite(extremaRegionLambda, extreme, res);
 	return res;
-
 }
+
+
+
+
+
+
+
+
+
 
 template <typename VecXX>
 VecXX calcCDFNormsSparse(VecXX& X)

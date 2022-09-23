@@ -69,9 +69,9 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 //set instruction set via namespace in cdfNormalInverse.h
 int main()
 {
-	doPerformanceComparison();
+      doPerformanceComparison();
 	//	compareNumerics();
-	//	profileRun();
+	//profileExample();
 	return 0;
 }
 
@@ -80,27 +80,44 @@ void doPerformanceComparison()
 {
 
 	long loop = 10000;
-	for (int SZ = 100; SZ < 10000; SZ += 100)
-	{
+	//for (int SZ = 100; SZ < 10000; SZ += 100)
+	//{
 
 		using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
-		std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+	//	std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
 
 
-		for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+		//for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
 
 		std::random_device rd;
 		std::mt19937 g(rd());
-		std::shuffle(&v[0], &v[SZ - 1], g);
+	//	std::shuffle(&v[0], &v[SZ - 1], g);
 
 
-		VecXX test(v);
-		auto test2 = test;
+		//VecXX test(v);
+		//auto test2 = test;
 
-		VecXX resultsWichura;
-		std::vector<double> resT(test.size(), .0);
+		//VecXX resultsWichura;
+		//std::vector<double> resT(test.size(), .0);
 
+		//
+		///*
+		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
+			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+			for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+			std::shuffle(&v[0], &v[SZ - 1], g);
+
+
+			VecXX test(v);
+			auto test2 = test;
+
+			//warm
+			for (long l = 0; l < loop; l++)
+			{
+				auto 	res = calcCDFNormsSparseFMA(test);
+			}
+
 			auto startTme = std::chrono::high_resolution_clock::now();
 			for (long l = 0; l < loop; l++)
 			{
@@ -108,27 +125,24 @@ void doPerformanceComparison()
 			}
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
-			std::cout << SZ  <<  "\n" << " calcCDFNormsSparseFMA ," << runtime.count() / 1000000000.0;//<< std::endl;
+			std::cout << SZ  <<  "," << " calcCDFNormsSparseFMA ," << runtime.count() / 1000000000.0;//<< std::endl;
 			std::cout << " , evluations run , " << numOps(loop,SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec |, \n";// << std::endl;
 		}
 
-
-
+		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
-			auto startTme = std::chrono::high_resolution_clock::now();
+			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+			for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+			std::shuffle(&v[0], &v[SZ - 1], g);
+
+
+			VecXX test(v);
+			auto test2 = test;
+		
 			for (long l = 0; l < loop; l++)
 			{
-				auto res = calcCDFNormWithViews(test);
+				auto res = calcCDFNormsSparseFMAOnePass(test);
 			}
-			auto endTime = std::chrono::high_resolution_clock::now();
-			auto runtime = endTime - startTme;
-			std::cout << " calcCDFNormWithViews ," << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ", secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ", evals per sec |, \n";// << std::endl;
-		}
-
-
-
-		{
 			auto startTme = std::chrono::high_resolution_clock::now();
 			for (long l = 0; l < loop; l++)
 			{
@@ -136,27 +150,53 @@ void doPerformanceComparison()
 			}
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
-			std::cout << " calcCDFNormsSparseFMAOnePass ," << runtime.count() / 1000000000.0;//<< std::endl;
+			std::cout << SZ << ", calcCDFNormsSparseFMAOnePass ," << runtime.count() / 1000000000.0;//<< std::endl;
 			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ", evals per sec |, \n";// << std::endl;
 		}
 
 
-	
+		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
+			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+			for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+			std::shuffle(&v[0], &v[SZ - 1], g);
+
+
+			VecXX test(v);
+			auto test2 = test;
+			//warm
+			for (long l = 0; l < loop; l++)
+			{
+				auto res = calcCDFNormWithViews(test);
+			}
+
 			auto startTme = std::chrono::high_resolution_clock::now();
 			for (long l = 0; l < loop; l++)
 			{
-				//auto res
-				resultsWichura =  calcCDFNormWichuraViewsAndFMA2splits(test);
+				auto res = calcCDFNormWithViews(test);
 			}
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
-			std::cout << " calcCDFNormWichuraViewsAndFMA time ," << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ", secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec |,\n";// << std::endl;
-
+			std::cout << SZ << ", calcCDFNormWithViews, " << runtime.count() / 1000000000.0;//<< std::endl;
+			std::cout << ", secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ", evals per sec |, \n";// << std::endl;
 		}
 
+
+
+		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
+			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+			for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+			std::shuffle(&v[0], &v[SZ - 1], g);
+
+
+			VecXX test(v);
+			auto test2 = test;
+			for (long l = 0; l < loop; l++)
+			{
+				auto 	res = calcCDFNormWithViewsAndFMA(test);
+			}
+
 			auto startTme = std::chrono::high_resolution_clock::now();
 			for (long l = 0; l < loop; l++)
 			{
@@ -165,12 +205,26 @@ void doPerformanceComparison()
 
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
-			std::cout << SZ << " calcCDFNormWithViewsAndFMA time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
+			std::cout << SZ << ",  calcCDFNormWithViewsAndFMA time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
 			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec | ,\n";// << std::endl;
 		}
 
+		
 
+		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
+			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+			for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+			std::shuffle(&v[0], &v[SZ - 1], g);
+
+
+			VecXX test(v);
+			auto test2 = test;
+			for (long l = 0; l < loop; l++)
+			{
+				auto 	res = calcCDFNormWithViewsAndFMAWriteFromViewCalc(test);
+			}
+
 			auto startTme = std::chrono::high_resolution_clock::now();
 			for (long l = 0; l < loop; l++)
 			{
@@ -178,11 +232,22 @@ void doPerformanceComparison()
 			}
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
-			std::cout << SZ << " calcCDFNormWithViewsAndFMAandViewCalcWrite time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
+			std::cout << SZ << ",  calcCDFNormWithViewsAndFMAandViewCalcWrite time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
 			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec | ,\n";// << std::endl;
 		}
-
+		
+		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
+			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+			for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+			std::shuffle(&v[0], &v[SZ - 1], g);
+
+
+			VecXX test(v);
+			auto test2 = test;
+
+			VecXX resultsWichura;
+			std::vector<double> resT(test.size(), .0);
 
 
 			auto startTme = std::chrono::high_resolution_clock::now();
@@ -195,21 +260,72 @@ void doPerformanceComparison()
 
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto runtime = endTime - startTme;
-			std::cout << " transform  with lambda of a double,  time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
-			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << "  evals per sec |";
+			std::cout << SZ << ",  transform  with lambda of a double,  time aclam 1 bill = " << runtime.count() / 1000000000.0;//<< std::endl;
+			std::cout << ",secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << "  evals per sec |\n";
 		}
 
+		
+//*/
 
-		/*
-		// intel svml called as lambda over vector, set vcl to lambda calling svml function  for target instruction set 
+		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
-			//SVML functions
-			//  auto vcl = [&](__m512d x) { return _mm512_cdfnorminv_pd(x);  };
-			//  auto vcl = [](Vec8d& x) { return _mm512_cdfnorminv_pd(x);  };
-			//  auto vcl = [&](Vec4d& x) { return _mm256_cdfnorminv_pd(x); };  
-			//	auto vcl = [](Vec4d& x) { return _mm256_cdfnorminv_pd(x); };     
-			//	auto vcl = [](Vec16f& x) { return _mm512_cdfnorminv_ps(x);  };
-			//  auto vcl = [](Vec8f& x) { return _mm256_cdfnorminv_ps(x);  };
+			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+			for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+			std::shuffle(&v[0], &v[SZ - 1], g);
+
+
+			VecXX test(v);
+			auto test2 = test;
+			VecXX resultsWichura;
+			std::vector<double> resT(test.size(), .0);
+
+			{
+
+				for (long l = 0; l < loop; l++)
+				{
+					//auto res
+					resultsWichura = calcCDFNormWichuraViewsAndFMA2splits(test);
+				}
+
+				auto startTme = std::chrono::high_resolution_clock::now();
+				for (long l = 0; l < loop; l++)
+				{
+					//auto res
+					resultsWichura = calcCDFNormWichuraViewsAndFMA2splits(test);
+				}
+				auto endTime = std::chrono::high_resolution_clock::now();
+				auto runtime = endTime - startTme;
+				std::cout << SZ << ",  calcCDFNormWichuraViewsAndFMA time ," << runtime.count() / 1000000000.0;//<< std::endl;
+				std::cout << ", secs , evluations run , " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << ",  evals per sec |,\n";// << std::endl;
+
+			}
+		}
+		//
+		/*
+		
+
+		//*/
+//
+/*
+//
+
+		for (int SZ = 100; SZ < 10000; SZ += 100)
+		{
+			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+			for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
+			std::shuffle(&v[0], &v[SZ - 1], g);
+			VecXX test(v);
+
+
+			// intel svml called as lambda over vector, set vcl to lambda calling svml function  for target instruction set 
+			{
+				//SVML functions
+				//  auto vcl = [&](__m512d x) { return _mm512_cdfnorminv_pd(x);  };
+				auto vcl = [](Vec8d& x) { return _mm512_cdfnorminv_pd(x);  };
+				//  auto vcl = [&](Vec4d& x) { return _mm256_cdfnorminv_pd(x); };  
+				//	auto vcl = [](Vec4d& x) { return _mm256_cdfnorminv_pd(x); };     
+				//	auto vcl = [](Vec16f& x) { return _mm512_cdfnorminv_ps(x);  };
+				//  auto vcl = [](Vec8f& x) { return _mm256_cdfnorminv_ps(x);  };
 
 				auto startTme = std::chrono::high_resolution_clock::now();
 				for (long l = 0; l < loop; l++)
@@ -218,11 +334,15 @@ void doPerformanceComparison()
 				}
 				auto endTime = std::chrono::high_resolution_clock::now();
 				auto runtime = endTime - startTme;
-				std::cout << " svml raw  time aclam ," << runtime.count() / 1000000000.0  ;// << std::endl;
-				std::cout << ", secs , evluations run , " << numOps(loop,SZ) << ", " << numOps(loop,SZ) * 1000000000.0 / (runtime.count()) << " |,";// evals per sec" << std::endl;
-		}
+				std::cout << " svml raw  time aclam ," << runtime.count() / 1000000000.0;// << std::endl;
+				std::cout << ", secs , evluations run , " << numOps(loop, SZ) << ", " << numOps(loop, SZ) * 1000000000.0 / (runtime.count()) << " |, evals per sec" << std::endl;
+			}
 
-		*/
+		}
+//
+*/
+		/*	*/
+		/*
 		std::vector<VecXX::SCALA_TYPE> wch = resultsWichura;
 		
 		if (vectorsEqual(resT, resT, wch))
@@ -234,7 +354,9 @@ void doPerformanceComparison()
 			std::cout << "\n FAIL transform and WS241 DO NOT MATCH \n";
 		}
 		std::cout << " | \n \n" << std::endl;
-	}
+	//}
+
+		*/
 
 }
 
@@ -285,9 +407,9 @@ void profileExample()
 			for (long l = 0; l < loop; l++)
 			{
 				//auto 	res = calcCDFNormsSparseFMA(test);
-				  auto 	res = calcCDFNormsSparseFMA2(test); //uses sparse update proper
+				//  auto 	res = calcCDFNormsSparseFMA2(test); //uses sparse update proper
 				//auto 	res = calcCDFNormWichuraViewsAndFMA(test);
-			    //auto 	res = calcCDFNormWichuraViewsAndFMA2splits(test);
+			    auto 	res = calcCDFNormWichuraViewsAndFMA2splits(test);
 				//auto 	res =  calcCDFNormBranchlessFloat(test);
 			}
 
