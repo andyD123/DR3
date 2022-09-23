@@ -34,6 +34,10 @@ void filtersAndViews();
 void complexExampleOfJoiningfiltersAndViews();
 void experimentalAAD();
 
+void optionPricerDriver();
+double blackScholes_1(double S, double K, double t, double r, double sigma);
+double  blackScholes_2(double S, double K, double t, double r, double sigma);
+VecXX  blackScholes_3(const VecXX& S, const VecXX& K, const VecXX& t, const VecXX& r, const VecXX& sigma);
 
 
 
@@ -42,62 +46,64 @@ void experimentalAAD();
 
 int main()
 {
-//    basicVector();
 
- //   applyLambdasToVector();
 
- //   applyBinaryLambdasToVector();
+
+
+   // basicVector();
+
+   // applyLambdasToVector();
+
+  // applyBinaryLambdasToVector();
    
- //    applySparseLambdasToVector();
+  //  applySparseLambdasToVector();
 
- //    accumulateVector();
+  //   accumulateVector();
 
  //    transformReduce();
 
-//      branching();
+ //     branching();
 //    filtersAndViews();
 
  //   complexExampleOfJoiningfiltersAndViews();
 
-    experimentalAAD();
+ //   experimentalAAD();
+
+ //   optionPricerDriver();
+
+
 
 }
 
 
 VecXX getVector(int SZ=100)
 {
-    std::vector<double>  stlVec(SZ, 0.0);
-    double i = 0;
-    for (auto& x : stlVec)
-    {
-        x = i;
-        ++i;
-    }
-
+    std::vector<double>  stlVec(SZ);
+    std::iota(begin(stlVec), end(stlVec), 0.0);
     //creates a vector from STL
     VecXX vec1 = stlVec;
     return vec1;
 }
 
+
+
+
+
+
 void basicVector()
 {
-    std::vector<double>  stlVec(100,0.0);
-    double i = 0;
-    for (auto& x : stlVec)
-    {
-        x = i;
-        ++i;
-    }
-   
+    std::vector<double>  stlVec(100);
+    std::iota(begin(stlVec), end(stlVec), 0.0);
 
-    //creat a vector from STL
+
+    //create a vector from STL
     VecXX vec1 = stlVec;
 
     //create vecXX from a sum
     VecXX vec2 = vec1 + 2.0;
 
     //create an STL vector from the VexXX
-    std::vector<double> outVec = (std::vector<double>)vec2; // conversion
+    std::vector<double> outVec = vec2; // conversion   
 
     for (auto& yy : vec2)
     {
@@ -109,7 +115,7 @@ void basicVector()
 
     vec2 *= 2.0;
     vec2 += 0.1;
-    auto vec3 = sqrt(vec2);  //function of 
+    auto vec3 = sqrt(vec2);  // sqrt function , all elements in vec3[i] = sqrt(vec2[i]) 
 
     
     //with vectors too
@@ -117,7 +123,7 @@ void basicVector()
     vec2 += vec3;
 
 
-    std::vector<double> outVec1 = (std::vector<double>)vec3; // a bit easier  to see the elements
+    std::vector<double> outVec1 = vec3; // a bit easier  to see the elements (std::vector<double>)
 
     //create a vecXX from a scalar 
     VecXX four = 4.0; // a scalar VecXX
@@ -154,14 +160,17 @@ void applyLambdasToVector()
     
 
 //  ApplyTransform 
+    
 
-    std::vector<double> dbVec;
-    const auto  v = getVector(); 
+    auto  v = getVector(); 
+    std::vector<double> dbVec = v;
+
     auto res1 = transform(square, v);
     dbVec = res1;
 
     //transform a constant vector
-    res1 = transform(square, v);
+    const auto  v_const = getVector();
+    res1 = transform(square, v_const);
     dbVec = res1;
 
     // transform modify inplace 
@@ -217,6 +226,8 @@ void applyBinaryLambdasToVector()
     auto res3 = transform(add, 100.0,y);
     dbVec = res3;
 
+   // double unused = 0.0;
+
     //apply transforms no unroll
     { //only single unroll
  
@@ -240,7 +251,7 @@ void applyBinaryLambdasToVector()
         auto res4 = transform1(add, x, 10.0);
         dbVec = res4;
 
-       // int UR = 1;
+  
         auto res5 = transform1(add, 100.0, y);
         dbVec1 = res5;
 
@@ -305,9 +316,15 @@ void applySparseLambdasToVector()
 void accumulateVector()
 {
     auto  vec = getVector(10000000);
-    vec += 1.0 / 6.0;
+
+   //NB accumulate really means reduce  so lets try max value
+   auto lambdaMax = [](auto lhs, auto rhs) { return max(lhs, rhs); };
+   auto maxVal = reduce(vec, lambdaMax);
+
+    vec += 1.0 / 6.0; 
     auto sum = [](auto x, auto y) {return x + y; };
-    auto acc = reduce(vec, sum);// , 0.0);
+    auto acc = reduce(vec, sum);
+
 
     auto NULL_Vec = (VecXX::INS(0.0));
     auto KhanAdd = [c = NULL_Vec](auto sum, auto rhs) mutable
@@ -319,15 +336,7 @@ void accumulateVector()
         sum = t;
         return t;
     };
-
- 
-    double KnAdd = reduce(vec, KhanAdd);// 0.0);
-
-
-   //NB accumulate really means reduce  so lets try max value
-
-   auto lambdaMax = [](auto lhs, auto rhs) { return max(lhs, rhs); };
-   auto maxVal = reduce(vec, lambdaMax);
+    double KnAdd = reduce(vec, KhanAdd);
 
 
    ignore(acc);
@@ -348,10 +357,10 @@ void transformReduce()
     auto oneIfOddLmbda = [](auto x) { return iff(((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) > VecXX::INS(0.)), VecXX::INS(1.0), VecXX::INS(0.0)); };
     auto oneIfEvenLmbda = [](auto x) { return iff(((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) <= VecXX::INS(0.)), VecXX::INS(1.0), VecXX::INS(0.0)); };
     auto Add = [](auto x, auto y) { return x + y; };
-    auto theCount = transformReduce(oneIfOddLmbda, Add, test);// 0.0);
+    auto theCount = transformReduce(oneIfOddLmbda, Add, test);
 
     auto SQR = [](auto X) {return X * X; };
-    auto sumSquares = transformReduce(SQR, Add, test);// 0.0);
+    auto sumSquares = transformReduce(SQR, Add, test);
 
     //return val of X or zero  not logical XOR
     auto XorZero = [=](auto x) {  return x * oneIfOddLmbda(x); }; //capturing a lambda 
@@ -630,7 +639,7 @@ void call_BSDerivAll()
     dbgVec = delta;
     auto dbgVecOther = dbgVec;
 
-    // force function  to take double or differenial vectors, standard conversion is to make 
+    // force function  to take double or differential vectors, standard conversion is to make 
     // null derivatives, using D() function creates differential vectors that are differentiable
     // so use  a D() around the parameter that you want to be differentiated against
 
@@ -675,3 +684,101 @@ void experimentalAAD()
 {
     call_BSDerivAll<VecXX::INS>();
 }
+
+
+
+
+
+double blackScholes_1(double S, double K, double t, double r, double sigma)
+{
+    double invK = 1.0 / K;
+    double discountedRate = exp(-r * t);
+    double S_invK = S * invK;
+    double log_sK = log(S_invK);
+    double rootT = sqrt(t);
+    double sigmaRootT = rootT * sigma;
+    double invSigmaRootT = 1.0 / sigmaRootT;
+    double halfSigmaSqrd_t = (0.5 * sigma * sigma + r) * t;
+    double d1 = invSigmaRootT * (log_sK + halfSigmaSqrd_t);
+    double d2 = d1 - sigmaRootT;
+    double normD1 = cdfnorm(d1);
+    double normD2 = cdfnorm(d2);
+    double C = S * normD1 - K * discountedRate * normD2;
+    //double delta = normD1;
+    return C;
+}
+
+
+
+double  blackScholes_2(double S, double K, double t, double r, double sigma)
+{
+    auto invK = 1.0 / K;
+    auto discountedRate = exp(-r * t);
+    auto S_invK = S * invK;
+    auto log_sK = log(S_invK);
+    auto rootT = sqrt(t);
+    auto sigmaRootT = rootT * sigma;
+    auto invSigmaRootT = 1.0 / sigmaRootT;
+    auto halfSigmaSqrd_t = (0.5 * sigma * sigma + r) * t;
+    auto d1 = invSigmaRootT * (log_sK + halfSigmaSqrd_t);
+    auto d2 = d1 - sigmaRootT;
+    auto normD1 = cdfnorm(d1);
+    auto normD2 = cdfnorm(d2);
+    auto C = S * normD1 - K * discountedRate * normD2;
+  //  auto delta = normD1;
+    return C;
+}
+
+
+
+
+// make automatic variables auto 
+VecXX  blackScholes_3(const VecXX& S, const VecXX& K, const VecXX& t, const VecXX& r, const VecXX& sigma)
+{
+    auto invK = 1.0 / K;
+    auto discountedRate = exp(-r * t);
+    auto S_invK = S * invK;
+    auto log_sK = log(S_invK);
+    auto rootT = sqrt(t);
+    auto sigmaRootT = rootT * sigma;
+    auto invSigmaRootT = 1.0 / sigmaRootT;
+    auto halfSigmaSqrd_t = (0.5 * sigma * sigma + r) * t;
+    auto d1 = invSigmaRootT * (log_sK + halfSigmaSqrd_t);
+    auto d2 = d1 - sigmaRootT;
+    auto normD1 = cdfnorm(d1);
+    auto normD2 = cdfnorm(d2);
+    auto C = S * normD1 - K * discountedRate * normD2;
+   // auto delta = normD1;
+    return C;
+}
+
+
+void optionPricerDriver()
+{
+    double S = 40.0;  // current spot price
+    double K = 40;    // strike
+    double t = 1.0;   // 1 year maturity
+    double r = 0.1;   // 10% , risk free rate of return
+    double sigma = 0.1;   //10%  sigma  volaiity of spot price 
+
+    double optionPrice1 = blackScholes_1(S, K, t, r, sigma);
+
+  
+
+    std::vector stl(100, 0.0);
+    std::iota(begin(stl), end(stl), 0.0);
+
+    VecXX sigXX = stl;
+    sigXX *= 0.001;
+    sigXX += sigma;
+
+    std::vector<double> testVec = sigXX;
+
+    auto optionPrice3 = blackScholes_3(S, K, t, r, sigXX);
+
+    std::vector<double> prices = optionPrice3;
+
+
+}
+
+
