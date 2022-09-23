@@ -857,7 +857,7 @@ void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 	check_vector(rhs1); //calls overload with a view
 	//views are not scalar
 
-	int sz = rhs1.size();
+	//int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
 	auto pRet = pRhs1;
 
@@ -879,7 +879,8 @@ void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 	int i = 0;
 
 	//int rhsSZ = sz - step;
-	int impSZ = rhs1.paddedSize();
+	//int impSZ = rhs1.paddedSize();
+	int impSZ = rhs1.fillSize();
 	//int rhsSZ = sz - step;
 	int rhsSZ = impSZ - step;
 	for (; i < rhsSZ; i += step)
@@ -947,7 +948,8 @@ VecView<INS_VEC> ApplyTransformUR_X(const VecView<INS_VEC>& rhs1, OP& oper)
 	int i = 0;
 
 	//int rhsSZ = sz - step;
-	int impSZ = rhs1.paddedSize();
+	//int impSZ = rhs1.paddedSize();
+	int impSZ = rhs1.fillSize();
 	//int rhsSZ = sz - step;
 	int rhsSZ = impSZ - step;
 
