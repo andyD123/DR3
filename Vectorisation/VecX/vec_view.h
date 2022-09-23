@@ -27,7 +27,7 @@ private:
 
 	typename InstructionTraits<INS_VEC>::FloatType* m_pData;
 	int m_size; // number of elements represented
-	size_t m_implSize;// actual size of allocated block
+	size_t	m_implSize;// actual size of allocated block
 	size_t m_implSizeIdx;
 	unsigned int* m_pIndex;
 	int m_fillSize;
@@ -286,6 +286,11 @@ public:
 		return m_last;
 	}
 
+	inline int srcSize() const
+	{
+		return m_size;
+	}
+
 	inline void setSizeAndPad(size_t SZ)
 	{
 		int sz = static_cast<int>(SZ);
@@ -316,9 +321,9 @@ public:
 		return m_fillSize;
 	}
 	
-	inline size_t paddedSize() const
+	inline int paddedSize() const
 	{
-		return m_implSize;
+		return static_cast<int>(m_implSize);
 	}
 
 	inline bool isScalar() const
@@ -412,7 +417,7 @@ public:
 		int SZ = (m_last);
 		for (; i < SZ - (int)(width * unrollFactor); i += width * unrollFactor)
 		{
-			idx0.load(pIdx);
+			idx0.load(pIdx + i);
 			r0.load_a(m_pData);
 			scatter(idx0, limit, r0, pRes);
 
@@ -465,7 +470,7 @@ public:
 		int SZ = (m_last);
 		for (; i < SZ - (int)(width * unrollFactor); i += width * unrollFactor)
 		{
-			idx0.load(pIdx);
+			idx0.load(pIdx +i);
 			r0.load_a(m_pData);
 			scatter(idx0, limit, r0, pRes);
 
@@ -495,7 +500,7 @@ public:
 template< typename INS_VEC>
 Vec<INS_VEC>  merge(std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >& src)
 {
-	Vec<INS_VEC> ret(std::get<0>(src).fillSize());
+	Vec<INS_VEC> ret(std::get<0>(src).srcSize());
 	const VecView<INS_VEC>& trueData = std::get<0>(src);
 	const VecView<INS_VEC>& falseData = std::get<1>(src);
 
@@ -507,7 +512,7 @@ Vec<INS_VEC>  merge(std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >& src)
 template< typename INS_VEC>
 VecView<INS_VEC>  mergeToViews(VecView<INS_VEC>& lhs, VecView<INS_VEC>& rhs)
 {
-	VecView<INS_VEC> ret(size_t(lhs.fillSize()));
+	VecView<INS_VEC> ret(size_t(lhs.srxSize()));/// fillSize())); //srxSize()?
 	lhs.write(ret);
 	rhs.write(ret);
 	return ret;
