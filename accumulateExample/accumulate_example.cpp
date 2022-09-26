@@ -327,19 +327,19 @@ int main()
 	
 	//doSumSqrs();
 	//doCountIf();
-	std::cout << "\n \n \n \n binarySelectionBetweenConst() \n" << std::endl;
-	binarySelectionBetweenConst();
+	//std::cout << "\n \n \n \n binarySelectionBetweenConst() \n" << std::endl;
+	//binarySelectionBetweenConst();
 
-	return 0;
+	//return 0;
 	std::cout << "\n \n \n \n binarySelectionBetweenLinearFunction() \n" << std::endl;
 	binarySelectionBetweenLinearFunction();
-	std::cout << "\n \n \n \n binarySelectionBetweenMiddleWeightFunction() \n" << std::endl;
-	binarySelectionBetweenMiddleWeightFunction();
+//	std::cout << "\n \n \n \n binarySelectionBetweenMiddleWeightFunction() \n" << std::endl;
+//	binarySelectionBetweenMiddleWeightFunction();
 
 //	return 0;
 
-	std::cout << "\n \n \n \n binarySelectionBetweenHeavyWeightFunction() \n" << std::endl;
-	binarySelectionBetweenHeavyWeightFunction();
+//	std::cout << "\n \n \n \n binarySelectionBetweenHeavyWeightFunction() \n" << std::endl;
+//	binarySelectionBetweenHeavyWeightFunction();
 //	return 0;
 //	doSum();
 	return 0;
@@ -951,7 +951,6 @@ void khanAccumulation()
 	{
 		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
 		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
-		//auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
 		std::cout << "STL accumulate , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second <<"relative err"<< valStl << "\t \t DR3 khan accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second << ", relative err " << valDr3 << "\n";
 	}
 
@@ -1037,18 +1036,18 @@ void binarySelectionBetweenConst()
 
 		{
 			double halfSize = SZ * 0.5;
-			auto MyOddLmbda = [&](auto x) { return x > halfSize; };
+			auto upperHalfLmbda = [&](auto x) { return x > halfSize; };
 			//warm up
 			for (long l = 0; l < 100; l++)
 			{
-				auto res1 = select(MyOddLmbda, testVec, truVal, falseVal); 
+				auto res1 = select(upperHalfLmbda, testVec, truVal, falseVal);
 			}
 
 			TimerGuard timer(time);
 			{
 				for (long l = 0; l < TEST_LOOP_SZ; l++)
 				{
-					res = select(MyOddLmbda, testVec, truVal, falseVal);
+					res = select(upperHalfLmbda, testVec, truVal, falseVal);
 				}
 			}
 			//res = res2;
@@ -1073,15 +1072,8 @@ void binarySelectionBetweenConst()
 	{
 		auto  valDr3_select = dr3_raw_results.m_calc_results[elem.first];
 		auto  valStl = run_res_for_loop.m_calc_results[elem.first];
-		//auto  valDr3_filterTransform = run_res_for_loop.m_calc_results[elem.first];
-
 		bool VecsOK = vectorsEqualD(valDr3_select, valStl, valStl, valStl);
 		auto strMatch = VecsOK ? "calcs match" : "cal difference";
-
-
-		//auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
-		//auto  valStl = run_res_innerProd.m_calc_results[elem.first];
-		//auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
 		std::cout << "for loop binarySelectionBetweenConst , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 binarySelectionBetweenConst , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- , " << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
 
@@ -1104,8 +1096,6 @@ void binarySelectionBetweenLinearFunction()
 	auto for_loop_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
 	{
 		double time = 0.;
-		//volatile  double res = 0.;
-
 		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
 		auto C = v1;
 		double halfSize = VEC_SZ * 0.5;
@@ -1148,8 +1138,6 @@ void binarySelectionBetweenLinearFunction()
 		}
 		return  std::make_pair(C, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
 	};
-
-
 
 	auto stl_transform_with_branch_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
 	{
@@ -1196,9 +1184,6 @@ void binarySelectionBetweenLinearFunction()
 		}
 		return  std::make_pair(C, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
 	};
-
-
-
 
 	auto DR3_select = [&](int SZ, long TEST_LOOP_SZ)
 	{
@@ -1247,8 +1232,6 @@ void binarySelectionBetweenLinearFunction()
 	auto run_transformBranchy = runFunctionOverDifferentSizeVec(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform_with_branch_run, TEST_LOOP_SZ);
 	auto stats_transform_branchy = performanceStats(run_transformBranchy.m_raw_results);
 
-	
-
 	auto dr3_raw_results = runFunctionOverDifferentSizeVec(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_select, TEST_LOOP_SZ);
 	auto stats_DR3 = performanceStats(dr3_raw_results.m_raw_results);
 
@@ -1256,25 +1239,11 @@ void binarySelectionBetweenLinearFunction()
 	//print out results
 	for (const auto& elem : stats_for_loop)
 	{
-
 		auto  valDr3_select = dr3_raw_results.m_calc_results[elem.first];
 		auto  valStl = run_res_for_loop.m_calc_results[elem.first];
-		auto  valDr3_filterTransform = run_res_for_loop.m_calc_results[elem.first];
-
-		bool VecsOK = vectorsEqualD(valDr3_select, valStl, valStl, valStl);
+		auto  val_branchy = run_transformBranchy.m_calc_results[elem.first];
+		bool VecsOK = vectorsEqualD(valDr3_select, valStl, val_branchy, valStl);
 		auto strMatch = VecsOK ? "calcs match" : "cal difference";
-
-		/*
-		auto  valDr3_select = dr3_raw_results.m_calc_results[elem.first];
-		auto  valStl = run_res_for_loop.m_calc_results[elem.first];
-		auto  valDr3_filterTransform = run_res_for_loop.m_calc_results[elem.first];
-
-		bool VecsOK = vectorsEqualD(valDr3_select, valStl, valDr3_filterTransform, valDr3_filterTransform);
-		auto strMatch = VecsOK ? "calcs match" : "cal difference";
-		*/
-		//auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
-		//auto  valStl = run_res_innerProd.m_calc_results[elem.first];
-		//auto strMatch = VecsOK ? "calcs match" : "cal difference";
 		std::cout << "for loop binarySelectionBetweenSimpleFunctions , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t stl transform branchy lambda  , size " << elem.first << " , " << stats_transform_branchy[elem.first].first << ", +- ," << stats_transform_branchy[elem.first].second << "\t \t DR3 binarySelectionBetweenVSimpleLambda , size " << elem.first << " , " << stats_DR3[elem.first].first << ", +- ," << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
 
