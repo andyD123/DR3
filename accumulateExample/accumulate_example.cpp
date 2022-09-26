@@ -90,17 +90,19 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 
 
 template<typename T>
-bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3, const std::vector<T>& input)
+bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3, const std::vector<T>& input,  double ERR = 1e-13)
 {
 	bool  testOK = true;
-	const double ERR = 1e-13;
+	//const double ERR = 1e-13;
 	if (C1.size() != C2.size())
 	{
+		std::cout << "wrong size C1,C2"<< C1.size() << ", " << C2.size() <<std::endl;
 		return false;
 	}
 
 	if (C3.size() != C2.size())
 	{
+		std::cout << "wrong size C2,C3" << C2.size() << ", " << C3.size() << std::endl;
 		return false;
 	}
 
@@ -114,6 +116,7 @@ bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std
 			testOK = false;
 			std::cout << "\n err diff@ " << i << " err1 =" << err1 << ", err2 = " << err2 << "\n";
 			std::cout << "\n val @ " << i << " C1[i] =" << C1[i] << ", C3[i] = " << C3[i] << "input val=" << input[i] <<"\n";
+			std::cout << std::endl;
 			break;
 		}
 	}
@@ -331,15 +334,16 @@ int main()
 	//binarySelectionBetweenConst();
 
 	//return 0;
-	std::cout << "\n \n \n \n binarySelectionBetweenLinearFunction() \n" << std::endl;
-	binarySelectionBetweenLinearFunction();
+	//std::cout << "\n \n \n \n binarySelectionBetweenLinearFunction() \n" << std::endl;
+	//binarySelectionBetweenLinearFunction();
+
 //	std::cout << "\n \n \n \n binarySelectionBetweenMiddleWeightFunction() \n" << std::endl;
-//	binarySelectionBetweenMiddleWeightFunction();
+// 	binarySelectionBetweenMiddleWeightFunction();
 
 //	return 0;
 
-//	std::cout << "\n \n \n \n binarySelectionBetweenHeavyWeightFunction() \n" << std::endl;
-//	binarySelectionBetweenHeavyWeightFunction();
+	std::cout << "\n \n \n \n binarySelectionBetweenHeavyWeightFunction() \n" << std::endl;
+	binarySelectionBetweenHeavyWeightFunction();
 //	return 0;
 //	doSum();
 	return 0;
@@ -1251,124 +1255,6 @@ void binarySelectionBetweenLinearFunction()
 
 }
 
-/*
-//selecting between middle weight functions
-void testBinarySelection2()
-{
-	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
-	const int TEST_LOOP_SZ = 1000;
-
-	for (long SZ = 200; SZ < 20000; SZ += 200)
-	{
-
-		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float
-		VecXX testVec(v1);
-
-		auto C = v1; //copy of STL vector to write values to
-		auto C1 = v1;
-		auto C2 = v1;
-
-		double time = 0.;
-		auto runName = "";
-		const auto one = VecXX::scalar(.0);
-		const auto two = VecXX::scalar(2.0);
-		const auto half = VecXX::scalar(0.5);
-
-		auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
-
-		/// from acklams inverse cdf normal
-		static FloatType a[] = { 0.0,  -3.969683028665376e+01, 2.209460984245205e+02,-2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01,  2.506628277459239e+00 };
-		static FloatType b[] = { 0.0, -5.447609879822406e+01,  1.615858368580409e+02, -1.556989798598866e+02,  6.680131188771972e+01, -1.328068155288572e+01 };
-		static FloatType c[] = { 0.0,-7.784894002430293e-03,-3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 };
-		static FloatType d[] = { 0.0,  7.784695709041462e-03, 3.224671290700398e-01,  2.445134137142996e+00, 3.754408661907416e+00 };
-
-
-		auto trueLambda = [&](auto q)
-		{
-			auto X = (((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) /
-				((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + VecXX::scalar(1.0));
-			return X;
-		};
-
-
-		auto falseLambda = [&](auto q)
-		{
-			auto X = (((((a[1] * q + a[2]) * q + a[3]) * q + a[4]) * q + a[5]) * q + a[6]) /
-				((((b[1] * q + b[2]) * q + b[3]) * q + b[4]) * q + VecXX::scalar(1.0));
-			return X;
-		};
-
-		auto writeResults = [&]() { std::cout << "size" << SZ << "," << runName <<  ", " << " # calcs, " << numOps(TEST_LOOP_SZ , SZ) << ", run time  =, " << time << ", rate  =, " << numOps(TEST_LOOP_SZ, SZ) / time << ", , "; };
-
-		
-		{	runName = "for loop";
-			{
-				TimerGuard timer(time);
-				{
-					for (long l = 0; l < TEST_LOOP_SZ; l++)
-					{
-						for (int k = 0; k < SZ; k++)
-						{
-							auto x = v1[k];
-							C[k] = MyOddLmbda(x) ? trueLambda(x) : falseLambda(x);
-						}
-					}
-				}
-			}
-			writeResults();
-		}
-
-		//calculate both true and false lambdas for all values and select/blend values together
-		{	runName = "DR3 selectTransform ";
-			VecXX res;
-			{
-				TimerGuard timer(time);
-				{
-					for (long l = 0; l < TEST_LOOP_SZ; l++)
-					{
-						res = selectTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
-					}
-				}
-			}
-			writeResults();
-			C1 = res;
-		}
-		
-
-	
-		//binary filter into concrete views  of true and false elements according to MyOddLambda. Then apply  true and false lambdas and finally  merge values together
-		{	runName = "DR3 filterTransform";
-			VecXX res;
-			{
-				TimerGuard timer(time);
-				{
-					for (long l = 0; l < TEST_LOOP_SZ; l++)
-					{
-						res = filterTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
-					}
-				}
-			}
-			writeResults();
-			C2 = res;
-		}
-
-		//compare resulyts of calcs
-		bool testOK = vectorsEqual(C1, C2, C);
-
-		if (testOK)
-		{
-			std::cout << "Matching results";
-		}
-		else
-		{
-			std::cout << " FAIL results dont match";
-		}
-		std::cout << "\n";
-	}
-
-}
-*/
-
 
 void binarySelectionBetweenMiddleWeightFunction()
 {
@@ -1882,14 +1768,14 @@ void binarySelectionBetweenHeavyWeightFunction()
 			//warm up
 			for (long l = 0; l < WARM_UP_LOOP; l++)
 			{
-				auto res = filterTransform(MyOddLmbda, testVec, trueLambdaS, falseLambdaS);
+				res = filterTransform(MyOddLmbda, testVec, trueLambdaS, falseLambdaS);
 			}
 
 			TimerGuard timer(time);
 			{
 				for (long l = 0; l < TEST_LOOP_SZ; l++)
 				{
-					auto res = filterTransform(MyOddLmbda, testVec, trueLambdaS, falseLambdaS);
+					res = filterTransform(MyOddLmbda, testVec, trueLambdaS, falseLambdaS);
 				}
 			}
 		}
@@ -1919,7 +1805,7 @@ void binarySelectionBetweenHeavyWeightFunction()
 		auto  valStl = run_res_for_loop.m_calc_results[elem.first];
 		auto  valDr3_filterTransform = dr3_raw_resultsFilter.m_calc_results[elem.first];
 
-		bool VecsOK = vectorsEqualD(valDr3_select, valStl, valDr3_filterTransform, valDr3_filterTransform);
+		bool VecsOK = vectorsEqualD(valDr3_select, valStl,valDr3_filterTransform, valDr3_filterTransform,3e-11);
 		auto strMatch = VecsOK ? "calcs match" : "cal difference";
 
 		std::cout << "for loop binarySelectionBetweenSimpleAndHeavyFunctions , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 filter_transform heavy weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << ", +- ," << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection heavy Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << " , +- , " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";

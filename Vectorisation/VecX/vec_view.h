@@ -418,7 +418,7 @@ public:
 		for (; i < SZ - (int)(width * unrollFactor); i += width * unrollFactor)
 		{
 			idx0.load(pIdx + i);
-			r0.load_a(m_pData);
+			r0.load_a(m_pData+i);
 			scatter(idx0, limit, r0, pRes);
 
 			idx1.load(pIdx + i + width);
@@ -471,7 +471,7 @@ public:
 		for (; i < SZ - (int)(width * unrollFactor); i += width * unrollFactor)
 		{
 			idx0.load(pIdx +i);
-			r0.load_a(m_pData);
+			r0.load_a(m_pData + i);
 			scatter(idx0, limit, r0, pRes);
 
 			idx1.load(pIdx + i + width);
@@ -512,7 +512,7 @@ Vec<INS_VEC>  merge(std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >& src)
 template< typename INS_VEC>
 VecView<INS_VEC>  mergeToViews(VecView<INS_VEC>& lhs, VecView<INS_VEC>& rhs)
 {
-	VecView<INS_VEC> ret(size_t(lhs.srxSize()));/// fillSize())); //srxSize()?
+	VecView<INS_VEC> ret(size_t(lhs.srxSize()));
 	lhs.write(ret);
 	rhs.write(ret);
 	return ret;
