@@ -763,7 +763,7 @@ void optionPricerDriver()
 
     double optionPrice1 = blackScholes_1(S, K, t, r, sigma);
 
-  
+   
 
     std::vector stl(100, 0.0);
     std::iota(begin(stl), end(stl), 0.0);
@@ -777,6 +777,8 @@ void optionPricerDriver()
     auto optionPrice3 = blackScholes_3(S, K, t, r, sigXX);
 
     std::vector<double> prices = optionPrice3;
+
+    ignore(optionPrice1);
 
 
 }

@@ -395,6 +395,8 @@ void testMemCpy2()
 		for (long i = 0; i < loop; ++i)
 		{
 			volatile auto xx =std::memcpy(cp, vp, bufferSz);
+
+			ignore(xx);
 		}
 			
 		auto endTime = std::chrono::high_resolution_clock::now();
