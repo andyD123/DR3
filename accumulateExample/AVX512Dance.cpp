@@ -15,14 +15,7 @@
 
 #include "../Vectorisation/VecX/dr3.h"
 
-//pick an instruction set for intrinsics by selecting a name space
 
-//using namespace DRC::VecDb;
-//using namespace DRC::VecD2D;  //sse2   double
-//using namespace DRC::VecD4D;	//avx2   double
-//using namespace DRC::VecF8F;	// avx2  float
-//using namespace DRC::VecD8D;  //avx512 double
-//using namespace DRC::VecF16F; //avx512   float
 const double billion = 1000000000.0;
 
 
@@ -34,6 +27,7 @@ struct RunResults
 {
 	Mapped_Performance_Results m_raw_results;
 	Calc_Values  m_calc_results;
+	double time;
 };
 
 class TimerGuard
@@ -55,12 +49,7 @@ public:
 
 auto getRandomShuffledVectorxxx(int SZ, int instance_number = 0)
 {
-	//using FloatType = double; // typename InstructionTraits<VecXX::INS>::FloatType;
-
-
 	static std::map<int, std::vector<double> > vectors;
-
-
 	int key = 10 * SZ + instance_number;
 	//store vectors with key 10 times size  and add on 0-9 integer for instance of different random vector
 
@@ -109,16 +98,6 @@ auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int 
 
 void doAVXMax512Dance()
 {
-	/*
-	const long TEST_LOOP_SZ = 1000;
-	const int repeatRuns = 20;
-	const int vectorStepSize = 200;
-	const int maxVectorSize = 20000;
-	const int minVectorSize = 400;
-	*/
-
-	//const double sleepTime = 10000.;/// 10 seconds
-
 
 	const int maxVectorSize = 4400;
 	const int minVectorSize = 3800;
@@ -126,140 +105,89 @@ void doAVXMax512Dance()
 	const int vectorStepSize = 8;
 	const int repeatRuns = 10;
 
-	//auto zero = 0.0;// InstructionTraits<VecXX::INS>::nullValue;
-
 	getRandomShuffledVectorxxx(-1); // reset  random input vectors
 
-								 /*
-	auto accumulate_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
-	{
-		double time = 0.;
-		volatile  double res = 0.;
-		//auto v = getRandomShuffledVector(SZ); // std stl vector double or float
-		auto v1 = getRandomShuffledVector(VEC_SZ, 0);
 
-		{
-			//warm up
-			for (long l = 0; l < 100; l++)
-			{
-				res = *std::max_element(v1.begin(), v1.end());
-			}
-
-			TimerGuard timer(time);
-			{
-				for (long l = 0; l < TEST_LOOP_SZ; l++)
-				{
-					res = *std::max_element(v1.begin(), v1.end());
-				}
-			}
-		}
-		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
-	};
-
-*/
-
-	auto DR3_accumulate = [&](int SZ, long TEST_LOOP_SZ)
+	//avx512 lambda
+	auto DR3_avx512 = [&](int SZ, long TEST_LOOP_SZ)
 	{
 		using namespace DRC::VecD8D;
 
 		double time = 0.;
 		volatile  double res = 0.;
 
-		// generic lambda for max either calling a max instruction or doing a selection with iff
-	//	 auto mxDbl = [](auto lhs, auto rhs) { return max(lhs, rhs); };
-		auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); }; //using iff fastest 
+		auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); };  
 
-		auto v1 = getRandomShuffledVectorxxx(SZ, 0); // std stl vector double or float 
+		auto v1 = getRandomShuffledVectorxxx(SZ, 0);
 		VecXX vec(v1);
+		
+
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
 		{
-
-			//warm up
-			for (long l = 0; l < 100; l++)
-			{
-				res = reduce(vec, mxDbl);
-			}
-
-			TimerGuard timer(time);
-			{
-				for (long l = 0; l < TEST_LOOP_SZ; l++)
-				{
-					res = reduce(vec, mxDbl);
-				}
-			}
+			res = reduce(vec, mxDbl);
 		}
-		//return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
-
+			
+		return std::make_pair(res,  time);
 	};
 
 
-	auto DR3_accumulate2 = [&](int SZ, long TEST_LOOP_SZ)
+	auto DR3_avx2 = [&](int SZ, long TEST_LOOP_SZ)
 	{
 		using namespace DRC::VecD4D;
 
 		double time = 0.;
 		volatile  double res = 0.;
 
-		// generic lambda for max either calling a max instruction or doing a selection with iff
-	//	 auto mxDbl = [](auto lhs, auto rhs) { return max(lhs, rhs); };
-		auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); }; //using iff fastest 
+		auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); }; 
 
-		auto v1 = getRandomShuffledVectorxxx(SZ, 0); // std stl vector double or float 
+		auto v1 = getRandomShuffledVectorxxx(SZ, 0); 
 		VecXX vec(v1);
+		
+		
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
 		{
-
-			//warm up
-			for (long l = 0; l < 100; l++)
-			{
-				res = reduce(vec, mxDbl);
-			}
-
-			TimerGuard timer(time);
-			{
-				for (long l = 0; l < TEST_LOOP_SZ; l++)
-				{
-					res = reduce(vec, mxDbl);
-				}
-			}
+			res = reduce(vec, mxDbl);
 		}
-		//return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+		
+		
+		return std::make_pair(res, time);
 
 	};
 
 
+	using namespace std::chrono_literals;
 
 	for (;;)
 	{
 
 		double time = 0.0;
+		
+		//AVX512
+		for (int K = 0; K < 4; K++)
 		{
-			
-			for (int K = 0; K < 4; K++)
+			time = 0.;
+			std::cout << "AVX 512 " << K + 1 << "of 4  " << std::endl;	
 			{
-				time = 0.;
-				std::cout << "AVX 512 " << K + 1 << "of 4" << std::endl;
-				auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate, TEST_LOOP_SZ);
-				std::cout << "AVX 512 " << K + 1 << "of 4" << time << "seconds   now sleep" << std::endl;
-
-				using namespace std::chrono_literals;
-				std::this_thread::sleep_for(15000ms);
-
+				TimerGuard timer(time);
+				auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_avx512, TEST_LOOP_SZ);
 			}
+			std::cout << "AVX 512 " << K + 1 << "of 4   " << time  << " seconds   now sleep" << std::endl;
+			std::this_thread::sleep_for(15000ms);
 		}
-		using namespace std::chrono_literals;
+		
 		std::this_thread::sleep_for(15000ms);
-
-		{	
-			
-			for (int K = 0; K < 4; K++)
-			{
-				time = 0.;
-				std::cout << "AVX 2 " << K + 1 << "of 4" << std::endl;
-				auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate2, TEST_LOOP_SZ);
-				std::cout << "AVX 2 " << K + 1 << "of 4" << time << "seconds   now sleep" << std::endl;
-				using namespace std::chrono_literals;
-				std::this_thread::sleep_for(15000ms);
-
+		
+		//AVX2 
+		for (int K = 0; K < 4; K++)
+		{
+			time = 0.;
+			std::cout << "AVX 2 " << K + 1 << "of 4   " << std::endl;
+			{	TimerGuard timer(time);
+				auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_avx2, TEST_LOOP_SZ);
 			}
+			std::cout << "AVX 2 " << K + 1 << "of 4   " << time << " seconds   now sleep" << std::endl;
+			std::this_thread::sleep_for(15000ms);
+
 		}
 
 	}

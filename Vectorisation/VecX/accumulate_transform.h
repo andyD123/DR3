@@ -562,15 +562,13 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X(con
 		for (; i <= (rhsSZ - step); i += step)
 		{
 			RHS1.load_a(pRhs1 + i);
-			RES = operAcc(RES, operTransform(RHS1) );
-
 			RHS2.load_a(pRhs1 + i + width);
-			RES1 = operAcc(RES1, operTransform(RHS2) );
-
 			RHS3.load_a(pRhs1 + i + width * 2);
-			RES2 = operAcc(RES2, operTransform(RHS3) );
-
 			RHS4.load_a(pRhs1 + i + width * 3);
+
+			RES = operAcc(RES, operTransform(RHS1) );
+			RES1 = operAcc(RES1, operTransform(RHS2) );
+			RES2 = operAcc(RES2, operTransform(RHS3) );
 			RES3 = operAcc(RES3, operTransform(RHS4));
 
 		}

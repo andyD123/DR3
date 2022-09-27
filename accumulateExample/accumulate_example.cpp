@@ -45,9 +45,9 @@ precision of results compare for float types is incorrect.
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-using namespace DRC::VecD4D;	//avx2   double
+//using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-//using namespace DRC::VecD8D;  //avx512 double
+using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
 
 
@@ -106,7 +106,7 @@ bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std
 		return false;
 	}
 
-	for (int i = 0; i < C3.size(); i++)
+	for (size_t i = 0; i < C3.size(); i++)
 	{
 		auto err1 = fabs((C1[i] - C2[i]) / (C2[i] + C1[i]));
 		auto err2 = fabs((C1[i] - C3[i]) / (C1[i] + C3[i]));
@@ -306,9 +306,9 @@ void    khanAccumulation();
 
 void	binarySelectionBetweenConst();
 void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of of operations
-void	testBinarySelection2();
+//void	testBinarySelection2();
 void    binarySelectionBetweenMiddleWeightFunction();
-void    testBinarySelection3();
+//void    testBinarySelection3();
 void	binarySelectionBetweenHeavyWeightFunction();
 void	doCountIf();
 
@@ -323,34 +323,42 @@ void doAVXMax512Dance();
 
 int main()
 {
+	//doAVXMax512Dance();
 
+	//std::cout << "\n \n \n \n doCountIf() \n" << std::endl;
+	//doCountIf();
+
+	//return 0;
+
+	/*
 	//doTransform();
 	//testMemCpy2();
 	//return 0;
 	
 	//doSumSqrs();
 	//doCountIf();
-	//std::cout << "\n \n \n \n binarySelectionBetweenConst() \n" << std::endl;
-	//binarySelectionBetweenConst();
+	std::cout << "\n \n \n \n binarySelectionBetweenConst() \n" << std::endl;
+	binarySelectionBetweenConst();
 
 	//return 0;
-	//std::cout << "\n \n \n \n binarySelectionBetweenLinearFunction() \n" << std::endl;
-	//binarySelectionBetweenLinearFunction();
+	std::cout << "\n \n \n \n binarySelectionBetweenLinearFunction() \n" << std::endl;
+	binarySelectionBetweenLinearFunction();
 
-//	std::cout << "\n \n \n \n binarySelectionBetweenMiddleWeightFunction() \n" << std::endl;
-// 	binarySelectionBetweenMiddleWeightFunction();
+	std::cout << "\n \n \n \n binarySelectionBetweenMiddleWeightFunction() \n" << std::endl;
+ 	binarySelectionBetweenMiddleWeightFunction();
 
-//	return 0;
+	
 
 	std::cout << "\n \n \n \n binarySelectionBetweenHeavyWeightFunction() \n" << std::endl;
 	binarySelectionBetweenHeavyWeightFunction();
 //	return 0;
 //	doSum();
+	
 	return 0;
 
 
 	testMemCpy2();
-
+*/
  //Uncomment  a function to play with
  // 
  //  transform 
@@ -360,8 +368,8 @@ int main()
 	testMemCpy2(); 
 //accumulate 
 // 
-		//std::cout << "\n \n \n \n doSum() \n" << std::endl;
-    	//doSum(); // stl slower with intel  stl slower
+	//	std::cout << "\n \n \n \n doSum() \n" << std::endl;
+    //	doSum(); // stl slower with intel  stl slower
 
 		std::cout << "\n \n \n \n doMax() \n"  << std::endl;
 	    doMax();
@@ -396,7 +404,9 @@ int main()
 	doCountIf();
 
 	
-	// run this and watch power consumption
+	// use namespace DRC::VecD8D  run this and watch power consumption
+	// switches between AVX2 and AVX512  implementations
+	//  AVX512 uses less energy iun this case
 	//doAVXMax512Dance();
 
 	return 0;
@@ -655,10 +665,6 @@ void doTransform()
 		std::cout << "STL transform , size " << elem.first << " , " << stats_stl[elem.first].first << ", +- ," << stats_stl[elem.first].second << "\t \t DR3 transform , size " << elem.first << " , " << stats_DR3[elem.first].first << ", +- ," << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
 	
-	
-
-
-
 }
 
 
@@ -1089,7 +1095,7 @@ void binarySelectionBetweenConst()
 void binarySelectionBetweenLinearFunction()
 {
 
-	const long TEST_LOOP_SZ = 1000;
+	const long TEST_LOOP_SZ = 100;
 	const int repeatRuns = 20;
 	const int vectorStepSize = 200;
 	const int maxVectorSize = 20000;
@@ -1299,9 +1305,8 @@ void binarySelectionBetweenMiddleWeightFunction()
 		double time = 0.;
 		volatile  double res = 0.;
 
-		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto v1 = getRandomShuffledVector(VEC_SZ); 
 		auto C = v1;
-		//use auto on scalars so we can switch between float and double instruction sets too
 		double halfSize = VEC_SZ * 0.5;
 		{
 			//warm up
@@ -1344,67 +1349,19 @@ void binarySelectionBetweenMiddleWeightFunction()
 	};
 
 
-	/*
-	auto stl_transform_with_branch_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
-	{
-		double time = 0.;
-		volatile  double res = 0.;
-
-		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
-		auto C = v1;
-		//use auto on scalars so we can switch between float and double instruction sets too
-
-
-		//auto MyOddLmbda = [&](auto x) { return  (x - two * floor(x * half)) >= one;  };
-
-		double halfSize = VEC_SZ * 0.5;
-		auto MyOddLmbda = [&](auto x) { return x > halfSize; };
-
-		{
-			//warm up
-			for (long l = 0; l < 100; l++)
-			{
-				std::transform(v1.begin(), v1.end(), C.begin(),
-					[&](auto x)
-					{
-						return MyOddLmbda(x) ? trueLambda(x) : falseLambda(x);
-					}
-				);
-			}
-
-			TimerGuard timer(time);
-			{
-				for (long l = 0; l < TEST_LOOP_SZ; l++)
-				{
-					std::transform(v1.begin(), v1.end(), C.begin(),
-						[&](auto x)
-						{
-							return MyOddLmbda(x) ? trueLambda(x) : falseLambda(x);
-						}
-					);
-				}
-			}
-		}
-		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
-	};
-
-	*/
-
 
 	auto DR3_select = [&](int SZ, long TEST_LOOP_SZ)
 	{
 		double time = 0.;
-		//volatile  double res = 0.;
-		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		auto v1 = getRandomShuffledVector(SZ);
 		VecXX testVec(v1);
 		VecXX res;
 
 		{
 			double halfSize = SZ * 0.5;
 			auto MyOddLmbda = [&](auto x) { return x > halfSize; };
-
-			//warm up
-			for (long l = 0; l < 100; l++)
+			
+			for (long l = 0; l < 100; l++)//warm up
 			{
 
 				 res = selectTransform(MyOddLmbda, testVec, trueLambda, falseLambda);
@@ -1430,11 +1387,9 @@ void binarySelectionBetweenMiddleWeightFunction()
 	auto DR3_filterTransdform = [&](int SZ, long TEST_LOOP_SZ)
 	{
 		double time = 0.;
-		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		auto v1 = getRandomShuffledVector(SZ); 
 		VecXX testVec(v1);
 		VecXX res;
-
-
 		{
 			double halfSize = SZ * 0.5;
 			auto MyOddLmbda = [&](auto x) { return x > halfSize; };
@@ -1466,10 +1421,6 @@ void binarySelectionBetweenMiddleWeightFunction()
 	auto run_res_for_loop = runFunctionOverDifferentSizeVec(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, for_loop_run, TEST_LOOP_SZ);
 	auto stats_for_loop = performanceStats(run_res_for_loop.m_raw_results);
 
-	//auto run_transformBranchy = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform_with_branch_run, TEST_LOOP_SZ);
-	//auto stats_transform_branchy = performanceStats(run_transformBranchy.m_raw_results);
-
-
 
 	auto dr3_raw_results = runFunctionOverDifferentSizeVec(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_select, TEST_LOOP_SZ);
 	auto stats_DR3 = performanceStats(dr3_raw_results.m_raw_results);
@@ -1484,7 +1435,7 @@ void binarySelectionBetweenMiddleWeightFunction()
 
 		bool VecsOK =vectorsEqualD(valDr3_select, valDr3_filterTransform, valStl, valStl);
 		auto strMatch = VecsOK ? "calcs match" : "cal difference";
-		std::cout << "for loop binarySelectionBetweenSimpleFunctions , size " << elem.first << " , " << elem.second.first << ", +-  " << elem.second.second << "\t \t DR3 filter_transform medium weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << ", +- ," << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection medium Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << ", +- ," << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
+		std::cout << "for loop binarySelectionBetweenMiddleWeightFunctions , size " << elem.first << " , " << elem.second.first << ", +-  " << elem.second.second << "\t \t DR3 filter_transform medium weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << ", +- ," << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection medium Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << ", +- ," << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
 
 
@@ -1493,6 +1444,7 @@ void binarySelectionBetweenMiddleWeightFunction()
 
 
 //heavy weight one odd lambda  functions
+/*
 void testBinarySelection3()
 {
 	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
@@ -1607,7 +1559,7 @@ void testBinarySelection3()
 	}
 
 }
-
+*/
 
 void binarySelectionBetweenHeavyWeightFunction()
 {
@@ -1677,58 +1629,12 @@ void binarySelectionBetweenHeavyWeightFunction()
 
 
 
-	auto stl_transform_with_branch_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
-	{
-		double time = 0.;
-		volatile  double res = 0.;
-
-		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
-		auto C = v1;
-		//use auto on scalars so we can switch between float and double instruction sets too
-
-		double halfSize = VEC_SZ * 0.5;
-		auto MyOddLmbda = [&](auto x) { return x > halfSize; };
-
-		{
-			//warm up
-			for (long l = 0; l < WARM_UP_LOOP; l++)
-			{
-				std::transform(v1.begin(), v1.end(), C.begin(),
-					[&](auto x)
-					{
-						return MyOddLmbda(x) ? trueLambdaS(x) : falseLambdaS(x);
-					}
-				);
-			}
-
-			TimerGuard timer(time);
-			{
-				for (long l = 0; l < TEST_LOOP_SZ; l++)
-				{
-					std::transform(v1.begin(), v1.end(), C.begin(),
-						[&](auto x)
-						{
-							return MyOddLmbda(x) ? trueLambdaS(x) : falseLambdaS(x);
-						}
-					);
-				}
-			}
-		}
-		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
-	};
-
-
-
-
 	auto DR3_select = [&](int SZ, long TEST_LOOP_SZ)
 	{
 		double time = 0.;
-		//volatile  double res = 0.;
 		VecXX  res;
-		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
+		auto v1 = getRandomShuffledVector(SZ); 
 		VecXX testVec(v1);
-
-
 		{
 			double halfSize = SZ * 0.5;
 			auto MyOddLmbda = [&](auto x) { return x > halfSize; };
@@ -1788,9 +1694,6 @@ void binarySelectionBetweenHeavyWeightFunction()
 	auto run_res_for_loop = runFunctionOverDifferentSizeVec(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, for_loop_run, TEST_LOOP_SZ);
 	auto stats_for_loop = performanceStats(run_res_for_loop.m_raw_results);
 
-	//auto run_transformBranchy = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform_with_branch_run, TEST_LOOP_SZ);
-	//auto stats_transform_branchy = performanceStats(run_transformBranchy.m_raw_results);
-
 	auto dr3_raw_resultsFilter = runFunctionOverDifferentSizeVec(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_filterTransdform, TEST_LOOP_SZ);
 	auto stats_DR3_filter = performanceStats(dr3_raw_resultsFilter.m_raw_results);
 
@@ -1808,7 +1711,7 @@ void binarySelectionBetweenHeavyWeightFunction()
 		bool VecsOK = vectorsEqualD(valDr3_select, valStl,valDr3_filterTransform, valDr3_filterTransform,3e-11);
 		auto strMatch = VecsOK ? "calcs match" : "cal difference";
 
-		std::cout << "for loop binarySelectionBetweenSimpleAndHeavyFunctions , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 filter_transform heavy weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << ", +- ," << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection heavy Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << " , +- , " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
+		std::cout << "for loop binarySelectionBetweenHeavyFunctions , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 filter_transform heavy weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << ", +- ," << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection heavy Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << " , +- , " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
 
 
@@ -1832,12 +1735,9 @@ void doCountIf()
 	{
 		double time = 0.;
 	
-		auto v1 = getRandomShuffledVector(VEC_SZ); // std stl vector double or float 
+		auto v1 = getRandomShuffledVector(VEC_SZ); 
 		auto C = v1;
-		//use auto on scalars so we can switch between float and double instruction sets too
-
 		volatile __int64 resStl = 0;// .0;
-
 
 		{	
 			double halfSize = VEC_SZ * 0.5;
@@ -1903,14 +1803,6 @@ void doCountIf()
 
 	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_count_if, TEST_LOOP_SZ);
 	auto stats_DR3 = performanceStats(dr3_raw_results.m_raw_results);
-
-
-	//auto run_transformBranchy = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_transform_with_branch_run, TEST_LOOP_SZ);
-	//auto stats_transform_branchy = performanceStats(run_transformBranchy.m_raw_results);
-
-	//auto dr3_raw_resultsFilter = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_filterTransdform, TEST_LOOP_SZ);
-	//auto stats_DR3_filter = performanceStats(dr3_raw_resultsFilter.m_raw_results);
-
 
 
 
