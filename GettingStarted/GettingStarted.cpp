@@ -371,8 +371,8 @@ void transformReduce()
     auto oddSqr = XorZero | SQR;
     auto evenSqr = XorZeroEven | SQR;
 
-    auto sumOddSquares = transformReduce(oddSqr, Add, test);// 0.0);
-    auto sumEvenSquares = transformReduce(evenSqr, Add, test);// 0.0);
+    auto sumOddSquares = transformReduce(oddSqr, Add, test);
+    auto sumEvenSquares = transformReduce(evenSqr, Add, test);
 
     auto sumboth = sumEvenSquares + sumOddSquares;
 

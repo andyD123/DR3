@@ -69,7 +69,7 @@ void transformM(LAMBDA& lambda, Vec<INS_VEC>& inputVec)
 template<typename LAMBDA, typename INS_VEC>
 void  transform1(LAMBDA& lambda, Vec<INS_VEC>& inputVec)// , int UR)
 {
-	ApplyUnitaryOperation1(inputVec, lambda);
+	inputVec =ApplyUnitaryOperation1(inputVec, lambda);
 }
 
 

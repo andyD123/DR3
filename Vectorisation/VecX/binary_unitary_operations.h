@@ -621,6 +621,11 @@ template< typename INS_VEC, typename OP>
 void ApplyUnitaryOperation(const Vec<INS_VEC>& rhs, Vec<INS_VEC>& res ,OP& oper)
 {
 	assert(res.size() == rhs.size());
+	if (res.size() != rhs.size() || res.isScalar() != rhs.isScalar())
+	{
+		throw std::exception("ApplyUnitaryOperation ::size mismatch");
+	}
+
 	check_vector(res);
 	check_vector(rhs);
 	if (rhs.isScalar())
