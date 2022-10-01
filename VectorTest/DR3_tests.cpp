@@ -379,3 +379,391 @@ TEST(TestDR3, test_transform1M)
 	testTransform_M1(63);
 	testTransform_M1(64);
 }
+
+
+
+void testBinaryTransform(int SZ)
+{
+
+
+	auto sumIt = [](auto x,auto y) { return y+ x; };
+	VecXX scalar = 3.33;
+	// = scalar;
+	const VecXX scalarPlusTwo = 2.0 + scalar;
+	const VecXX resScalar  =transform(sumIt, scalar, scalarPlusTwo);
+	auto val = resScalar.getScalarValue();
+	EXPECT_TRUE(resScalar.isScalar());
+	EXPECT_DOUBLE_EQ(8.66, val);
+
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	const VecXX testVec(input);
+	const VecXX testVecPlusTwo = testVec + 2.0;
+
+	for (int j = 0; j < SZ; ++j)
+	{
+		auto onlyJAddlambda = [=](auto x,auto y) { return select((j > (x - 0.0001) && (j < x + 0.00001)), x+y, -(x+y)); };
+		//auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((j > (y - 0.0001) && (j < y + 0.00001)), x + y, -(x + y)); };
+
+		VecXX res  = transform(onlyJAddlambda, testVec, testVecPlusTwo);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], 2.0*( k +1.0) );
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], -2.0 * (k + 1.0));
+			}
+		}
+	
+	}
+
+
+	for (int j = 0; j < SZ; ++j)
+	{
+		auto onlyJAddlambda = [=](auto x, auto y) { return select((j > (x - 0.0001) && (j < x + 0.00001)), x + y, -(x + y)); };
+		auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((j > (y- 0.0001) && (j < y + 0.00001)), x + y, -(x + y)); };
+
+		const VecXX scalarPlusTwo = 2.0;
+
+		VecXX res = transform(onlyJAddlambda, testVec, scalarPlusTwo);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], k + 2.0);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], -1.0 * (k + 2.0));
+			}
+		}
+
+
+		VecXX res2 =  transform(onlyJAddlambda_dash, scalarPlusTwo, testVec);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res2[k], k + 2.0);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res2[k], -1.0 * (k + 2.0));
+			}
+		}
+
+		
+		VecXX res3 = transform(onlyJAddlambda_dash, 2.0, testVec);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res3[k], k + 2.0);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res3[k], -1.0 * (k + 2.0));
+			}
+		}
+		
+
+		VecXX res4 = transform(onlyJAddlambda, testVec,2.0);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res4[k], k + 2.0);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res4[k], -1.0 * (k + 2.0));
+			}
+		}
+
+
+	}
+
+
+}
+
+
+
+
+TEST(TestDR3, test_transform_binary)
+{
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testBinaryTransform(SZ);
+	}
+}
+
+
+
+
+void testBinaryTransform1(int SZ)
+{
+
+
+	auto sumIt = [](auto x, auto y) { return y + x; };
+	VecXX scalar = 3.33;
+	// = scalar;
+	const VecXX scalarPlusTwo = 2.0 + scalar;
+	const VecXX resScalar = transform1(sumIt, scalar, scalarPlusTwo);
+	auto val = resScalar.getScalarValue();
+	EXPECT_TRUE(resScalar.isScalar());
+	EXPECT_DOUBLE_EQ(8.66, val);
+
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	const VecXX testVec(input);
+	const VecXX testVecPlusTwo = testVec + 2.0;
+
+	for (int j = 0; j < SZ; ++j)
+	{
+		auto onlyJAddlambda = [=](auto x, auto y) { return select((j > (x - 0.0001) && (j < x + 0.00001)), x + y, -(x + y)); };
+		//auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((j > (y - 0.0001) && (j < y + 0.00001)), x + y, -(x + y)); };
+
+		VecXX res = transform1(onlyJAddlambda, testVec, testVecPlusTwo);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], 2.0 * (k + 1.0));
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], -2.0 * (k + 1.0));
+			}
+		}
+
+	}
+
+
+	for (int j = 0; j < SZ; ++j)
+	{
+		auto onlyJAddlambda = [=](auto x, auto y) { return select((j > (x - 0.0001) && (j < x + 0.00001)), x + y, -(x + y)); };
+		auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((j > (y - 0.0001) && (j < y + 0.00001)), x + y, -(x + y)); };
+
+		const VecXX scalarPlusTwo = 2.0;
+
+		VecXX res = transform1(onlyJAddlambda, testVec, scalarPlusTwo);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], k + 2.0);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], -1.0 * (k + 2.0));
+			}
+		}
+
+
+		VecXX res2 = transform1(onlyJAddlambda_dash, scalarPlusTwo, testVec);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res2[k], k + 2.0);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res2[k], -1.0 * (k + 2.0));
+			}
+		}
+
+
+		VecXX res3 = transform1(onlyJAddlambda_dash, 2.0, testVec);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res3[k], k + 2.0);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res3[k], -1.0 * (k + 2.0));
+			}
+		}
+
+
+		VecXX res4 = transform1(onlyJAddlambda, testVec, 2.0);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res4[k], k + 2.0);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res4[k], -1.0 * (k + 2.0));
+			}
+		}
+
+
+	}
+
+
+}
+
+
+
+
+TEST(TestDR3, test_transform_binary1)
+{
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testBinaryTransform1(SZ);
+	}
+}
+
+
+
+
+
+void testBinaryTransformM(int SZ)
+{
+
+
+	auto sumIt = [](auto x, auto y) { return y + x; };
+	VecXX scalar = 3.33;
+	const VecXX two = 2.0;
+	auto resScalar = scalar;
+	//const VecXX scalarPlusTwo = 2.0 + scalar;
+	transformM(sumIt, resScalar, 2.0);
+	auto val = resScalar.getScalarValue();
+	EXPECT_TRUE(resScalar.isScalar());
+	EXPECT_DOUBLE_EQ(5.33, val);
+
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+
+	for (int j = 0; j < SZ; ++j)
+	{
+		auto onlyJAddlambda = [=](auto x, auto y) { return select((j > (x - 0.0001) && (j < x + 0.00001)), x + y, -(x + y)); };
+		auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((j > (y - 0.0001) && (j < y + 0.00001)), x + y, -(x + y)); };
+
+		VecXX res;
+		VecXX testVec(input);
+		const VecXX testVecPlusTwo = testVec + 2.0;
+
+		transformM(onlyJAddlambda, testVec, testVecPlusTwo);
+		res = testVec;
+
+		//std::vector<double> stl = res;
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], 2.0 + 2. *k );
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], -(2.0 +2. *k));
+			}
+		}
+
+
+		VecXX res1;
+		VecXX testVec1(input);
+		const VecXX testTwo =  2.0;
+
+		transformM(onlyJAddlambda, testVec1, testTwo);
+		res1 = testVec1;
+
+		//std::vector<double> stl = res;
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res1[k], 2.0 +  k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res1[k], -(2.0 + k));
+			}
+		}
+
+
+		VecXX res2;
+		VecXX testVec2(input);
+
+		transformM(onlyJAddlambda, testVec2, 2.0);
+		res2 = testVec2;
+
+		//std::vector<double> stl = res;
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res2[k], 2.0 + k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res2[k], -(2.0 + k));
+			}
+		}
+
+
+	
+		VecXX res3;
+		VecXX testVec3(input);
+
+		transformM(onlyJAddlambda_dash,  2.0, testVec3);
+		res3 = testVec3;
+
+		std::vector<double> stl = res;
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res3[k], 2.0 + k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res3[k], -(2.0 + k));
+			}
+		}
+	}
+}
+
+
+
+
+TEST(TestDR3, test_transform_binaryM)
+{
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testBinaryTransformM(SZ);
+	}
+}
