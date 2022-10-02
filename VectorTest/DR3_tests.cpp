@@ -767,3 +767,210 @@ TEST(TestDR3, test_transform_binaryM)
 		testBinaryTransformM(SZ);
 	}
 }
+
+
+
+
+
+
+
+void testSelect(int SZ)
+{
+
+	int j = 666.;
+
+	auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
+	const VecXX trueValue = 1.;
+	const VecXX falseValue = -1.;
+	const VecXX testValue = 666.;
+	VecXX resScalar = select(equalsJay, testValue, trueValue, falseValue);
+
+	auto val = resScalar.getScalarValue();
+	EXPECT_TRUE(resScalar.isScalar());
+	EXPECT_DOUBLE_EQ(1.0, val);
+
+	const VecXX testValueFalse = 999.;
+	VecXX resScalarFlse = select(equalsJay, testValueFalse, trueValue, falseValue);
+
+	val = resScalarFlse.getScalarValue();
+	EXPECT_TRUE(resScalarFlse.isScalar());
+	EXPECT_DOUBLE_EQ(-1.0, val);
+
+
+	auto SQR = [](auto x) { return x * x; };
+	auto CUBE = [](auto x) { return x * x * x; };
+
+	VecXX resSelScalarLambda = selectTransform(equalsJay, testValue, SQR, CUBE);
+	val = resSelScalarLambda.getScalarValue();
+	EXPECT_TRUE(resSelScalarLambda.isScalar());
+	EXPECT_DOUBLE_EQ(666.*666., val);
+
+
+	VecXX resSelScalarLambdaFlse = selectTransform(equalsJay, falseValue, SQR, CUBE);
+	val = resSelScalarLambdaFlse.getScalarValue();
+	EXPECT_TRUE(resSelScalarLambdaFlse.isScalar());
+	EXPECT_DOUBLE_EQ(-1., val);
+
+
+
+	for (int j = 0; j < SZ; ++j)
+	{
+
+		std::vector<double> input(SZ, 0.0);
+		std::iota(begin(input), end(input), 0.0);
+
+		auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
+
+		const VecXX trueValues(input);
+		const VecXX falseValues = -trueValues;
+		const VecXX testValues(input);
+		
+		VecXX res = select(equalsJay, testValues, trueValues, falseValues);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], - k);
+			}
+		}
+	
+
+		VecXX resInv = select(equalsJay, testValues,  falseValues, trueValues);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(resInv[k], -k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(resInv[k], k);
+			}
+		}
+
+
+		VecXX resScalarChoice = select(equalsJay, testValues, -666.66, 999.99);
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(resScalarChoice[k], -666.66);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(resScalarChoice[k], 999.99);
+			}
+		}
+
+
+		auto SQR = [](auto x) { return x * x; };
+		auto CUBE = [](auto x) { return x * x * x; };
+
+		VecXX resSelLambda = selectTransform(equalsJay, testValues, SQR, CUBE );
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(resSelLambda[k], SQR(k));
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(resSelLambda[k], CUBE(k));
+			}
+		}
+	}
+
+}
+
+
+
+
+TEST(TestDR3, test_select)
+{
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testSelect(SZ);
+	}
+}
+
+
+
+
+
+
+
+
+void test_FilterTransform(int SZ)
+{
+
+	int j = 666.;
+
+	auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
+	const VecXX trueValue = 1.;
+	const VecXX falseValue = -1.;
+	const VecXX testValue = 666.;
+
+	auto SQR = [](auto x) { return x * x; };
+	auto CUBE = [](auto x) { return x * x * x; };
+
+	VecXX resSelScalarLambda = filterTransform(equalsJay, testValue, SQR, CUBE);
+	auto val = resSelScalarLambda.getScalarValue();
+	EXPECT_TRUE(resSelScalarLambda.isScalar());
+	EXPECT_DOUBLE_EQ(666. * 666., val);
+
+
+	VecXX resSelScalarLambdaFlse = filterTransform(equalsJay, falseValue, SQR, CUBE);
+	val = resSelScalarLambdaFlse.getScalarValue();
+	EXPECT_TRUE(resSelScalarLambdaFlse.isScalar());
+	EXPECT_DOUBLE_EQ(-1., val);
+
+
+
+	for (int j = 0; j < SZ; ++j)
+	{
+
+		std::vector<double> input(SZ, 0.0);
+		std::iota(begin(input), end(input), 0.0);
+
+		auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
+
+		const VecXX testValues(input);
+
+		auto SQR = [](auto x) { return x * x; };
+		auto CUBE = [](auto x) { return x * x * x; };
+
+		VecXX resSelLambda = filterTransform(equalsJay, testValues, SQR, CUBE);
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(resSelLambda[k], SQR(k));
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(resSelLambda[k], CUBE(k));
+			}
+		}
+	}
+
+}
+
+
+
+
+TEST(TestDR3, test_filterTransform)
+{
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		test_FilterTransform(SZ);
+	}
+}
+

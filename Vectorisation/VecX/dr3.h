@@ -238,6 +238,14 @@ VecView<INS_VEC> filterTransform(BOOL_TEST_OP& testFunc, const VecView<INS_VEC>&
 
 
 ///////////////////////////  transforming  views values //////////////////////
+//why is this needed ??
+// so that we get a view not a vector created
+template<typename LAMBDA, typename INS_VEC>
+VecView<INS_VEC> transformV(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
+{
+	return ApplyUnitaryOperation(lambda, inputVec);
+}
+
 
 /*
 Modify  transforms the values held in the VecView object with the lambda. Has unrolled bersion for VC++
@@ -270,12 +278,6 @@ VecView<INS_VEC> transform(LAMBDA& lambda, const VecView<INS_VEC>& inputVec)
 
 }
 
-//why is this needed ??
-template<typename LAMBDA, typename INS_VEC>
-VecView<INS_VEC> transformV(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
-{
-	return ApplyUnitaryOperation(lambda, inputVec);
-}
 
 
 /*

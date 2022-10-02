@@ -25,11 +25,21 @@
 template< typename INS_VEC, typename  BOOL_TEST_OP, typename  TRUE_LAMBDA, typename  FALSE_LAMBDA>
 Vec<INS_VEC> splitConditionalCalculate(const Vec<INS_VEC>& val, BOOL_TEST_OP& testFunc, TRUE_LAMBDA& trueLambda, FALSE_LAMBDA& falseLambda)
 {
+
 	check_vector(val);
-	auto  vwTupple = ApplyBinaryFilter(testFunc, val);
-	ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
-	ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
-	return  merge(vwTupple);
+
+	if (!val.isScalar())
+	{
+		
+		auto  vwTupple = ApplyBinaryFilter(testFunc, val);
+		ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
+		ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
+		return  merge(vwTupple);
+	}
+	else
+	{
+		return selectTransform(testFunc, val, trueLambda, falseLambda);
+	}
 }
 
 
@@ -45,10 +55,18 @@ template< typename INS_VEC, typename  BOOL_TEST_OP, typename  TRUE_LAMBDA, typen
 Vec<INS_VEC> splitConditionalCalculate_X(const Vec<INS_VEC>& val, BOOL_TEST_OP& testFunc, TRUE_LAMBDA& trueLambda, FALSE_LAMBDA& falseLambda)
 {
 	check_vector(val);
-	auto  vwTupple = ApplyBinaryFilter(testFunc, val);
-	ApplyTransformUR_X( std::get<0>(vwTupple), trueLambda);
-	ApplyTransformUR_X( std::get<1>(vwTupple), falseLambda);
-	return  merge(vwTupple);
+
+	if (!val.isScalar())
+	{
+		auto  vwTupple = ApplyBinaryFilter(testFunc, val);
+		ApplyTransformUR_X(std::get<0>(vwTupple), trueLambda);
+		ApplyTransformUR_X(std::get<1>(vwTupple), falseLambda);
+		return  merge(vwTupple);
+	}
+	else
+	{
+		return selectTransform(testFunc, val, trueLambda, falseLambda);
+	}
 }
 
 
@@ -99,6 +117,17 @@ Vec<INS_VEC> ApplySelectionOperationC(BOOL_OPER& COND, const Vec<INS_VEC>& testD
 {
 	check_pair(lhs, rhs);
 	check_pair(lhs, testData);
+
+
+	if (isScalar(testData) &&isScalar(rhs) && isScalar(lhs)  )
+	{
+		INS_VEC RHS = testData.getScalarValue();
+		INS_VEC TRU = lhs.getScalarValue();
+		INS_VEC FLS = rhs.getScalarValue();
+		INS_VEC RES = select(COND(RHS), TRU, FLS);
+		return Vec<INS_VEC>(RES[0]);
+	}
+
 
 	Vec<INS_VEC> result(rhs.size());
 	auto pRes = result.start();
