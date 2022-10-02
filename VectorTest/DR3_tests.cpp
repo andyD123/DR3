@@ -777,7 +777,7 @@ TEST(TestDR3, test_transform_binaryM)
 void testSelect(int SZ)
 {
 
-	int j = 666.;
+	int j = 666;
 
 	auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
 	const VecXX trueValue = 1.;
@@ -974,3 +974,150 @@ TEST(TestDR3, test_filterTransform)
 	}
 }
 
+
+
+
+
+void testTransform_V(int SZ)
+{
+	
+	auto doubleIt = [](auto x) { return 2.0 * x; };
+	VecXX scalar = 3.33;
+	VecVW res = transformV(doubleIt, scalar);
+	auto val = res.getScalarValue();
+	EXPECT_TRUE(res.isScalar());
+	EXPECT_DOUBLE_EQ(6.66, val);
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+		auto onlyJlambda = [=](auto x) { return select((j > (x - VecXX::INS(0.0001) ) && (j < x + VecXX::INS(0.00001) )), x, -x); };
+		VecVW res = transformV(onlyJlambda, testVec);
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], -1.0 * k);
+			}
+		}
+	}
+
+
+}
+
+
+
+
+TEST(TestDR3, testTransform_view)
+{
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testTransform_V(SZ);
+	}
+
+
+	testTransform_V(34);
+	testTransform_V(63);
+	testTransform_V(64);
+
+}
+
+
+
+
+/*
+
+
+TO DO
+
+void test_FilterTransform_view(int SZ)
+{
+
+	int j = 666.;
+
+	auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
+	const VecXX trueValue = 1.;
+	const VecXX falseValue = -1.;
+	const VecXX testValue = 666.;
+
+	auto SQR = [](auto x) { return x * x; };
+	auto CUBE = [](auto x) { return x * x * x; };
+
+	auto alwaysTrue = [](auto x) { return true; };
+
+	auto copy = [](auto x) {return x; };
+
+	VecVW vw = transformV(copy, testValue);
+
+
+	// TO DO
+
+	////view on scalar types 
+
+	//VecXX resSelScalarLambda = filterTransform(equalsJay, testValue, SQR, CUBE);
+	//auto val = resSelScalarLambda.getScalarValue();
+	//EXPECT_TRUE(resSelScalarLambda.isScalar());
+	//EXPECT_DOUBLE_EQ(666. * 666., val);
+
+
+	//VecXX resSelScalarLambdaFlse = filterTransform(equalsJay, falseValue, SQR, CUBE);
+	//val = resSelScalarLambdaFlse.getScalarValue();
+	//EXPECT_TRUE(resSelScalarLambdaFlse.isScalar());
+	//EXPECT_DOUBLE_EQ(-1., val);
+
+
+	for (int j = 0; j < SZ; ++j)
+	{
+
+		std::vector<double> input(SZ, 0.0);
+		std::iota(begin(input), end(input), 0.0);
+
+		auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
+
+		const VecXX testValues(input);
+		VecVW vwTestValues = transformV(copy, testValues);
+
+		auto SQR = [](auto x) { return x * x; };
+		auto CUBE = [](auto x) { return x * x * x; };
+
+		auto resSelLambda = filterTransform(equalsJay, vwTestValues, SQR, CUBE);
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(resSelLambda[k], SQR(k));
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(resSelLambda[k], CUBE(k));
+			}
+		}
+	}
+
+}
+
+
+
+
+TEST(TestDR3, test_filterTransform_view)
+{
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		test_FilterTransform_view(SZ);
+	}
+}
+
+*/

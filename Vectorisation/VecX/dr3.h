@@ -3,6 +3,7 @@
 #include "binary_unitary_operations.h"
 #include "conditional_select_eval.h"
 #include "filter_pipe_and_join.h"
+#include "filter_select.h"
 
 #include "operations.h"
 #include "apply_operation.h"
@@ -243,7 +244,7 @@ VecView<INS_VEC> filterTransform(BOOL_TEST_OP& testFunc, const VecView<INS_VEC>&
 template<typename LAMBDA, typename INS_VEC>
 VecView<INS_VEC> transformV(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
 {
-	return ApplyUnitaryOperation(lambda, inputVec);
+	return ApplyUnitaryOperationV(lambda, inputVec);
 }
 
 

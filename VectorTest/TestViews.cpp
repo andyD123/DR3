@@ -70,7 +70,7 @@ TEST(TestViews, ApplyUnitaryOperationXXX) {
 
 		auto mySquareItLambda = [](const auto& x) {return x * x;  };
 
-		auto testSquare = ApplyUnitaryOperation( mySquareItLambda, test);
+		auto testSquare = ApplyUnitaryOperationV( mySquareItLambda, test);
 
 		for (int i = 0; i < test.size(); ++i)
 		{
@@ -890,21 +890,21 @@ TEST(TestViews, JoiningLambdas)
 
 	auto copyOfData = data;
 
-	auto res_sqr = ApplyUnitaryOperation(SQR, data);
+	auto res_sqr = ApplyUnitaryOperationV(SQR, data);
 	using namespace JOIN;
 	auto quartic = SQR | SQR;
 
-	auto res_quartic = ApplyUnitaryOperation(quartic, data);
+	auto res_quartic = ApplyUnitaryOperationV(quartic, data);
 
 
 	auto roundTrip = SQR_ROOT | SQR;
 
 
-	auto res_quartic_two = ApplyUnitaryOperation(roundTrip, data);
+	auto res_quartic_two = ApplyUnitaryOperationV(roundTrip, data);
 
 	auto doIt = addFive | timesTwo;  //2x+5  
 
-	auto res_qtest = ApplyUnitaryOperation(doIt, data);
+	auto res_qtest = ApplyUnitaryOperationV(doIt, data);
 
 	for (int i = 0; i < data.size(); ++i)
 	{

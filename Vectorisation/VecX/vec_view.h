@@ -38,6 +38,7 @@ public:
 
 	VecView() : m_scalarVal(0.),m_isScalar(true)
 	{
+		
 		m_last = 0;
 		m_fillSize = 0;
 		m_size = 0;
@@ -57,6 +58,13 @@ public:
 		m_last = 0;
 	}
 
+
+	explicit VecView(typename InstructionTraits<INS_VEC>::FloatType scalarVal) 
+		: m_scalarVal(scalarVal),m_isScalar(true),m_implSize(0),m_implSizeIdx(0),
+		m_pData(nullptr),m_pIndex(nullptr), m_size(0), m_fillSize(0), m_last(0)
+	{
+	
+	}
 
 
 	VecView& operator =(typename InstructionTraits<INS_VEC>::FloatType scalarVal)
@@ -512,7 +520,7 @@ Vec<INS_VEC>  merge(std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >& src)
 template< typename INS_VEC>
 VecView<INS_VEC>  mergeToViews(VecView<INS_VEC>& lhs, VecView<INS_VEC>& rhs)
 {
-	VecView<INS_VEC> ret(size_t(lhs.srxSize()));
+	VecView<INS_VEC> ret(static_cast<size_t>(lhs.srxSize()));
 	lhs.write(ret);
 	rhs.write(ret);
 	return ret;

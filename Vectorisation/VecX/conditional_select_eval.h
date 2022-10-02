@@ -82,7 +82,7 @@ template< typename INS_VEC, typename  BOOL_TEST_OP, typename  TRUE_LAMBDA, typen
 VecView<INS_VEC> splitConditionalCalculate(const VecView<INS_VEC>& val, BOOL_TEST_OP& testFunc, TRUE_LAMBDA& trueLambda, FALSE_LAMBDA& falseLambda)
 {
 	check_vector(val);
-	auto  vwTupple = ApplyFilterBinaryZ(testFunc, val);
+	auto  vwTupple = ApplyFilterBinary(testFunc, val);
 	ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
 	ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
 	return  merge(vwTupple);

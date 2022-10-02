@@ -925,7 +925,7 @@ VecView<INS_VEC> ApplyTransformUR_X(const VecView<INS_VEC>& rhs1, OP& oper)
 
 	int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	VecView<INS_VEC> ret(sz);
+	VecView<INS_VEC> ret(static_cast<size_t>(sz));
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;

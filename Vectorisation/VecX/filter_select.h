@@ -45,7 +45,7 @@ VecView<INS_VEC>  ApplyFilterBImpl(const VecBool<INS_VEC>& condition, const VEC_
 {
 	check_pair_different_type(condition,lhs);
 
-	VecView<INS_VEC> vw(static_cast<int>(lhs.size()));
+	VecView<INS_VEC> vw(static_cast<size_t>(lhs.size()));
 	auto pRes = vw.start();
 	auto pIdx = vw.idxStart();
 	auto pLhs = lhs.start();
@@ -98,7 +98,7 @@ VecView<INS_VEC>  ApplyFilterImpl(OP& condition, const VEC_TYPE<INS_VEC>& lhs)
 {
 	check_vector(lhs);
 
-	VecView<INS_VEC> vw(lhs.size());
+	VecView<INS_VEC> vw(static_cast<size_t>(lhs.size())); 
 	auto pRes = vw.start();
 	auto pIdx = vw.idxStart();
 	auto pLhs = lhs.start();
@@ -164,7 +164,7 @@ VecView<INS_VEC>  CountedFilterImpl(OP& condition, const VEC_TYPE<INS_VEC>& lhs,
 
 	check_vector(lhs); //should just test that not scalar mode vecx
 
-	VecView<INS_VEC> vw(lhs.size());
+	VecView<INS_VEC> vw(static_cast<size_t>(lhs.size())); 
 	auto pRes = vw.start();
 	auto pIdx = vw.idxStart();
 	auto pLhs = lhs.start();
@@ -226,8 +226,8 @@ the second for remaining elements
 template< template <class> typename VEC_TYPE  ,typename INS_VEC , typename OP  >
 std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >  BinaryFilterImpl(OP& condition, const  VEC_TYPE< INS_VEC>& lhs)  
 {
-	VecView<INS_VEC> vwTrue(lhs.size());
-	VecView<INS_VEC> vwFalse(lhs.size());
+	VecView<INS_VEC> vwTrue(static_cast<size_t>(lhs.size()));
+	VecView<INS_VEC> vwFalse(static_cast<size_t>(lhs.size() ));
 	auto pRes = vwTrue.start();
 	unsigned int* pIdx = vwTrue.idxStart();
 	auto pResFalse = vwFalse.start();
@@ -325,18 +325,35 @@ VecView<INS_VEC> ApplyUnitaryOperation(OP& oper, const VecView<INS_VEC>& rhs)
 /*
 applies the operation to the input view to generate a new view which it returns
 */
+
 template< typename INS_VEC, typename OP>
-VecView<INS_VEC> ApplyUnitaryOperation(OP& oper, const  Vec<INS_VEC>& rhs)
+VecView<INS_VEC> ApplyUnitaryOperationV(OP& oper, const  Vec<INS_VEC>& rhs)
 {
-	check_vector_for_filter(rhs);
-	VecView<INS_VEC> result(rhs.size());
-	auto pRes = result.start();
-	auto pRhs = rhs.start();
-	int sz = rhs.paddedSize();
-	Unroll_Unitary<INS_VEC, OP>::apply_4( sz,  pRhs,  pRes,  oper);
-	result.set_last(static_cast<int>( rhs.size()) );
-	return result;
+
+	if (!rhs.isScalar())
+	{
+		check_vector_for_filter(rhs);
+		VecView<INS_VEC> result(static_cast<size_t>(rhs.size()));
+		auto pRes = result.start();
+		auto pRhs = rhs.start();
+		int sz = rhs.paddedSize();
+		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
+		result.set_last(static_cast<int>(rhs.size()));
+		return result;
+	
+	}
+	else
+	{
+		auto val = rhs.getScalarValue();
+		auto scalarRes = oper(INS_VEC(val))[0];
+		VecView<INS_VEC> result;
+		result =scalarRes;
+		return result;
+	}
+	
 }
+
+
 
 /*
 applies the binary OP to the two view inputs and returns a view object
@@ -348,7 +365,7 @@ VecView<INS_VEC> ApplyBinaryOperation(OP& oper, const  VecView<INS_VEC>& lhs, co
 	check_view_pair(lhs, rhs);
 	
 	// to do checdks assert  or throw and overloads with scalar and Vec
-	VecView<INS_VEC> result(rhs);// .size());
+	VecView<INS_VEC> result(rhs);// 
 	auto pRes = result.start();
 	auto pRhs = rhs.start();
 	auto pLhs = lhs.start();
@@ -377,7 +394,7 @@ template< typename INS_VEC, typename OP, typename FILT>
 std::pair< Vec<INS_VEC>, VecView<INS_VEC> > ApplyOperationAndFilter(OP& oper, FILT& filt, const Vec<INS_VEC>& in)
 {
 	check_vector_for_filter(in);
-	VecView<INS_VEC> vw(in.size());
+	VecView<INS_VEC> vw(static_cast<size_t>(in.size()));
 	auto pVw = vw.start();
 	auto pIdx = vw.idxStart();
 	Vec<INS_VEC> result(in.size());
@@ -399,16 +416,16 @@ template< typename INS_VEC, typename OP, typename FILT1, typename FILT2>
 std::tuple< Vec<INS_VEC>, VecView<INS_VEC>, VecView<INS_VEC> > ApplyOperationAndFilter(OP& oper, FILT1& filt1, FILT2& filt2, const Vec<INS_VEC>& in)
 {
 	check_vector_for_filter(in);
-	VecView<INS_VEC> vw(in.size());
+	VecView<INS_VEC> vw(static_cast<size_t>(in.size())); 
 	auto pVw = vw.start();
 	auto pIdx = vw.idxStart();
 
-	VecView<INS_VEC> vw2(in.size());
+	VecView<INS_VEC> vw2(static_cast<size_t>(in.size()));
 	auto pVw2 = vw2.start();
 	auto pIdx2 = vw2.idxStart();
 
 
-	Vec<INS_VEC> result(in.size());
+	Vec<INS_VEC> result(static_cast<int>(in.size()));
 	auto pRes = result.start();
 	auto pRhs = in.start();
 	//int sz = static_cast<int>(in.size());

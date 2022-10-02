@@ -301,7 +301,7 @@ void testUnitaryOpVec(int SZ)
 	auto SQR = [](auto x) { return  x * x; };
 
 
-	auto resultView = ApplyUnitaryOperation(SQR, data);
+	auto resultView = ApplyUnitaryOperationV(SQR, data);
 
 	EXPECT_EQ(resultView.size(), SZ);
 
@@ -590,9 +590,9 @@ TEST(TestFilterSelect, ApplyComplexJoinedLambdasToVec)
 
 	auto SQR = [](auto x) { return (x * x); };
 
-	auto AddTen = [](auto x) { return (x + VecXX::scalar(10.0)); };
+	auto AddTen = [](auto x) { return (x + VecXX::INS(10.0)); };
 
-	auto negateIfOverTen = [](auto x) { return iff(x > VecXX::scalar(10), -x, x); };
+	auto negateIfOverTen = [](auto x) { return iff(x > VecXX::INS(10.), -x, x); };
 
 
 	using namespace JOIN;
@@ -601,7 +601,7 @@ TEST(TestFilterSelect, ApplyComplexJoinedLambdasToVec)
 	//the result of the operation into the input of the next lambda
 	auto complex2 = AddTen | negateIfOverTen | SQR;
 
-	auto res = ApplyUnitaryOperation(complex2, data);
+	auto res = ApplyUnitaryOperationV(complex2, data);
 
 
 
