@@ -13,6 +13,7 @@
 #include "instruction_traits.h"
 #include "alloc_policy.h"
 #include "apply_operation.h"
+#include "vec_view.h"
 
 #include <algorithm>
 #include <iterator>
@@ -24,6 +25,8 @@ template <typename INS_VEC>
 class Vec
 {
 public:
+
+	friend class VecView< INS_VEC>;
 
 	typedef INS_VEC INS;
 	using SCALA_TYPE = typename InstructionTraits<INS_VEC>::FloatType;

@@ -81,11 +81,24 @@ Vec<INS_VEC> splitConditionalCalculate_X(const Vec<INS_VEC>& val, BOOL_TEST_OP& 
 template< typename INS_VEC, typename  BOOL_TEST_OP, typename  TRUE_LAMBDA, typename  FALSE_LAMBDA>
 VecView<INS_VEC> splitConditionalCalculate(const VecView<INS_VEC>& val, BOOL_TEST_OP& testFunc, TRUE_LAMBDA& trueLambda, FALSE_LAMBDA& falseLambda)
 {
+
 	check_vector(val);
-	auto  vwTupple = ApplyFilterBinary(testFunc, val);
-	ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
-	ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
-	return  merge(vwTupple);
+
+	//if (!val.isScalar())
+	//{
+		auto vwTupple = ApplyBinaryFilter(testFunc, val);
+		ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
+		ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
+		return  merge(vwTupple);
+
+/*
+	}
+	else
+	{
+		
+		//return selectTransform(testFunc, val, trueLambda, falseLambda);
+	}
+	*/
 }
 
 /*

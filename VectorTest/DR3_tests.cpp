@@ -651,7 +651,7 @@ void testBinaryTransformM(int SZ)
 	VecXX scalar = 3.33;
 	const VecXX two = 2.0;
 	auto resScalar = scalar;
-	//const VecXX scalarPlusTwo = 2.0 + scalar;
+	
 	transformM(sumIt, resScalar, 2.0);
 	auto val = resScalar.getScalarValue();
 	EXPECT_TRUE(resScalar.isScalar());
@@ -675,8 +675,7 @@ void testBinaryTransformM(int SZ)
 		transformM(onlyJAddlambda, testVec, testVecPlusTwo);
 		res = testVec;
 
-		//std::vector<double> stl = res;
-
+		
 		for (int k = 0; k < SZ; k++)
 		{
 			if (k == j)
@@ -697,8 +696,6 @@ void testBinaryTransformM(int SZ)
 		transformM(onlyJAddlambda, testVec1, testTwo);
 		res1 = testVec1;
 
-		//std::vector<double> stl = res;
-
 		for (int k = 0; k < SZ; k++)
 		{
 			if (k == j)
@@ -718,7 +715,6 @@ void testBinaryTransformM(int SZ)
 		transformM(onlyJAddlambda, testVec2, 2.0);
 		res2 = testVec2;
 
-		//std::vector<double> stl = res;
 
 		for (int k = 0; k < SZ; k++)
 		{
@@ -910,7 +906,7 @@ TEST(TestDR3, test_select)
 void test_FilterTransform(int SZ)
 {
 
-	int j = 666.;
+	int j = 666;
 
 	auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
 	const VecXX trueValue = 1.;
@@ -1037,15 +1033,10 @@ TEST(TestDR3, testTransform_view)
 
 
 
-/*
-
-
-TO DO
-
-void test_FilterTransform_view(int SZ)
+void test_FilterTransform_View(int SZ)
 {
-
-	int j = 666.;
+	auto copyVecToView = [](auto x) {return x; };
+	int j = 666;
 
 	auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
 	const VecXX trueValue = 1.;
@@ -1054,28 +1045,19 @@ void test_FilterTransform_view(int SZ)
 
 	auto SQR = [](auto x) { return x * x; };
 	auto CUBE = [](auto x) { return x * x * x; };
+	VecVW testVwScal = transformV(copyVecToView, testValue);
 
-	auto alwaysTrue = [](auto x) { return true; };
-
-	auto copy = [](auto x) {return x; };
-
-	VecVW vw = transformV(copy, testValue);
-
-
-	// TO DO
-
-	////view on scalar types 
-
-	//VecXX resSelScalarLambda = filterTransform(equalsJay, testValue, SQR, CUBE);
-	//auto val = resSelScalarLambda.getScalarValue();
-	//EXPECT_TRUE(resSelScalarLambda.isScalar());
-	//EXPECT_DOUBLE_EQ(666. * 666., val);
-
-
-	//VecXX resSelScalarLambdaFlse = filterTransform(equalsJay, falseValue, SQR, CUBE);
-	//val = resSelScalarLambdaFlse.getScalarValue();
-	//EXPECT_TRUE(resSelScalarLambdaFlse.isScalar());
-	//EXPECT_DOUBLE_EQ(-1., val);
+	try
+	{
+		VecVW resSelScalarLambda = filterTransform(equalsJay, testVwScal, SQR, CUBE);
+		
+	}
+	catch (std::exception& ex)
+	{
+		bool throws = true;
+		EXPECT_TRUE(throws);
+	}
+	
 
 
 	for (int j = 0; j < SZ; ++j)
@@ -1083,16 +1065,20 @@ void test_FilterTransform_view(int SZ)
 
 		std::vector<double> input(SZ, 0.0);
 		std::iota(begin(input), end(input), 0.0);
-
 		auto equalsJay = [&](auto x) { return (j > (x - 0.0001)) && (j < (x + 0.00001)); };
 
 		const VecXX testValues(input);
-		VecVW vwTestValues = transformV(copy, testValues);
+		VecVW testVw = transformV(copyVecToView, testValues);
+
+		std::vector<double> stdVec = testVw;
+		auto idz = testVw.getIndex();
 
 		auto SQR = [](auto x) { return x * x; };
 		auto CUBE = [](auto x) { return x * x * x; };
 
-		auto resSelLambda = filterTransform(equalsJay, vwTestValues, SQR, CUBE);
+		VecVW resSelLambda = filterTransform(equalsJay, testVw, SQR, CUBE);
+		stdVec = resSelLambda;
+
 		for (int k = 0; k < SZ; k++)
 		{
 			if (k == j)
@@ -1111,13 +1097,164 @@ void test_FilterTransform_view(int SZ)
 
 
 
-TEST(TestDR3, test_filterTransform_view)
+TEST(TestDR3, test_filterTransformView)
 {
+
+	test_FilterTransform_View(16);
+	test_FilterTransform_View(34);
+	test_FilterTransform_View(63);
+	test_FilterTransform_View(64);
 
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
-		test_FilterTransform_view(SZ);
+		test_FilterTransform_View(SZ);
 	}
+
 }
 
-*/
+
+
+
+
+
+
+
+void test_Transform_V(int SZ)
+{
+	/*
+	auto doubleIt = [](auto x) { return 2.0 * x; };
+	VecXX scalar = 3.33;
+	VecVW res = transformV(doubleIt, scalar);
+	auto val = res.getScalarValue();
+	EXPECT_TRUE(res.isScalar());
+	EXPECT_DOUBLE_EQ(6.66, val);
+
+	*/
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+	auto copyLambda = [&](auto x) {return x; };
+	VecVW inputView = transformV(copyLambda, testVec);
+
+	//std::vector<double> inputVw = inputView;
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+		auto onlyJlambda = [=](auto x) { return select((j > (x - VecXX::INS(0.0001)) && (j < x + VecXX::INS(0.00001))), x, -x); };
+
+
+		auto res  =transform(onlyJlambda, inputView);
+		
+
+		//std::vector<double> restVw = res;
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], -1.0 * k);
+			}
+		}
+	}
+
+
+}
+
+
+
+
+TEST(TestDR3, testTransformA_view)
+{
+
+	test_Transform_V(3);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		test_Transform_V(SZ);
+	}
+
+	test_Transform_V(34);
+	test_Transform_V(63);
+	test_Transform_V(64);
+}
+
+
+
+
+
+void testTransformM_V(int SZ)
+{
+	/*
+	auto doubleIt = [](auto x) { return 2.0 * x; };
+	VecXX scalar = 3.33;
+	VecVW res = transformV(doubleIt, scalar);
+	auto val = res.getScalarValue();
+	EXPECT_TRUE(res.isScalar());
+	EXPECT_DOUBLE_EQ(6.66, val);
+
+	*/
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+	auto copyLambda = [&](auto x) {return x; };
+	VecVW inputView = transformV(copyLambda, testVec);
+
+	std::vector<double> inputVw = inputView;
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+		auto onlyJlambda = [=](auto x) { return select((j > (x - VecXX::INS(0.0001)) && (j < x + VecXX::INS(0.00001))), x, -x); };
+		
+
+	   transformM(onlyJlambda, inputView);
+	   auto res = inputView;
+
+	   std::vector<double> restVw = res;
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], -1.0 * k);
+			}
+		}
+	}
+
+
+}
+
+
+//TO DO
+
+TEST(TestDR3, testTransformM_view)
+{
+
+	//testTransformM_V(3);
+
+	/*
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testTransformM_V(SZ);
+	}
+
+
+	testTransformM_V(34);
+	testTransformM_V(63);
+	testTransformM_V(64);
+	*/
+
+}
+

@@ -792,7 +792,7 @@ Vec<INS_VEC>  ApplyTransformUR_X(const Vec<INS_VEC>& rhs1, OP& oper)
 
 	int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	Vec<INS_VEC> ret(sz);
+	Vec<INS_VEC> ret(sz);// ret(rhs1); //???
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -843,6 +843,7 @@ Vec<INS_VEC>  ApplyTransformUR_X(const Vec<INS_VEC>& rhs1, OP& oper)
 	}
 
 	//to do odd end bit
+	//no odd bit
 	return ret;
 }
 
@@ -852,6 +853,16 @@ Vec<INS_VEC>  ApplyTransformUR_X(const Vec<INS_VEC>& rhs1, OP& oper)
 template< typename INS_VEC, typename OP >
 void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 {
+
+
+	
+
+	//Vec<INS_VEC> rehsTemp(rhs1);
+	//Vec<INS_VEC>  res = ApplyTransformUR_X(rehsTemp, oper);
+	//rhs1 = std::move(res);
+
+
+	
 	check_vector(rhs1); //calls overload with a view
 	//views are not scalar
 
@@ -881,6 +892,7 @@ void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 	int impSZ = rhs1.fillSize();
 	//int rhsSZ = sz - step;
 	int rhsSZ = impSZ - step;
+
 	for (; i < rhsSZ; i += step)
 	{
 		RHS1.load_a(pRhs1 + i);
@@ -909,6 +921,7 @@ void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 
  //views are padded and filled to width of register 
  // so no end bits
+ 
 	
 }
 
@@ -946,8 +959,8 @@ VecView<INS_VEC> ApplyTransformUR_X(const VecView<INS_VEC>& rhs1, OP& oper)
 	int i = 0;
 
 	//int rhsSZ = sz - step;
-	//int impSZ = rhs1.paddedSize();
-	int impSZ = rhs1.fillSize();
+	int impSZ = rhs1.paddedSize();
+	//int impSZ = rhs1.fillSize();
 	//int rhsSZ = sz - step;
 	int rhsSZ = impSZ - step;
 

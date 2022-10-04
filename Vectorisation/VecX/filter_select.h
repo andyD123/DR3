@@ -228,6 +228,7 @@ std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >  BinaryFilterImpl(OP& condition,
 {
 	VecView<INS_VEC> vwTrue(static_cast<size_t>(lhs.size()));
 	VecView<INS_VEC> vwFalse(static_cast<size_t>(lhs.size() ));
+
 	auto pRes = vwTrue.start();
 	unsigned int* pIdx = vwTrue.idxStart();
 	auto pResFalse = vwFalse.start();
@@ -248,7 +249,7 @@ std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >  BinaryFilterImpl(OP& condition,
 
 		for (int j = 0; j < WDTH && ((i + j) < sz); j++)
 		{
-			int posnOfIdx = getIndex(lhs, i, j);// (i + j);
+			int posnOfIdx = getIndex(lhs, i, j);
 			auto val = pLhs[i + j];
 
 			if (COND[j])
@@ -333,7 +334,7 @@ VecView<INS_VEC> ApplyUnitaryOperationV(OP& oper, const  Vec<INS_VEC>& rhs)
 	if (!rhs.isScalar())
 	{
 		check_vector_for_filter(rhs);
-		VecView<INS_VEC> result(static_cast<size_t>(rhs.size()));
+		VecView<INS_VEC> result(rhs);
 		auto pRes = result.start();
 		auto pRhs = rhs.start();
 		int sz = rhs.paddedSize();

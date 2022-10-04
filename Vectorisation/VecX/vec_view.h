@@ -217,8 +217,8 @@ public:
 
 	VecView( const Vec< INS_VEC>& rhs)
 	{
-		m_last = rhs.m_fillSize;
-		m_fillSize = rhs.m_fillSize;
+		m_last = rhs.m_size;
+		m_fillSize = rhs.m_size;
 		m_isScalar = rhs.m_isScalar;
 		m_scalarVal = rhs.m_scalarVal;
 		m_size = 0;
@@ -232,7 +232,7 @@ public:
 			m_size = rhs.m_size;
 			m_implSize = m_size;
 			alloc(m_implSize, m_pData);
-			std::copy(rhs.m_pData, rhs.m_pData + m_implSize, m_pData);
+			std::copy(rhs.start(), rhs.start() + m_implSize, m_pData);
 			
 			m_implSizeIdx = m_size;
 			alloc(m_implSizeIdx, m_pIndex);
@@ -366,6 +366,15 @@ public:
 		return true;
 	}
 
+	std::vector<int> getIndex() const
+	{
+		std::vector<int> ret;
+		for (int i = 0; i < m_size; ++i)
+		{
+			ret.push_back(m_pIndex[i]);	
+		}
+		return ret;
+	}
 
 	void writeView(Vec<INS_VEC>& vec) const
 	{
@@ -508,12 +517,37 @@ public:
 template< typename INS_VEC>
 Vec<INS_VEC>  merge(std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >& src)
 {
+
+	if (
+		std::get<0>(src).isScalar()
+		|| std::get<1>(src).isScalar()
+		)
+	{
+		throw std::exception("cant merge scalar views");
+	}
+
 	Vec<INS_VEC> ret(std::get<0>(src).srcSize());
+
+	std::vector<double> stdVec = ret;
 	const VecView<INS_VEC>& trueData = std::get<0>(src);
+	auto idx = trueData.getIndex();
+
+	stdVec = trueData;
+
 	const VecView<INS_VEC>& falseData = std::get<1>(src);
 
+	stdVec = falseData;
+	idx = falseData.getIndex();
+
 	falseData.write(ret);
+
+	stdVec = ret;
+
+
 	trueData.write(ret);
+
+
+	stdVec = ret;
 	return ret;
 }
 
