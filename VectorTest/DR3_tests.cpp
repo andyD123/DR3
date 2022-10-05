@@ -1052,7 +1052,7 @@ void test_FilterTransform_View(int SZ)
 		VecVW resSelScalarLambda = filterTransform(equalsJay, testVwScal, SQR, CUBE);
 		
 	}
-	catch (std::exception& ex)
+	catch (const std::exception& ex)
 	{
 		bool throws = true;
 		EXPECT_TRUE(throws);
@@ -1241,8 +1241,6 @@ void testTransformM_V(int SZ)
 }
 
 
-//TO DO
-
 TEST(TestDR3, testTransformM_view)
 {
 
@@ -1259,6 +1257,390 @@ TEST(TestDR3, testTransformM_view)
 	testTransformM_V(63);
 	testTransformM_V(64);
 	
+
+}
+
+
+
+
+
+
+
+//transform and modify a view 
+void testTransformWrite_Vw(int SZ)
+{
+	/*	
+	auto doubleIt = [](auto x) { return 2.0 * x; };
+	VecXX scalar = 3.33;
+	VecXX copyScalar = scalar;
+	VecVW doubled = transformV(doubleIt, scalar);
+	
+	transformWrite(doubleIt, doubled, copyScalar);
+	auto val = copyScalar.getScalarValue();
+	EXPECT_TRUE(copyScalar.isScalar());
+	EXPECT_DOUBLE_EQ(6.66 * 2.0, val);
+*/
+
+	
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+
+	auto copyLambda = [&](auto x) {return x; };
+	VecVW inputView = transformV(copyLambda, testVec);
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+
+		auto onlyJlambda = [=](auto x) { return j == x; }; 
+		auto SQR = [](auto x) {return x * x; };
+		auto fltrVwOnlyJ = filter(onlyJlambda, inputView);
+		auto copyInputVec = testVec;
+		transformWrite(SQR, fltrVwOnlyJ, copyInputVec);
+		auto res = copyInputVec;
+
+		for (int k = 0; k < SZ; k++)
+		{
+			if (k == j)
+			{
+				EXPECT_DOUBLE_EQ(res[k], k*k);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(res[k], k);
+			}
+		}
+	}
+}
+
+
+
+
+TEST(TestDR3, testTransformWrite_view)
+{
+
+	testTransformWrite_Vw(3);
+	testTransformWrite_Vw(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testTransformWrite_Vw(SZ);
+	}
+
+	testTransformWrite_Vw(34);
+	testTransformWrite_Vw(63);
+	testTransformWrite_Vw(64);
+	testTransformWrite_Vw(65);
+
+
+}
+
+
+
+// TO DO filters
+
+// excluding filter by vec of booles 
+//
+
+
+
+void testFilterVw(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+
+	auto copyLambda = [&](auto x) {return x; };
+	VecVW inputView = transformV(copyLambda, testVec);
+
+	auto allowAll = [](auto x) {return x==x; };
+
+
+	auto resAll = filter(allowAll, inputView);
+	
+	
+	for (int i =0; i < resAll.size();++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll[i], inputView[i]);
+	}
+	
+	auto allowNone = [](auto x) {return x != x; };
+	
+	auto resNone = filter(allowNone, inputView);
+
+	EXPECT_EQ(0, resNone.size());
+
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+
+		auto onlyJlambda = [=](auto x) { return j == x; };
+		auto res = filter(onlyJlambda, inputView);
+
+		EXPECT_DOUBLE_EQ(res[0], j);
+
+	}
+}
+
+
+
+
+TEST(TestDR3, testFilter_view)
+{
+
+	testFilterVw(3);
+	testFilterVw(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testFilterVw(SZ);
+	}
+
+	testFilterVw(34);
+	testFilterVw(63);
+	testFilterVw(64);
+	testFilterVw(65);
+
+}
+
+
+
+void testFilterVecXX(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+
+	auto copyLambda = [&](auto x) {return x; };
+	//VecVW inputView = transformV(copyLambda, testVec);
+
+	auto allowAll = [](auto x) {return x == x; };
+
+
+	auto resAll = filter(allowAll, testVec);
+
+
+	for (int i = 0; i < resAll.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll[i], testVec[i]);
+	}
+
+	auto allowNone = [](auto x) {return x != x; };
+
+	auto resNone = filter(allowNone, testVec);
+
+	EXPECT_EQ(0, resNone.size());
+
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+
+		auto onlyJlambda = [=](auto x) { return j == x; };
+		auto res = filter(onlyJlambda, testVec);
+
+		EXPECT_DOUBLE_EQ(res[0], j);
+
+	}
+}
+
+
+
+
+TEST(TestDR3, testFilter_vec)
+{
+
+	testFilterVecXX(3);
+	testFilterVecXX(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testFilterVecXX(SZ);
+	}
+
+	testFilterVecXX(34);
+	testFilterVecXX(63);
+	testFilterVecXX(64);
+	testFilterVecXX(65);
+
+}
+
+
+
+
+
+void testCountedFilterVw(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+
+	auto copyLambda = [&](auto x) {return x; };
+	VecVW inputView = transformV(copyLambda, testVec);
+
+	auto allowAll = [](auto x) {return x == x; };
+
+
+	auto resAll = countedFilter(allowAll, inputView,SZ+100);
+	auto resAll1 = countedFilter(allowAll, inputView, SZ );
+	auto resAll2 = countedFilter(allowAll, inputView, SZ-1);
+
+
+	for (int i = 0; i < resAll.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll[i], inputView[i]);
+	}
+
+	for (int i = 0; i < resAll1.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll1[i], inputView[i]);
+	}
+
+
+	for (int i = 0; i < resAll2.size()-1; ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll2[i], inputView[i]);
+	}
+
+
+
+	auto allowNone = [](auto x) {return x != x; };
+
+	auto resNone = countedFilter(allowNone, inputView,SZ);
+
+	EXPECT_EQ(0, resNone.size());
+
+
+
+	for (int j = 0; j < SZ; ++j)
+	{
+
+		auto res = countedFilter(allowAll, inputView,j);
+		EXPECT_EQ(res.size(), j);
+
+		for (int i = 0; i < res.size(); ++i)
+		{
+			EXPECT_DOUBLE_EQ(res[i], i);
+		}
+
+	}
+}
+
+TEST(TestDR3, testCountedFilter_view)
+{
+
+	testCountedFilterVw(3);
+	testCountedFilterVw(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testCountedFilterVw(SZ);
+	}
+
+	testCountedFilterVw(34);
+	testCountedFilterVw(63);
+	testCountedFilterVw(64);
+	testCountedFilterVw(65);
+
+}
+
+
+
+
+
+void testCountedFilterVecXX(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+
+	//auto copyLambda = [&](auto x) {return x; };
+	//VecVW inputView = transformV(copyLambda, testVec);
+
+	auto allowAll = [](auto x) {return x == x; };
+
+
+	auto resAll = countedFilter(allowAll, testVec, SZ + 100);
+	auto resAll1 = countedFilter(allowAll, testVec, SZ);
+	auto resAll2 = countedFilter(allowAll, testVec, SZ - 1);
+
+
+	for (int i = 0; i < resAll.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll[i], testVec[i]);
+	}
+
+	for (int i = 0; i < resAll1.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll1[i], testVec[i]);
+	}
+
+
+	for (int i = 0; i < resAll2.size() - 1; ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll2[i], testVec[i]);
+	}
+
+
+
+	auto allowNone = [](auto x) {return x != x; };
+
+	auto resNone = countedFilter(allowNone, testVec, SZ);
+
+	EXPECT_EQ(0, resNone.size());
+
+
+
+	for (int j = 0; j < SZ; ++j)
+	{
+
+		auto res = countedFilter(allowAll, testVec, j);
+		EXPECT_EQ(res.size(), j);
+
+		for (int i = 0; i < res.size(); ++i)
+		{
+			EXPECT_DOUBLE_EQ(res[i], i);
+		}
+
+	}
+}
+
+TEST(TestDR3, testCountedFilter_vec)
+{
+
+	testCountedFilterVecXX(3);
+	testCountedFilterVecXX(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testCountedFilterVecXX(SZ);
+	}
+
+	testCountedFilterVecXX(34);
+	testCountedFilterVecXX(63);
+	testCountedFilterVecXX(64);
+	testCountedFilterVecXX(65);
 
 }
 
