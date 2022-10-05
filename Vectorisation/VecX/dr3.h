@@ -255,8 +255,7 @@ performance regression
 template<typename LAMBDA, typename INS_VEC>
 void transformM(LAMBDA& lambda, VecView<INS_VEC>& inputVec)
 {
-	//ApplyUnitaryOperation(lambda, inputVec);
-	//return;
+
 #ifdef _MSC_VER
 	ApplyTransformUR_X(inputVec, lambda);
 #else

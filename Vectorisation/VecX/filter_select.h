@@ -448,12 +448,19 @@ applies the OP to the view in and  scatter,  writes the results to the correspon
 template< typename INS_VEC, typename OP>
 void ApplyUnitaryOperationWrite(OP& oper, const VecView<INS_VEC>& rhs, Vec<INS_VEC>& res)
 {
-	check_vector(rhs); //checks the view
-	auto pRhs = rhs.start();
-	int sz = rhs.last(); //because we are writing not necessarily full register
-	auto pIdx = rhs.idxStart();
-	auto pWrite = res.start();
-	Unroll_Unitary<INS_VEC, OP>::apply_4_andWrite(sz, pRhs, pRhs, oper, pWrite, &pIdx[0]);
+	if (!rhs.isScalar() && !res.isScalar())
+	{
+		check_vector(rhs); //checks the view
+		auto pRhs = rhs.start();
+		int sz = rhs.last(); //because we are writing not necessarily full register
+		auto pIdx = rhs.idxStart();
+		auto pWrite = res.start();
+		Unroll_Unitary<INS_VEC, OP>::apply_4_andWrite(sz, pRhs, pRhs, oper, pWrite, &pIdx[0]);
+	}
+	else
+	{
+		throw std::exception("ApplyUnitaryOperationWrite not suppported for scalars ");
+	}
 
 }
 
