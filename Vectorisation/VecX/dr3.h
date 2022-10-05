@@ -53,7 +53,7 @@ void  transform(LAMBDA& lambda, const Vec<INS_VEC>& inputVec,  Vec<INS_VEC>& out
 
 //not unrolled x1
 template<typename LAMBDA, typename INS_VEC>
-Vec<INS_VEC>  transform1(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)// , int UR)
+Vec<INS_VEC>  transform1(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
 {
 	return ApplyUnitaryOperation1(inputVec, lambda);
 }
