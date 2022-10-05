@@ -1644,3 +1644,195 @@ TEST(TestDR3, testCountedFilter_vec)
 
 }
 
+
+
+//binary filter to do ??
+
+
+void testBimaryFilterVecXX(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+
+	//auto copyLambda = [&](auto x) {return x; };
+	//VecVW inputView = transformV(copyLambda, testVec);
+
+	auto allowAll = [](auto x) {return x == x; };
+
+
+
+	auto  tpl = binaryFilter(allowAll, testVec);
+	
+	auto trueVw = std::get<0>(tpl);
+	auto falseVw = std::get<1>(tpl);
+
+	for (int i = 0; i < trueVw.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(trueVw[i], testVec[i]);
+	}
+
+	EXPECT_EQ(falseVw.size(), 0);
+	EXPECT_EQ(trueVw.size(), SZ);
+
+	auto allowNone = [](auto x) {return x != x; };
+	auto  tplNone = binaryFilter(allowNone, testVec);
+
+	trueVw = std::get<0>(tplNone);
+	falseVw = std::get<1>(tplNone);
+
+
+	for (int i = 0; i < falseVw.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(falseVw[i], testVec[i]);
+	}
+
+	EXPECT_EQ(trueVw.size(), 0);
+	EXPECT_EQ(falseVw.size(), SZ);
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+		auto allowj = [&](auto x) {return x == j; };
+		auto res = binaryFilter(allowj, testVec);
+	
+		auto trueVw = std::get<0>(res);
+		auto falseVw = std::get<1>(res);
+		EXPECT_EQ(trueVw.size(), 1);
+
+		for (int i = 0; i < testVec.size()-1; ++i)
+		{
+			if (i < j)
+			{
+				EXPECT_DOUBLE_EQ(falseVw[i], i);
+			}
+			else if (i > j)
+			{
+				EXPECT_DOUBLE_EQ(falseVw[i], i + 1.); 
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(trueVw[0], i);
+			}
+		}
+	}
+}
+
+TEST(TestDR3, testBinaryFilter_vec)
+{
+
+	testBimaryFilterVecXX(3);
+	testBimaryFilterVecXX(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testBimaryFilterVecXX(SZ);
+	}
+
+	testBimaryFilterVecXX(34);
+	testBimaryFilterVecXX(63);
+	testBimaryFilterVecXX(64);
+	testBimaryFilterVecXX(65);
+
+}
+
+
+
+
+
+
+void testBimaryFilterVecView(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+
+	auto copyLambda = [&](auto x) {return x; };
+	VecVW inputView = transformV(copyLambda, testVec);
+
+	auto allowAll = [](auto x) {return x == x; };
+
+
+
+	auto  tpl = binaryFilter(allowAll, inputView);
+
+	auto trueVw = std::get<0>(tpl);
+	auto falseVw = std::get<1>(tpl);
+
+	for (int i = 0; i < trueVw.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(trueVw[i], testVec[i]);
+	}
+
+	EXPECT_EQ(falseVw.size(), 0);
+	EXPECT_EQ(trueVw.size(), SZ);
+
+	auto allowNone = [](auto x) {return x != x; };
+	auto  tplNone = binaryFilter(allowNone, inputView);
+
+	trueVw = std::get<0>(tplNone);
+	falseVw = std::get<1>(tplNone);
+
+
+	for (int i = 0; i < falseVw.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(falseVw[i], testVec[i]);
+	}
+
+	EXPECT_EQ(trueVw.size(), 0);
+	EXPECT_EQ(falseVw.size(), SZ);
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+		auto allowj = [&](auto x) {return x == j; };
+		auto res = binaryFilter(allowj, inputView);
+
+		auto trueVw = std::get<0>(res);
+		auto falseVw = std::get<1>(res);
+		EXPECT_EQ(trueVw.size(), 1);
+
+		for (int i = 0; i < testVec.size() - 1; ++i)
+		{
+			if (i < j)
+			{
+				EXPECT_DOUBLE_EQ(falseVw[i], i);
+			}
+			else if (i > j)
+			{
+				EXPECT_DOUBLE_EQ(falseVw[i], i + 1.);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(trueVw[0], i);
+			}
+		}
+	}
+}
+
+TEST(TestDR3, testBinaryFilter_Vw)
+{
+
+	testBimaryFilterVecView(3);
+	testBimaryFilterVecView(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testBimaryFilterVecView(SZ);
+	}
+
+	testBimaryFilterVecView(34);
+	testBimaryFilterVecView(63);
+	testBimaryFilterVecView(64);
+	testBimaryFilterVecView(65);
+
+}
+
