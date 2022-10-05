@@ -1121,7 +1121,8 @@ TEST(TestDR3, test_filterTransformView)
 
 void test_Transform_V(int SZ)
 {
-	/*
+
+
 	auto doubleIt = [](auto x) { return 2.0 * x; };
 	VecXX scalar = 3.33;
 	VecVW res = transformV(doubleIt, scalar);
@@ -1129,15 +1130,15 @@ void test_Transform_V(int SZ)
 	EXPECT_TRUE(res.isScalar());
 	EXPECT_DOUBLE_EQ(6.66, val);
 
-	*/
+
 	std::vector<double> input(SZ, 0.0);
 	std::iota(begin(input), end(input), 0.0);
 
 	VecXX testVec(input);
 	auto copyLambda = [&](auto x) {return x; };
-	VecVW inputView = transformV(copyLambda, testVec);
+	VecVW inputView = transformV(copyLambda, testVec);	
 
-	//std::vector<double> inputVw = inputView;
+
 
 
 	for (double j = 0; j < SZ; ++j)
@@ -1147,8 +1148,6 @@ void test_Transform_V(int SZ)
 
 		auto res  =transform(onlyJlambda, inputView);
 		
-
-		//std::vector<double> restVw = res;
 
 		for (int k = 0; k < SZ; k++)
 		{
@@ -1188,37 +1187,42 @@ TEST(TestDR3, testTransformA_view)
 
 
 
-
+//transform and modify a view 
 void testTransformM_V(int SZ)
 {
-	/*
+
 	auto doubleIt = [](auto x) { return 2.0 * x; };
 	VecXX scalar = 3.33;
-	VecVW res = transformV(doubleIt, scalar);
-	auto val = res.getScalarValue();
-	EXPECT_TRUE(res.isScalar());
-	EXPECT_DOUBLE_EQ(6.66, val);
+	VecVW doubled = transformV(doubleIt, scalar);
+	transformM(doubleIt,doubled );
+	auto val = doubled.getScalarValue();
+	EXPECT_TRUE(doubled.isScalar());
+	EXPECT_DOUBLE_EQ(6.66*2.0, val);
+	
 
-	*/
 	std::vector<double> input(SZ, 0.0);
 	std::iota(begin(input), end(input), 0.0);
 
 	VecXX testVec(input);
+
 	auto copyLambda = [&](auto x) {return x; };
 	VecVW inputView = transformV(copyLambda, testVec);
-
-	std::vector<double> inputVw = inputView;
 
 
 	for (double j = 0; j < SZ; ++j)
 	{
-		auto onlyJlambda = [=](auto x) { return select((j > (x - VecXX::INS(0.0001)) && (j < x + VecXX::INS(0.00001))), x, -x); };
-		
 
-	   transformM(onlyJlambda, inputView);
-	   auto res = inputView;
+		auto onlyJlambda = [=](auto x) { return select((j == x), x, x* x); };
 
-	   std::vector<double> restVw = res;
+	
+		auto copyMod = inputView;
+
+		transformM(onlyJlambda, copyMod);
+		auto res = copyMod;
+
+		auto index2 = res.getIndex();
+		std::vector<double>  st2 = res;
+
 
 		for (int k = 0; k < SZ; k++)
 		{
@@ -1228,7 +1232,7 @@ void testTransformM_V(int SZ)
 			}
 			else
 			{
-				EXPECT_DOUBLE_EQ(res[k], -1.0 * k);
+				EXPECT_DOUBLE_EQ(res[k], k* k);
 			}
 		}
 	}
@@ -1242,19 +1246,19 @@ void testTransformM_V(int SZ)
 TEST(TestDR3, testTransformM_view)
 {
 
-	//testTransformM_V(3);
+	testTransformM_V(3);
+	testTransformM_V(4);
 
-	/*
+
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
 		testTransformM_V(SZ);
 	}
 
-
 	testTransformM_V(34);
 	testTransformM_V(63);
 	testTransformM_V(64);
-	*/
+	
 
 }
 

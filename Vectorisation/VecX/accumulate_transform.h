@@ -854,13 +854,8 @@ template< typename INS_VEC, typename OP >
 void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 {
 
-
-	
-
-	//Vec<INS_VEC> rehsTemp(rhs1);
-	//Vec<INS_VEC>  res = ApplyTransformUR_X(rehsTemp, oper);
-	//rhs1 = std::move(res);
-
+	if (!rhs1.isScalar())
+	{
 
 	
 	check_vector(rhs1); //calls overload with a view
@@ -888,8 +883,8 @@ void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 	int i = 0;
 
 	//int rhsSZ = sz - step;
-	//int impSZ = rhs1.paddedSize();
-	int impSZ = rhs1.fillSize();
+	int impSZ = rhs1.paddedSize();
+	//int impSZ = rhs1.fillSize();
 	//int rhsSZ = sz - step;
 	int rhsSZ = impSZ - step;
 
@@ -921,6 +916,16 @@ void ApplyTransformUR_X( VecView<INS_VEC>& rhs1, OP& oper)
 
  //views are padded and filled to width of register 
  // so no end bits
+
+	}
+	else
+	{
+		auto val = rhs1.getScalarValue();
+		auto scalarRes = oper(INS_VEC(val))[0];
+		VecView<INS_VEC> result;
+		result = scalarRes;
+		rhs1 = result;
+	}
  
 	
 }
@@ -938,7 +943,7 @@ VecView<INS_VEC> ApplyTransformUR_X(const VecView<INS_VEC>& rhs1, OP& oper)
 
 	int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	VecView<INS_VEC> ret(static_cast<size_t>(sz));
+	VecView<INS_VEC> ret(rhs1);// static_cast<size_t>(sz));
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
