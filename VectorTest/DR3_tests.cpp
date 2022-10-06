@@ -2022,3 +2022,64 @@ TEST(TestDR3, testReduce1_VecXX)
 	testReduce1_Vec(65);
 }
 
+
+
+
+void testReduce_Vw(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+	VecXX negTestVec = -1.0 * testVec + SZ / 2;
+
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto MAX = [](auto x, auto y) { return iff((x > y), x, y); };
+	auto MIN = [](auto x, auto y) { return iff((x < y), x, y); };
+
+
+	auto copyLambda = [&](auto x) {return x; };
+	VecVW testVw = transformV(copyLambda, testVec);
+	VecVW negTestVw = transformV(copyLambda, negTestVec);
+
+
+	auto resSUM = reduce(testVw, SUM);
+	auto expectedSum = (SZ - 1) * SZ / 2.0;
+	EXPECT_DOUBLE_EQ(resSUM, expectedSum);
+
+	auto resMAX = reduce(testVw, MAX);
+	EXPECT_DOUBLE_EQ(resMAX, SZ - 1);
+
+	auto resMIN = reduce(negTestVw, MIN);
+	EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
+
+
+
+
+
+
+}
+
+TEST(TestDR3, testReduce_Views)
+{
+
+	testReduce_Vw(3);
+	testReduce_Vw(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testReduce_Vw(SZ);
+	}
+
+	testReduce_Vw(34);
+	testReduce_Vw(63);
+	testReduce_Vw(64);
+	testReduce_Vw(65);
+}
