@@ -21,6 +21,7 @@
 
 
 #include <numeric>
+#include <random>
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
@@ -1056,6 +1057,7 @@ void test_FilterTransform_View(int SZ)
 	{
 		bool throws = true;
 		EXPECT_TRUE(throws);
+		ignore(ex);
 	}
 	
 
@@ -1269,19 +1271,7 @@ TEST(TestDR3, testTransformM_view)
 //transform and modify a view 
 void testTransformWrite_Vw(int SZ)
 {
-	/*	
-	auto doubleIt = [](auto x) { return 2.0 * x; };
-	VecXX scalar = 3.33;
-	VecXX copyScalar = scalar;
-	VecVW doubled = transformV(doubleIt, scalar);
-	
-	transformWrite(doubleIt, doubled, copyScalar);
-	auto val = copyScalar.getScalarValue();
-	EXPECT_TRUE(copyScalar.isScalar());
-	EXPECT_DOUBLE_EQ(6.66 * 2.0, val);
-*/
 
-	
 
 	std::vector<double> input(SZ, 0.0);
 	std::iota(begin(input), end(input), 0.0);
@@ -1658,12 +1648,8 @@ void testBimaryFilterVecXX(int SZ)
 
 	VecXX testVec(input);
 
-	//auto copyLambda = [&](auto x) {return x; };
-	//VecVW inputView = transformV(copyLambda, testVec);
-
+	
 	auto allowAll = [](auto x) {return x == x; };
-
-
 
 	auto  tpl = binaryFilter(allowAll, testVec);
 	
@@ -1745,7 +1731,7 @@ TEST(TestDR3, testBinaryFilter_vec)
 
 
 
-void testBimaryFilterVecView(int SZ)
+void testBinaryFilterVecView(int SZ)
 {
 
 
@@ -1820,19 +1806,219 @@ void testBimaryFilterVecView(int SZ)
 TEST(TestDR3, testBinaryFilter_Vw)
 {
 
-	testBimaryFilterVecView(3);
-	testBimaryFilterVecView(4);
+	testBinaryFilterVecView(3);
+	testBinaryFilterVecView(4);
 
 
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
-		testBimaryFilterVecView(SZ);
+		testBinaryFilterVecView(SZ);
 	}
 
-	testBimaryFilterVecView(34);
-	testBimaryFilterVecView(63);
-	testBimaryFilterVecView(64);
-	testBimaryFilterVecView(65);
+	testBinaryFilterVecView(34);
+	testBinaryFilterVecView(63);
+	testBinaryFilterVecView(64);
+	testBinaryFilterVecView(65);
+}
 
+
+
+
+
+void testSparseTransform_Vec(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	VecXX testVec(input);
+	VecXX resultVec(input);
+	auto resultVec1 = resultVec;
+
+
+	auto allowAll = [](auto x) {return x == x; };
+	auto allowANone = [](auto x) {return x != x; };
+
+	auto SQR = [](auto x) { return x * x; };
+
+
+	sparseTransform(testVec, resultVec, SQR, allowAll);
+
+	for (int i = 0; i < resultVec.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resultVec[i], testVec[i]* testVec[i]);
+	}
+
+
+
+	sparseTransform(testVec, resultVec1, SQR, allowANone);
+
+	for (int i = 0; i < resultVec.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resultVec1[i], testVec[i]);
+	}
+
+
+	//transform only one point
+
+	for (double j = 0; j < SZ; ++j)
+	{
+		auto updateAt_j = [&](auto x) {return x == j; };
+
+		auto updateVec = testVec;
+
+		sparseTransform(testVec, updateVec, SQR, updateAt_j);
+
+
+		for (int i = 0; i < testVec.size() ; ++i)
+		{
+			if (i < j)
+			{
+				EXPECT_DOUBLE_EQ(updateVec[i], testVec[i]);
+			}
+			else if (i > j)
+			{
+				EXPECT_DOUBLE_EQ(updateVec[i], testVec[i]);
+			}
+			else
+			{
+				EXPECT_DOUBLE_EQ(updateVec[i], testVec[i] * testVec[i]);
+			}
+		}
+	}
+
+}
+
+TEST(TestDR3, testSparseTransform_VecXX)
+{
+
+	testSparseTransform_Vec(3);
+	testSparseTransform_Vec(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testSparseTransform_Vec(SZ);
+	}
+
+	testSparseTransform_Vec(34);
+	testSparseTransform_Vec(63);
+	testSparseTransform_Vec(64);
+	testSparseTransform_Vec(65);
+}
+
+
+/////////////////////  test reductions //////////////////
+
+void testReduce_Vec(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+	VecXX negTestVec = -1.0 * testVec + SZ / 2;
+
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto MAX = [](auto x, auto y) { return iff((x > y), x, y); };
+	auto MIN = [](auto x, auto y) { return iff((x < y), x, y); };
+
+
+	auto resSUM =reduce(testVec, SUM);
+	auto expectedSum = (SZ - 1) * SZ / 2.0;
+	EXPECT_DOUBLE_EQ(resSUM, expectedSum);
+
+	auto resMAX = reduce(testVec, MAX);
+	EXPECT_DOUBLE_EQ(resMAX, SZ-1);
+
+	auto resMIN = reduce(negTestVec, MIN);
+	EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ-1) + SZ / 2);
+
+
+
+
+
+
+}
+
+TEST(TestDR3, testReduce_VecXX)
+{
+
+	testReduce_Vec(3);
+	testReduce_Vec(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testReduce_Vec(SZ);
+	}
+
+	testReduce_Vec(34);
+	testReduce_Vec(63);
+	testReduce_Vec(64);
+	testReduce_Vec(65);
+}
+
+
+
+
+void testReduce1_Vec(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+	VecXX negTestVec = -1.0 * testVec + SZ / 2;
+
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto MAX = [](auto x, auto y) { return iff((x > y), x, y); };
+	auto MIN = [](auto x, auto y) { return iff((x < y), x, y); };
+
+
+	auto resSUM = reduce1(testVec, SUM);
+	auto expectedSum = (SZ - 1) * SZ / 2.0;
+	EXPECT_DOUBLE_EQ(resSUM, expectedSum);
+
+	auto resMAX = reduce1(testVec, MAX);
+	EXPECT_DOUBLE_EQ(resMAX, SZ - 1);
+
+	auto resMIN = reduce1(negTestVec, MIN);
+	EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
+
+
+
+
+
+
+}
+
+TEST(TestDR3, testReduce1_VecXX)
+{
+
+	testReduce1_Vec(3);
+	testReduce1_Vec(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testReduce1_Vec(SZ);
+	}
+
+	testReduce1_Vec(34);
+	testReduce1_Vec(63);
+	testReduce1_Vec(64);
+	testReduce1_Vec(65);
 }
 
