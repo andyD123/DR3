@@ -2083,3 +2083,95 @@ TEST(TestDR3, testReduce_Views)
 	testReduce_Vw(64);
 	testReduce_Vw(65);
 }
+
+
+
+
+//////////////////////////////////////////////
+
+/////////////////////  test reductions //////////////////
+
+void testTransformReduceUnitary_Vec(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+	VecXX negTestVec = -1.0 * testVec + SZ / 2;
+
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto MAX = [](auto x, auto y) { return iff((x > y), x, y); };
+	auto MIN = [](auto x, auto y) { return iff((x < y), x, y); };
+
+	auto CPY = [](auto x) { return x; };
+
+	
+
+
+	auto resSUM = transformReduce(testVec, CPY,SUM);
+	auto expectedSum = (SZ - 1) * SZ / 2.0;
+	EXPECT_DOUBLE_EQ(resSUM, expectedSum);
+
+	auto resMAX = transformReduce(testVec, CPY, MAX);
+	EXPECT_DOUBLE_EQ(resMAX, SZ - 1);
+
+	auto resMIN = transformReduce(negTestVec, CPY,MIN);
+	EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
+
+
+	auto NEGATE = [](auto x) { return -x; };
+
+
+
+
+	auto resSUMNeg = transformReduce(testVec, NEGATE, SUM);
+	expectedSum = -(SZ - 1) * SZ / 2.0;
+	EXPECT_DOUBLE_EQ(resSUMNeg, expectedSum);
+
+	auto resMAXNeg = transformReduce(testVec, NEGATE, MAX);
+	EXPECT_DOUBLE_EQ(resMAXNeg, 0);
+
+	auto resMINNeg = transformReduce(negTestVec, NEGATE, MIN);
+	//EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
+
+	/*
+	auto SQR = [](auto x) { return x*x; };
+
+	auto resSUMNeg = transformReduce(testVec, SQR, SUM);
+	expectedSum = -(SZ - 1) * SZ / 2.0;
+	EXPECT_DOUBLE_EQ(resSUMNeg, expectedSum);
+
+	auto resMAXNeg = transformReduce(testVec, SQR, MAX);
+	EXPECT_DOUBLE_EQ(resMAXNeg, 0);
+
+	auto resMINNeg = transformReduce(negTestVec, SQR, MIN);
+	//EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
+
+	*/
+
+}
+
+TEST(TestDR3, testTransformReduceUnitary_VecXX)
+{
+
+	testTransformReduceUnitary_Vec(3);
+	testTransformReduceUnitary_Vec(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testTransformReduceUnitary_Vec(SZ);
+	}
+
+	testTransformReduceUnitary_Vec(34);
+	testTransformReduceUnitary_Vec(63);
+	testTransformReduceUnitary_Vec(64);
+	testTransformReduceUnitary_Vec(65);
+}
+
