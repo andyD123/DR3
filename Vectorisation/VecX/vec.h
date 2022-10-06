@@ -280,6 +280,15 @@ bool isScalar(const Vec<T> & X)
 	return  X.isScalar();
 }
 
+
+template<typename T>
+bool isScalar(const VecView<T>& X)
+{
+	return  X.isScalar();
+}
+
+
+
 template<typename T> bool isScalar(const T&)
 {
 	return true;

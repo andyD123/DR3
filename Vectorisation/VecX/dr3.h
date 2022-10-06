@@ -251,6 +251,7 @@ VecView<INS_VEC> transformV(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
 /*
 Modify  transforms the values held in the VecView object with the lambda. Has unrolled bersion for VC++
 performance regression
+in place modify avoids the cost of setting up indexes again in a separate view object
 */
 template<typename LAMBDA, typename INS_VEC>
 void transformM(LAMBDA& lambda, VecView<INS_VEC>& inputVec)
@@ -415,6 +416,30 @@ typename InstructionTraits<INS_VEC>::FloatType reduce(const Vec<INS_VEC>& rhs1, 
 #endif
 	
 }
+
+
+
+//unroll version
+template< typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduce(const VecView<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+
+	return ApplyAccumulate2UR_X(rhs1, oper);
+	ignore(initVal);
+	ignore(singularInit);
+	/*
+
+#ifdef _MSC_VER
+	return ApplyAccumulate2UR_X(rhs1, oper);
+	ignore(initVal);
+	ignore(singularInit);
+
+#else
+	return ApplyAccumulate2UR(rhs1, oper, initVal, singularInit);
+#endif
+	*/
+}
+
 
 
 //unitary transform

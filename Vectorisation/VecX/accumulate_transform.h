@@ -469,6 +469,109 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const Vec<IN
 }
 
 
+//unrolled version helps greatly with VC2019
+template< typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VecView<INS_VEC>& rhs1, OP& oper)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
+	{
+		return rhs1.getScalarValue();
+	}
+
+	int sz = rhs1.size();
+	auto pRhs1 = rhs1.start();
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	INS_VEC RHS1;
+	INS_VEC RES;
+
+	INS_VEC RHS2;
+	INS_VEC RES1;
+
+	INS_VEC RHS3;
+	INS_VEC RES2;
+
+	INS_VEC RHS4;
+	INS_VEC RES3;
+
+	int i = 0;
+
+	if (sz >= step * 2)
+	{
+		//initialise first set of registers
+		{
+			RES.load_a(pRhs1 + i);
+			RES1.load_a(pRhs1 + i + width);
+			RES2.load_a(pRhs1 + i + width * 2);
+			RES3.load_a(pRhs1 + i + width * 3);
+		}
+
+		i += step;
+		int rhsSZ = rhs1.size();
+		for (; i <= (rhsSZ - step); i += step)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RES, RHS1);
+
+			RHS2.load_a(pRhs1 + i + width);
+			RES1 = oper(RES1, RHS2);
+
+			RHS3.load_a(pRhs1 + i + width * 2);
+			RES2 = oper(RES2, RHS3);
+
+			RHS4.load_a(pRhs1 + i + width * 3);
+			RES3 = oper(RES3, RHS4);
+
+		}
+
+		// odd bits
+		for (; i <= rhsSZ - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RES, RHS1);
+		}
+
+		RES = oper(RES, RES1);
+		RES2 = oper(RES2, RES3);
+		RES = oper(RES, RES2);
+
+	}
+	else
+	{
+		RES.load_a(pRhs1);
+
+		i += width;
+		// odd bits
+		for (; i <= sz - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RES, RHS1);
+		}
+
+	}
+
+	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
+	int min_wdth = std::min(sz, width);
+	//across vectors lanes  // not assuming horizontal versoion exist
+	for (int j = 1; j < min_wdth; ++j)
+	{
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], oper);
+	}
+
+	//end bits for vecs not filling padding
+	for (; i < rhs1.size(); ++i)
+	{
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(pRhs1[i], result, oper);
+	}
+
+	return result;
+}
+
+
+
+
 
 
 template< typename INS_VEC,  typename OPT, typename OP>
