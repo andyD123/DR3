@@ -723,6 +723,124 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X(con
 }
 
 
+//TO DO refactor these two using template template ie vec and view and then just forward to a vec or view instantiation
+
+template< typename INS_VEC, typename OPT, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X(const VecView<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1)) // nothing to accumulate with so just transform  and  return  value
+	{
+//		auto trform = ApplyUnitaryOperation(rhs1, operTransform);
+//		return trform.getScalarValue();
+
+		//no scalar views
+		//TO DO
+	}
+
+	int sz = rhs1.size();
+	auto pRhs1 = rhs1.start();
+	const int width = InstructionTraits<INS_VEC>::width;
+
+	auto zero = InstructionTraits<INS_VEC>::nullValue;
+
+	int step = 4 * width;
+
+	INS_VEC RHS1 = zero;
+	INS_VEC RES = zero;
+
+	INS_VEC RHS2 = zero;
+	INS_VEC RES1 = zero;
+
+	INS_VEC RHS3 = zero;
+	INS_VEC RES2 = zero;
+
+	INS_VEC RHS4 = zero;
+	INS_VEC RES3 = zero;
+
+	int i = 0;
+
+	if (sz >= step * 2)
+	{
+		//initialise first set of registers
+		{
+			RHS1.load_a(pRhs1 + i);
+			RHS2.load_a(pRhs1 + i + width);
+			RHS3.load_a(pRhs1 + i + width * 2);
+			RHS4.load_a(pRhs1 + i + width * 3);
+
+			RES = operTransform(RHS1);
+			RES1 = operTransform(RHS2);
+			RES2 = operTransform(RHS3);
+			RES3 = operTransform(RHS4);
+		}
+
+		i += step;
+		int rhsSZ = rhs1.size();
+		for (; i <= (rhsSZ - step); i += step)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RHS2.load_a(pRhs1 + i + width);
+			RHS3.load_a(pRhs1 + i + width * 2);
+			RHS4.load_a(pRhs1 + i + width * 3);
+
+			RES = operAcc(RES, operTransform(RHS1));
+			RES1 = operAcc(RES1, operTransform(RHS2));
+			RES2 = operAcc(RES2, operTransform(RHS3));
+			RES3 = operAcc(RES3, operTransform(RHS4));
+
+		}
+
+		// odd bits
+		for (; i <= rhsSZ - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = operAcc(RES, operTransform(RHS1));
+		}
+
+		RES = operAcc(RES, RES1);
+		RES2 = operAcc(RES2, RES3);
+		RES = operAcc(RES, RES2);
+
+	}
+	else
+	{
+		RHS1.load_a(pRhs1);
+		RES = operTransform(RHS1);
+
+		i += width;
+		// odd bits
+		for (; i <= sz - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = operAcc(RES, operTransform(RHS1));
+		}
+
+	}
+
+	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
+	int min_wdth = std::min(sz, width);
+	//across vectors lanes  // not assuming horizontal versoion exist
+	for (int j = 1; j < min_wdth; ++j)
+	{
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], operAcc);
+	}
+
+	//end bits for vecs not filling padding
+	for (; i < rhs1.size(); ++i)
+	{
+		//need to transform
+		typename InstructionTraits<INS_VEC>::FloatType trfmResult = operTransform(INS_VEC(pRhs1[i]))[0];
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, trfmResult, operAcc);
+	}
+
+	return result;
+}
+
+
+
+
+
 
 
 /////////////////////////////////////////
