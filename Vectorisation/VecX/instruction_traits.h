@@ -133,7 +133,7 @@ struct InstructionTraits<Vec8d>
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 
-	static constexpr  bool isCompact = true;// false;// true;
+	static constexpr  bool isCompact =  true;// false;// true;
 	using RegBoolType = Vec8db;// Vec8db;
 	using MemBoolType = Vec8d;
 

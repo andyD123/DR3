@@ -527,27 +527,10 @@ Vec<INS_VEC>  merge(std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >& src)
 	}
 
 	Vec<INS_VEC> ret(std::get<0>(src).srcSize());
-
-	std::vector<double> stdVec = ret;
 	const VecView<INS_VEC>& trueData = std::get<0>(src);
-	auto idx = trueData.getIndex();
-
-	stdVec = trueData;
-
 	const VecView<INS_VEC>& falseData = std::get<1>(src);
-
-	stdVec = falseData;
-	idx = falseData.getIndex();
-
 	falseData.write(ret);
-
-	stdVec = ret;
-
-
 	trueData.write(ret);
-
-
-	stdVec = ret;
 	return ret;
 }
 
