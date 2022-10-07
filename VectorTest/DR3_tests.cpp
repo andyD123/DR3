@@ -21,6 +21,7 @@
 
 
 #include <numeric>
+#include <algorithm>
 #include <random>
 
 //using namespace DRC::VecDb;
@@ -2261,5 +2262,119 @@ TEST(TestDR3, testTransformReduceUnitary_View)
 	testTransformReduceUnitary_Vw(63);
 	testTransformReduceUnitary_Vw(64);
 	testTransformReduceUnitary_Vw(65);
+}
+
+/////////////////////////////////
+
+
+void testTransformReduceBinary_Vw(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+
+	auto testVecPlusTwo = testVec + 2.0;
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto MULT = [](auto x, auto y) { return x * y; };
+	
+	auto CPY = [](auto x) { return x; };
+
+
+	auto testVw = transformV(CPY, testVec);
+	auto testPlusTwoVw = transformV(CPY, testVecPlusTwo);
+
+	auto inputPlusTwo = input;
+	for(auto & x: inputPlusTwo)
+	{
+		x += 2.0;
+	}
+
+	auto resSUM = transformReduce(testVw, testPlusTwoVw, MULT, SUM);
+	auto ipRes = std::inner_product(begin(input), end(input), begin(inputPlusTwo),.0);
+
+	EXPECT_DOUBLE_EQ(resSUM, ipRes);
+
+}
+
+TEST(TestDR3, testTransformReduceBinary_View)
+{
+
+	testTransformReduceBinary_Vw(3);
+	testTransformReduceBinary_Vw(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testTransformReduceBinary_Vw(SZ);
+	}
+
+	testTransformReduceBinary_Vw(34);
+	testTransformReduceBinary_Vw(63);
+	testTransformReduceBinary_Vw(64);
+	testTransformReduceBinary_Vw(65);
+}
+
+
+
+
+void testTransformReduceBinary_Vec(int SZ)
+{
+
+
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+
+	auto testVecPlusTwo = testVec + 2.0;
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto MULT = [](auto x, auto y) { return x * y; };
+
+	auto CPY = [](auto x) { return x; };
+
+
+	//auto testVw = transformV(CPY, testVec);
+	//auto testPlusTwoVw = transformV(CPY, testVecPlusTwo);
+
+	auto inputPlusTwo = input;
+	for (auto& x : inputPlusTwo)
+	{
+		x += 2.0;
+	}
+
+	auto resSUM = transformReduce(testVec, testVecPlusTwo, MULT, SUM);
+	auto ipRes = std::inner_product(begin(input), end(input), begin(inputPlusTwo), .0);
+
+	EXPECT_DOUBLE_EQ(resSUM, ipRes);
+
+}
+
+TEST(TestDR3, testTransformReduceBinary_Vec)
+{
+
+	testTransformReduceBinary_Vec(3);
+	testTransformReduceBinary_Vec(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testTransformReduceBinary_Vec(SZ);
+	}
+
+	testTransformReduceBinary_Vec(34);
+	testTransformReduceBinary_Vec(63);
+	testTransformReduceBinary_Vec(64);
+	testTransformReduceBinary_Vec(65);
 }
 

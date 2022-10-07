@@ -384,7 +384,7 @@ void evalTransformAccumulateInnerProduct_X(size_t startLen, size_t endLen)
 		auto SUM = [](auto lhs, auto rhs) {  return lhs + rhs; };
 
 		auto S = std::inner_product(v.begin(), v.end(), w.begin(), 0.0);
-		double resAcc3 = ApplyTransformAccumulate2UR_X(test, test2, MULT, SUM);
+		double resAcc3 = ApplyTransformAccumulate2UR_XBin(test, test2, MULT, SUM);
 
 		EXPECT_NEAR(S, resAcc3, testEpsilon);
 	}

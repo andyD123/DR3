@@ -494,7 +494,7 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Vec<INS_VEC
 {
 
 #if defined( _MSC_VER)
-	return ApplyTransformAccumulate2UR_X(lhs1, rhs1, operTransform, operAcc);
+	return ApplyTransformAccumulate2UR_XBin(lhs1, rhs1, operTransform, operAcc);
 	ignore(initVal);
 	ignore(singularInit);
 #else
@@ -502,6 +502,24 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Vec<INS_VEC
 #endif
 	
 }
+
+
+//binary transform  unrolled
+template< typename INS_VEC, typename OP, typename OPT>
+typename InstructionTraits<INS_VEC>::FloatType transformReduce(const VecView<INS_VEC>& lhs1, const VecView<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+
+//#if defined( _MSC_VER)
+	return ApplyTransformAccumulate2UR_XBin(lhs1, rhs1, operTransform, operAcc);
+	ignore(initVal);
+	ignore(singularInit);
+//#else
+	//return ApplyTransformAccumulateUR(lhs1, rhs1, operTransform, operAcc, initVal, singularInit);
+//#endif
+
+}
+
+
 
 
 
