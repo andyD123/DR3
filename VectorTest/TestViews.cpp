@@ -70,7 +70,7 @@ TEST(TestViews, ApplyUnitaryOperationXXX) {
 
 		auto mySquareItLambda = [](const auto& x) {return x * x;  };
 
-		auto testSquare = ApplyUnitaryOperationV( mySquareItLambda, test);
+		auto testSquare = ApplyUnitaryOperationV(test, mySquareItLambda);
 
 		for (int i = 0; i < test.size(); ++i)
 		{
@@ -890,21 +890,21 @@ TEST(TestViews, JoiningLambdas)
 
 	auto copyOfData = data;
 
-	auto res_sqr = ApplyUnitaryOperationV(SQR, data);
+	auto res_sqr = ApplyUnitaryOperationV(data,SQR);
 	using namespace JOIN;
 	auto quartic = SQR | SQR;
 
-	auto res_quartic = ApplyUnitaryOperationV(quartic, data);
+	auto res_quartic = ApplyUnitaryOperationV(data,quartic);
 
 
 	auto roundTrip = SQR_ROOT | SQR;
 
 
-	auto res_quartic_two = ApplyUnitaryOperationV(roundTrip, data);
+	auto res_quartic_two = ApplyUnitaryOperationV(data,roundTrip);
 
 	auto doIt = addFive | timesTwo;  //2x+5  
 
-	auto res_qtest = ApplyUnitaryOperationV(doIt, data);
+	auto res_qtest = ApplyUnitaryOperationV(data,doIt);
 
 	for (int i = 0; i < data.size(); ++i)
 	{
@@ -952,7 +952,7 @@ TEST(TestViews, binaryFilterZVec)
 	EXPECT_EQ(vw_other.size(), 3);
 
 	auto addFive = [](auto rhs) { return rhs + VecXX::scalar(5.0); };
-	ApplyUnitaryOperation(addFive, vw_other);
+	ApplyUnitaryOperation(vw_other,addFive);
 
 	vw_other.writeView(test);
 	EXPECT_EQ(test[0], 6.0);
@@ -997,7 +997,7 @@ TEST(TestViews, binaryFilterZView)
 	EXPECT_EQ(vw_other.size(), 3);
 
 	auto addFive = [](auto rhs) { return rhs + VecXX::scalar(5.0); };
-	ApplyUnitaryOperation(addFive, vw_other);
+	ApplyUnitaryOperation(vw_other,addFive);
 
 	vw_other.writeView(test);
 	EXPECT_EQ(test[0], 6.0);
@@ -1160,7 +1160,7 @@ TEST(TestViews, writeView2)
 	auto squareIt = [](auto x) {return x * x; };
 
 
-	 ApplyUnitaryOperation(squareIt,vw );
+	 ApplyUnitaryOperation(vw,squareIt );
 	 for (auto x : vw)
 	 {
 		 std::cout << x << std::endl;

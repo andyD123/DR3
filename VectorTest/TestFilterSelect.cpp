@@ -264,7 +264,7 @@ void testUnitaryOpVecViewRef(int SZ)
 
 	auto viewOfData = ApplyFilter(trueCond, data);
 
-    ApplyUnitaryOperation(SQR, viewOfData);
+    ApplyUnitaryOperation(viewOfData,SQR);
 
 	auto resultView = viewOfData; 
 
@@ -301,7 +301,7 @@ void testUnitaryOpVec(int SZ)
 	auto SQR = [](auto x) { return  x * x; };
 
 
-	auto resultView = ApplyUnitaryOperationV(SQR, data);
+	auto resultView = ApplyUnitaryOperationV(data,SQR);
 
 	EXPECT_EQ(resultView.size(), SZ);
 
@@ -601,7 +601,7 @@ TEST(TestFilterSelect, ApplyComplexJoinedLambdasToVec)
 	//the result of the operation into the input of the next lambda
 	auto complex2 = AddTen | negateIfOverTen | SQR;
 
-	auto res = ApplyUnitaryOperationV(complex2, data);
+	auto res = ApplyUnitaryOperationV(data,complex2);
 
 
 

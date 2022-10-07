@@ -550,12 +550,12 @@ VecXX calcCDFNormWithViews(VecXX& X)
 	VecXX res = ApplyUnitaryOperation1(X, aclambdaMain);
 	auto lambada = getLambdaBool(islambdaLow);
 	auto lowVw = ApplyFilter(lambada, X); // a view 
-	ApplyUnitaryOperation(dolambdaLow, lowVw);
+	ApplyUnitaryOperation(lowVw,dolambdaLow);
 	lowVw.write(res);
 
 	auto lambadaHi = getLambdaBool(islambdaHi);
 	auto hiVw = ApplyFilter(lambadaHi, X); // a view 
-	ApplyUnitaryOperation(dolambdaHi, hiVw);
+	ApplyUnitaryOperation(hiVw,dolambdaHi);
 	hiVw.write(res);
 
 
@@ -627,10 +627,10 @@ VecXX calcCDFNormWithViewsAndFMA(VecXX& X)
 	auto loHiVwTple = ApplyBinaryFilter(islambdaLow, outside); // a view 
 
 	auto& lowVw = std::get<0>(loHiVwTple);
-	ApplyUnitaryOperation(dolambdaLow, lowVw);
+	ApplyUnitaryOperation(lowVw,dolambdaLow );
 	lowVw.write(res);
 	auto& hiVw = std::get<1>(loHiVwTple);
-	ApplyUnitaryOperation(dolambdaHi, hiVw);
+	ApplyUnitaryOperation(hiVw,dolambdaHi);
 	hiVw.write(res);
 	return res;
 

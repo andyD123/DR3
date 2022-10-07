@@ -87,8 +87,8 @@ VecView<INS_VEC> splitConditionalCalculate(const VecView<INS_VEC>& val, BOOL_TES
 	//if (!val.isScalar())
 	//{
 		auto vwTupple = ApplyBinaryFilter(testFunc, val);
-		ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
-		ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
+		ApplyUnitaryOperation(std::get<0>(vwTupple),trueLambda );
+		ApplyUnitaryOperation(std::get<1>(vwTupple),falseLambda);
 		return  merge(vwTupple);
 
 /*

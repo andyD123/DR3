@@ -299,7 +299,7 @@ std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >  ApplyBinaryFilter(OP& condition
 applies the OP to the view updating input in situ.
 */
 template< typename INS_VEC, typename OP>
-void ApplyUnitaryOperation(OP& oper, VecView<INS_VEC>& rhs)
+void ApplyUnitaryOperation(VecView<INS_VEC>& rhs, OP& oper)
 {
 	auto pRhs = rhs.start();
 	int sz = rhs.fillSize();
@@ -310,7 +310,7 @@ void ApplyUnitaryOperation(OP& oper, VecView<INS_VEC>& rhs)
 applies the OP and creates a new view.
 */
 template< typename INS_VEC, typename OP>
-VecView<INS_VEC> ApplyUnitaryOperation(OP& oper, const VecView<INS_VEC>& rhs)
+VecView<INS_VEC> ApplyUnitaryOperation(const VecView<INS_VEC>& rhs, OP& oper)
 {
 	check_vector_for_filter(rhs);
 	VecView<INS_VEC> result(rhs);
@@ -328,7 +328,7 @@ applies the operation to the input view to generate a new view which it returns
 */
 
 template< typename INS_VEC, typename OP>
-VecView<INS_VEC> ApplyUnitaryOperationV(OP& oper, const  Vec<INS_VEC>& rhs)
+VecView<INS_VEC> ApplyUnitaryOperationV(const  Vec<INS_VEC>& rhs, OP& oper)
 {
 
 	if (!rhs.isScalar())

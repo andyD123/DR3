@@ -54,7 +54,7 @@ VecView<INS_VEC> operator |(Vec<INS_VEC>& rhs, OP& condition)
 template< typename INS_VEC, typename OP>
 VecView<INS_VEC> operator > (  VecView<INS_VEC> rhs, OP& oper)
 {
-	ApplyUnitaryOperation(oper, rhs);
+	ApplyUnitaryOperation( rhs, oper);
 	return rhs;
 }
 
