@@ -103,5 +103,17 @@ public:
 	{
 		return false;
 	}
+
+	inline bool operator[](int j)const
+	{
+		return m_pData[j];
+	}
+
+
+	void setAt(int j, bool val)
+	{
+		m_pData[j] = val; // need set get function for instruction set
+	}
+
 };
 

@@ -1473,6 +1473,151 @@ TEST(TestDR3, testFilter_vec)
 
 
 
+
+
+
+
+
+void testFilterBoolVecXX(int SZ)
+{
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	const VecXX testVec(input);
+
+	auto copyLambda = [&](auto x) {return x; };
+	//VecVW inputView = transformV(copyLambda, testVec);
+
+	auto allowAll = [](auto x) {return x == x; };
+
+	VecBL vBoolAllTrue = testVec == testVec;
+	VecBL vBoolAllFalse = testVec != testVec;
+
+
+	 auto resAll = filterB(vBoolAllTrue, testVec);
+
+
+	for (int i = 0; i < resAll.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll[i], testVec[i]);
+	}
+
+	auto allowNone = [](auto x) {return x != x; };
+
+	auto resNone = filterB(vBoolAllFalse, testVec);
+
+	EXPECT_EQ(0, resNone.size());
+
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+		auto testVecB = vBoolAllFalse;
+		testVecB.setAt(j, true);
+		auto res = filterB(testVecB, testVec);
+		EXPECT_DOUBLE_EQ(res[0], j);
+
+	}
+	
+}
+
+
+
+
+TEST(TestDR3, testFilterBool_vec)
+{
+
+	testFilterBoolVecXX(3);
+	testFilterBoolVecXX(4);
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testFilterBoolVecXX(SZ);
+	}
+
+	testFilterBoolVecXX(34);
+	testFilterBoolVecXX(63);
+	testFilterBoolVecXX(64);
+	testFilterBoolVecXX(65);
+
+}
+
+
+
+
+void testFilterBool_vw(int SZ)
+{
+	std::vector<double> input(SZ, 0.0);
+	std::iota(begin(input), end(input), 0.0);
+
+	const VecXX testVec(input);
+
+	auto copyLambda = [&](auto x) {return x; };
+	VecVW inputView = transformV(copyLambda, testVec);
+
+	auto allowAll = [](auto x) {return x == x; };
+
+	VecBL vBoolAllTrue = testVec == testVec;
+	VecBL vBoolAllFalse = testVec != testVec;
+
+
+	auto resAll = filterB(vBoolAllTrue, inputView);
+
+
+	for (int i = 0; i < resAll.size(); ++i)
+	{
+		EXPECT_DOUBLE_EQ(resAll[i], testVec[i]);
+	}
+
+	auto allowNone = [](auto x) {return x != x; };
+
+	auto resNone = filterB(vBoolAllFalse, inputView);
+
+	EXPECT_EQ(0, resNone.size());
+
+
+
+	for (double j = 0; j < SZ; ++j)
+	{
+		auto testVecB = vBoolAllFalse;
+		testVecB.setAt(j, true);
+		auto res = filterB(testVecB, inputView);
+		EXPECT_DOUBLE_EQ(res[0], j);
+
+	}
+
+}
+
+
+
+
+TEST(TestDR3, testFilterBool_vw)
+{
+
+	testFilterBool_vw(3);
+	testFilterBool_vw(4);
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testFilterBool_vw(SZ);
+	}
+
+	testFilterBool_vw(34);
+	testFilterBool_vw(63);
+	testFilterBool_vw(64);
+	testFilterBool_vw(65);
+
+}
+
+
+
+
+
+
+
+
+
+
 void testCountedFilterVw(int SZ)
 {
 

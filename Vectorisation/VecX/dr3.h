@@ -298,7 +298,7 @@ void transformWrite(OP& oper, const VecView<INS_VEC>& view, Vec<INS_VEC>& out)
 returns a view containing eleements from the vector which have corresponding true values in the VectorBool condition input
 */
 template< typename INS_VEC>
-VecView<INS_VEC>  filter(const VecBool<INS_VEC>& condition, const Vec<INS_VEC>& lhs)
+VecView<INS_VEC>  filterB(const VecBool<INS_VEC>& condition, const Vec<INS_VEC>& lhs)
 {
 	return ApplyFilterBImpl< Vec, INS_VEC>(condition, lhs);
 };
@@ -307,7 +307,7 @@ VecView<INS_VEC>  filter(const VecBool<INS_VEC>& condition, const Vec<INS_VEC>& 
 returns a view containing eleements from the vector which have corresponding true values in the VectorBool condition input
 */
 template< typename INS_VEC>
-VecView<INS_VEC>  filter(const VecBool<INS_VEC>& condition, const VecView<INS_VEC>& lhs)
+VecView<INS_VEC>  filterB(const VecBool<INS_VEC>& condition, const VecView<INS_VEC>& lhs)
 {
 	return ApplyFilterBImpl< VecView, INS_VEC>(condition, lhs);
 }

@@ -28,6 +28,7 @@ namespace DRC
 		using Vecx = VecD<VecDouble>;
 		using VecXX = Vec<VecDouble>;
 		using VecVW = VecView<VecDouble>;
+		using VecBL = VecBool<VecDouble>;
 
 	};
 
@@ -39,6 +40,7 @@ namespace DRC
 		typedef VecD<Vec2d>  Vecx;
 		typedef Vec<Vec2d>  VecXX;
 		//typedef VecView<Vec2d>  VecVW;
+		typedef VecBool<Vec2d>	VecBL;
 	};
 
 
@@ -49,6 +51,7 @@ namespace DRC
 		typedef VecD<Vec4d>  Vecx;
 		typedef Vec<Vec4d>  VecXX;
 		typedef VecView<Vec4d>  VecVW;
+		typedef VecBool<Vec4d>	VecBL;
 
 	};
 
@@ -58,6 +61,7 @@ namespace DRC
 		typedef VecD<Vec8d>  Vecx;
 		typedef Vec<Vec8d>  VecXX;
 		typedef VecView<Vec8d>  VecVW;
+		typedef VecBool<Vec8d>	VecBL;
 
 	};
 
@@ -67,6 +71,7 @@ namespace DRC
 		typedef VecD<Vec16f>  Vecx;
 		typedef Vec<Vec16f>  VecXX;
 		typedef VecView<Vec16f>  VecVW;
+		typedef VecBool<Vec16f>	VecBL;
 	};
 
 	namespace VecF8F
@@ -75,6 +80,7 @@ namespace DRC
 		typedef VecD<Vec8f>  Vecx;
 		typedef Vec<Vec8f>  VecXX;
 		typedef VecView<Vec8f>  VecVW;
+		typedef VecBool<Vec8f>	VecBL;
 	};
 
 
@@ -84,6 +90,7 @@ namespace DRC
 		typedef VecD<Vec4f>  Vecx;
 		typedef Vec<Vec4f>  VecXX;
 		typedef VecView<Vec4f>  VecVW;
+		typedef VecBool<Vec4f>	VecBL;
 	};
 
 
