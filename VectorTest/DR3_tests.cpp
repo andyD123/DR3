@@ -25,9 +25,8 @@
 #include <random>
 
 //using namespace DRC::VecDb;
-using namespace DRC::VecD2D;
-//using namespace DRC::VecF4F;
-
+using namespace DRC::VecF4F;
+//using namespace DRC::VecD2D;
 //using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
@@ -71,12 +70,16 @@ void testTransform_1(int SZ)
 	std::iota(begin(input), end(input), asNumber(0.0));
 
 	VecXX testVec(input);
+
+	
 	
 
 	for (int j = 0; j < SZ; ++j)
 	{
-		auto onlyJlambda = [=](auto x) { return select ((asNumber(j) > (x - asNumber(0.0001)) && (asNumber(j) < x + asNumber(0.00001))) ,x,-x); };
+		auto onlyJlambda = [=](auto x) { return select ( ((asNumber(j)-asNumber(0.0001) ) < x  && ( (asNumber(j)+ asNumber(0.00001) )> x )) ,x,-x); };
 		VecXX res = transform(onlyJlambda, testVec);
+
+		std::vector<Numeric> inspect = res;
 
 		for (int k = 0; k < SZ; k++)
 		{
@@ -100,6 +103,15 @@ void testTransform_1(int SZ)
 TEST(TestDR3, testTransform_1)
 {
 
+	testTransform_1(5);
+
+
+	//for (int SZ = 3; SZ < 5; SZ++)
+	//{
+	//	testTransform_1(SZ);
+	//}
+
+
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
 		testTransform_1(SZ);
@@ -110,6 +122,8 @@ TEST(TestDR3, testTransform_1)
 	testTransform_1(65);
 	testTransform_1(63);
 	testTransform_1(64);
+
+	/*	*/
 
 }
 

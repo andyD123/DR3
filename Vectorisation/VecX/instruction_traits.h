@@ -85,6 +85,28 @@ struct InstructionTraits<Vec2d>
 
 
 template<>
+struct InstructionTraits<Vec4f>
+{
+	using IdxType = Vec4i;
+	using BoolType = Vec4fb;
+	using FloatType = float;
+	static const int width = 4;
+	static const float nullValue;
+	static constexpr  bool alignedLoadStore = true;
+	static constexpr  bool boolTypeIsAlignedLoadStore = false;
+	static const float oneValue;
+	static constexpr  bool useScatter = false;
+
+	static constexpr  bool isCompact = false;
+	using RegBoolType = Vec4fb;
+	using MemBoolType = Vec4f;
+};
+
+
+
+
+
+template<>
 struct InstructionTraits<Vec4d>
 {
 	using IdxType = Vec4i;

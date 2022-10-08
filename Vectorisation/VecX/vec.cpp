@@ -31,3 +31,6 @@ const float InstructionTraits<Vec16f>::oneValue = 1.0f;
 const float InstructionTraits<Vec8f>::nullValue = 0.0f;
 const float InstructionTraits<Vec8f>::oneValue = 1.0f;
 
+const float InstructionTraits<Vec4f>::nullValue = 0.0f;
+const float InstructionTraits<Vec4f>::oneValue = 1.0f;
+

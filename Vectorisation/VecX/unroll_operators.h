@@ -84,7 +84,17 @@ struct  UnitaryOpElement
 		idx.load(pIdx + i + elem_lhs.relativeOffset);
 		elem_lhs.load(plhs + i);
 		INS_VEC res = oper(elem_lhs.value);
-		scatter(idx, limit, res, pRes);
+		if constexpr (InstructionTraits< INS_VEC>::useScatter)
+		{
+			scatter(idx, limit, res, pRes);
+		}
+		else
+		{
+			for (int j =0; j < InstructionTraits< INS_VEC>::width; ++j)
+			{
+				pRes[j + idx[j]] = res[j];
+			}
+		}
 	}
 
 
