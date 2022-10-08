@@ -33,6 +33,7 @@ struct InstructionTraits
 	static const double oneValue;
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
+	static constexpr  bool useScatter = false;
 
 	static constexpr  bool isCompact = false;
 	using RegBoolType = VecBoolD;
@@ -53,6 +54,7 @@ struct InstructionTraits<VecDouble>
 	static const double nullValue;
 	static const double oneValue;
 	static constexpr  bool alignedLoadStore = true;
+	static constexpr  bool useScatter = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = true;
 
 	static constexpr  bool isCompact = false;
@@ -64,13 +66,15 @@ struct InstructionTraits<VecDouble>
 template<>
 struct InstructionTraits<Vec2d>
 {
-	using IdxType = Vec2q;
+	using IdxType = Vec2q;//Vec2q;
 	using BoolType = Vec2db;// VecBoolD;
 	using FloatType = double;
 	static const int width = 2;
 	static const double nullValue;
 	static const double oneValue;
 	static constexpr  bool alignedLoadStore = true;
+	static constexpr  bool boolTypeIsAlignedLoadStore = false;
+	static constexpr  bool useScatter = false;
 
 	static constexpr  bool isCompact = false;
 	using RegBoolType = Vec2db;
@@ -91,6 +95,7 @@ struct InstructionTraits<Vec4d>
 	static constexpr  bool alignedLoadStore = true;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static const double oneValue;
+	static constexpr  bool useScatter = true;
 
 	static constexpr  bool isCompact = false;
 	using RegBoolType = Vec4db;
@@ -110,6 +115,7 @@ struct InstructionTraits<Vec8f>
 	static const float oneValue;
 	static constexpr  bool alignedLoadStore = true;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
+	static constexpr  bool useScatter = true;
 
 	static constexpr  bool isCompact = false;
 	using RegBoolType = Vec8fb;
@@ -132,6 +138,7 @@ struct InstructionTraits<Vec8d>
 	static const double oneValue;
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
+	static constexpr  bool useScatter = true;
 
 	static constexpr  bool isCompact =  true;// false;// true;
 	using RegBoolType = Vec8db;// Vec8db;
@@ -154,6 +161,7 @@ struct InstructionTraits<Vec16f>
 	static const float oneValue;
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
+	static constexpr  bool useScatter = true;
 
 	static constexpr  bool isCompact = true; //to do
 	using RegBoolType = Vec16b;

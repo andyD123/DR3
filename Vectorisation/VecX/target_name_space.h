@@ -39,7 +39,7 @@ namespace DRC
 		typedef VecD<Vec2d>  VecxD;
 		typedef VecD<Vec2d>  Vecx;
 		typedef Vec<Vec2d>  VecXX;
-		//typedef VecView<Vec2d>  VecVW;
+		typedef VecView<Vec2d>  VecVW;
 		typedef VecBool<Vec2d>	VecBL;
 	};
 

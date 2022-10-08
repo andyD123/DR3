@@ -415,48 +415,56 @@ public:
 		int constexpr unrollFactor = 4;
 		using  IdxType = typename InstructionTraits< INS_VEC>::IdxType;
 
-		INS_VEC r0;
-		INS_VEC r1;
-		INS_VEC r2;
-		INS_VEC r3;
 
-		IdxType idx0;
-		IdxType idx1;
-		IdxType idx2;
-		IdxType idx3;
 
 
 		auto pIdx = &m_pIndex[0];
-
-		uint32_t limit = 100000;
-
 		int i = 0;
 		int SZ = (m_last);
-		for (; i < SZ - (int)(width * unrollFactor); i += width * unrollFactor)
+
+		if constexpr (InstructionTraits< INS_VEC>::useScatter)
 		{
-			idx0.load(pIdx + i);
-			r0.load_a(m_pData+i);
-			scatter(idx0, limit, r0, pRes);
 
-			idx1.load(pIdx + i + width);
-			r1.load_a(m_pData + i + width);
-			scatter(idx1, limit, r1, pRes);
 
-			idx2.load(pIdx + i + 2 * width);
-			r2.load_a(m_pData + i + 2 * width);
-			scatter(idx2, limit, r2, pRes);
+			INS_VEC r0;
+			INS_VEC r1;
+			INS_VEC r2;
+			INS_VEC r3;
 
-			idx3.load(pIdx + i + 3 * width);
-			r3.load_a(m_pData + i + 3 * width);
-			scatter(idx3, limit, r3, pRes);
+			IdxType idx0;
+			IdxType idx1;
+			IdxType idx2;
+			IdxType idx3;
 
+			uint32_t limit = 100000;
+
+
+
+			for (; i < SZ - (int)(width * unrollFactor); i += width * unrollFactor)
+			{
+				idx0.load(pIdx + i);
+				r0.load_a(m_pData + i);
+				scatter(idx0, limit, r0, pRes);
+
+				idx1.load(pIdx + i + width);
+				r1.load_a(m_pData + i + width);
+				scatter(idx1, limit, r1, pRes);
+
+				idx2.load(pIdx + i + 2 * width);
+				r2.load_a(m_pData + i + 2 * width);
+				scatter(idx2, limit, r2, pRes);
+
+				idx3.load(pIdx + i + 3 * width);
+				r3.load_a(m_pData + i + 3 * width);
+				scatter(idx3, limit, r3, pRes);
+
+			}
 		}
-
+		
 		for (; i < SZ; ++i)
 		{
 			pRes[(m_pIndex[i])] = m_pData[i];
 		}
-
 
 	}
 
