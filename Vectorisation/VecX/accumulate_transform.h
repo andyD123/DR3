@@ -925,9 +925,8 @@ VEC_TYPE<INS_VEC>  ApplyTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& op
 		return ApplyUnitaryOperation<INS_VEC, OP>(rhs1.getScalarValue(), oper);
 	}
 
-	int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	VEC_TYPE<INS_VEC> ret(sz,1,1);// ret(rhs1); //???
+	VEC_TYPE<INS_VEC> ret(rhs1); //ret(sz,1,1);// ret(rhs1); //???
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1178,9 +1177,9 @@ VEC_TYPE<INS_VEC>  ApplyTransformUR_XX_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& o
 		return ApplyUnitaryOperation<INS_VEC, OP>(rhs1.getScalarValue(), oper);
 	}
 
-	int sz = rhs1.size();
+	
 	auto pRhs1 = rhs1.start();
-	VEC_TYPE<INS_VEC> ret(sz);
+	VEC_TYPE<INS_VEC> ret(rhs1);
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1301,7 +1300,7 @@ VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& lhs, c
 	int sz = rhs.size();
 	auto pRhs = rhs.start();
 	auto pLhs = lhs.start();
-	VEC_TYPE<INS_VEC> ret(sz);
+	VEC_TYPE<INS_VEC> ret(lhs);
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1371,84 +1370,7 @@ VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& lhs, c
 template< typename INS_VEC, typename OPER >
 Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, const Vec<INS_VEC>& rhs, OPER& oper)
 {
-
 	return ApplyBinaryTransformUR_X_Impl(lhs, rhs, oper);
-/*
-	check_pair(lhs, rhs);
-	if (isScalar(lhs))
-	{
-		return ApplyBinaryTransformUR_X(lhs.getScalarValue(), rhs, oper);
-	}
-	if (isScalar(rhs))
-	{
-		return ApplyBinaryTransformUR_X(lhs, rhs.getScalarValue(), oper);
-	}
-
-	int sz = rhs.size();
-	auto pRhs = rhs.start();
-	auto pLhs = lhs.start();
-	Vec<INS_VEC> ret(sz);
-	auto pRet = ret.start();
-
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 4 * width;
-
-	INS_VEC RHS;
-	INS_VEC LHS;
-	INS_VEC RES;
-	
-	INS_VEC RHS1;
-	INS_VEC LHS1;
-	INS_VEC RES1;
-	
-	INS_VEC RHS2;
-	INS_VEC LHS2;
-	INS_VEC RES2;
-
-	INS_VEC RHS3;
-	INS_VEC LHS3;
-	INS_VEC RES3;
-
-
-	int i = 0;
-
-	int impSZ = lhs.paddedSize();
-	int rhsSZ = impSZ - step;
-
-	for (; i < rhsSZ; i += step)
-	{
-		LHS.load_a(pLhs + i);
-		RHS.load_a(pRhs + i);
-		RES = oper(LHS, RHS);
-		RES.store_a(pRet + i);
-
-		LHS1.load_a(pLhs + i+ width);
-		RHS1.load_a(pRhs + i+ width);
-		RES1 = oper(LHS1, RHS1);
-		RES1.store_a(pRet + i+ width);
-
-		LHS2.load_a(pLhs + i + 2* width);
-		RHS2.load_a(pRhs + i + 2*width);
-		RES2 = oper(LHS2, RHS2);
-		RES2.store_a(pRet + i +2*width);
-
-		LHS3.load_a(pLhs + i + 3*width);
-		RHS3.load_a(pRhs + i + 3*width);
-		RES3 = oper(LHS3, RHS3);
-		RES3.store_a(pRet + i +3*width);
-	}
-
-	for (; i <= impSZ - width; i += width)
-	{
-		LHS.load_a(pLhs + i);
-		RHS.load_a(pRhs + i);
-		RES = oper(LHS, RHS);
-		RES.store_a(pRet + i);
-	}
-
-	//Since vector is padded no odd end bits, just unused end bits 
-	return ret;
-	*/
 }
 
 
@@ -1461,8 +1383,8 @@ VecView<INS_VEC>  ApplyBinaryTransformUR_X(const VecView<INS_VEC>& lhs, const Ve
 
 
 
-template< typename INS_VEC, typename OPER >
-Vec<INS_VEC>  ApplyBinaryTransformUR_X(typename InstructionTraits<INS_VEC>::FloatType  lhs, const Vec<INS_VEC>& rhs, OPER& oper)
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
+VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(typename InstructionTraits<INS_VEC>::FloatType  lhs, const VEC_TYPE<INS_VEC>& rhs, OP& oper)
 {
 	check_vector(rhs);
 
@@ -1480,9 +1402,9 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(typename InstructionTraits<INS_VEC>::Floa
 	}
 
 
-	int sz = rhs.size();
+	//int sz = rhs.size();
 	auto pRhs = rhs.start();
-	Vec<INS_VEC> ret(sz);
+	VEC_TYPE<INS_VEC> ret(rhs);
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1514,7 +1436,7 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(typename InstructionTraits<INS_VEC>::Floa
 
 		RHS2.load_a(pRhs + i + 2 * width);
 		RES2 = oper(LHS, RHS2);
-		RES2.store_a(pRet + i +2 * width);
+		RES2.store_a(pRet + i + 2 * width);
 
 		RHS3.load_a(pRhs + i + 3 * width);
 		RES3 = oper(LHS, RHS3);
@@ -1535,8 +1457,107 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(typename InstructionTraits<INS_VEC>::Floa
 
 
 template< typename INS_VEC, typename OPER >
+VecView<INS_VEC>  ApplyBinaryTransformUR_X_Impl(typename InstructionTraits<INS_VEC>::FloatType  lhs, const VecView<INS_VEC>& rhs, OPER& oper)
+{
+	return ApplyBinaryTransformUR_X_Impl(lhs,rhs, oper);
+}
+
+
+
+template< typename INS_VEC, typename OPER >
+Vec<INS_VEC>  ApplyBinaryTransformUR_X(typename InstructionTraits<INS_VEC>::FloatType  lhs, const Vec<INS_VEC>& rhs, OPER& oper)
+{
+	return ApplyBinaryTransformUR_X_Impl(lhs,rhs, oper);
+}
+
+
+
+
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
+VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& lhs, typename InstructionTraits<INS_VEC>::FloatType  rhs, OP& oper)
+{
+	check_vector(lhs);
+
+	INS_VEC LHS;
+	INS_VEC RHS;
+	INS_VEC RES;
+	RHS = rhs;
+
+	if (isScalar(lhs))
+	{
+		// both are scalar
+		LHS = lhs.getScalarValue();
+		RES = oper(LHS, RHS);
+		return VEC_TYPE<INS_VEC>(RES[0]);
+	}
+
+
+	//int sz = lhs.size();
+	auto pLhs = lhs.start();
+	VEC_TYPE<INS_VEC> ret(lhs);// ret(sz);
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	INS_VEC LHS1;
+	INS_VEC RES1;
+
+	INS_VEC LHS2;
+	INS_VEC RES2;
+
+	INS_VEC LHS3;
+	INS_VEC RES3;
+
+	int i = 0;
+
+	int impSZ = lhs.paddedSize();
+	//int rhsSZ = sz - step;
+	int rhsSZ = impSZ - step;
+	for (; i < rhsSZ; i += step)
+	{
+		LHS.load_a(pLhs + i);
+		RES = oper(LHS, RHS);
+		RES.store_a(pRet + i);
+
+		LHS1.load_a(pLhs + i + width);
+		RES1 = oper(LHS1, RHS);
+		RES1.store_a(pRet + i + width);
+
+		LHS2.load_a(pLhs + i + 2 * width);
+		RES2 = oper(LHS2, RHS);
+		RES2.store_a(pRet + i + 2 * width);
+
+		LHS3.load_a(pLhs + i + 3 * width);
+		RES3 = oper(LHS3, RHS);
+		RES3.store_a(pRet + i + 3 * width);
+	}
+
+	for (; i <= impSZ - width; i += width)
+	{
+		LHS.load_a(pLhs + i);
+		RES = oper(LHS, RHS);
+		RES.store_a(pRet + i);
+	}
+
+	//Since vector is padded no odd end bits, just unused end bits 
+	return ret;
+}
+
+
+template< typename INS_VEC, typename OPER >
+VecView<INS_VEC>  ApplyBinaryTransformUR_X(const VecView<INS_VEC>& lhs, typename InstructionTraits<INS_VEC>::FloatType  rhs, OPER& oper)
+{
+	return ApplyBinaryTransformUR_X_Impl(lhs, rhs, oper);
+}
+
+
+template< typename INS_VEC, typename OPER >
 Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, typename InstructionTraits<INS_VEC>::FloatType  rhs,  OPER& oper)
 {
+	return ApplyBinaryTransformUR_X_Impl(lhs, rhs, oper);
+	/*
+
 	check_vector(lhs);
 
 	INS_VEC LHS;
@@ -1603,6 +1624,7 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, typename Instruc
 
 	//Since vector is padded no odd end bits, just unused end bits 
 	return ret;
+	*/
 }
 
 
@@ -1610,10 +1632,106 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, typename Instruc
 
 //////////////////////////////
 
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename OPER_TRUE, typename OPER_FALSE >
+VEC_TYPE<INS_VEC>  ApplySelectTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& cond, OPER_TRUE& trueOper, OPER_FALSE& falseOper)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1))
+	{
+		//apply same operation across whole register with same values in all lanes
+		//and return value from only one lane
+		INS_VEC RHS = rhs1.getScalarValue(); //set with scalar value
+		INS_VEC TRU = trueOper(RHS);
+		INS_VEC FLS = falseOper(RHS);
+		INS_VEC RES = select(cond(RHS), TRU, FLS);
+		return VEC_TYPE<INS_VEC>(RES[0]);
+	}
+
+	int sz = rhs1.size();
+	auto pRhs1 = rhs1.start();
+	VEC_TYPE<INS_VEC> ret(rhs1);////ret(sz);
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	INS_VEC RHS;
+	INS_VEC RES;
+	INS_VEC TRU;
+	INS_VEC FLS;
+
+	INS_VEC RHS1;
+	INS_VEC RES1;
+	INS_VEC TRU1;
+	INS_VEC FLS1;
+
+	INS_VEC RHS2;
+	INS_VEC RES2;
+	INS_VEC TRU2;
+	INS_VEC FLS2;
+
+	INS_VEC RHS3;
+	INS_VEC RES3;
+	INS_VEC TRU3;
+	INS_VEC FLS3;
+
+	int i = 0;
+
+	//int rhsSZ = sz - step;
+	int impSZ = rhs1.paddedSize();
+	//int rhsSZ = sz - step;
+	int rhsSZ = impSZ - step;
+
+
+	for (; i < rhsSZ; i += step)
+	{
+		RHS.load_a(pRhs1 + i);
+		TRU = trueOper(RHS);
+		FLS = falseOper(RHS);
+		RES = select(cond(RHS), TRU, FLS);
+		RES.store_a(pRet + i);
+
+		RHS1.load_a(pRhs1 + i + width);
+		TRU1 = trueOper(RHS1);
+		FLS1 = falseOper(RHS1);
+		RES1 = select(cond(RHS1), TRU1, FLS1);
+		RES1.store_a(pRet + i + width);
+
+		RHS2.load_a(pRhs1 + i + width * 2);
+		TRU2 = trueOper(RHS2);
+		FLS2 = falseOper(RHS2);
+		RES2 = select(cond(RHS2), TRU2, FLS2);
+		RES2.store_a(pRet + i + width * 2);
+
+		RHS3.load_a(pRhs1 + i + width * 3);
+		TRU3 = trueOper(RHS3);
+		FLS3 = falseOper(RHS3);
+		RES3 = select(cond(RHS3), TRU3, FLS3);
+		RES3.store_a(pRet + i + width * 3);
+	}
+
+	for (; i <= impSZ - width; i += width)
+	{
+		RHS.load_a(pRhs1 + i);
+		TRU = trueOper(RHS);
+		FLS = falseOper(RHS);
+		RES = select(cond(RHS), TRU, FLS);
+		RES.store_a(pRet + i);
+	}
+
+	//Since vector is padded no odd end bits, just unused end bits 
+	return ret;
+}
+
+
+
 
 template< typename INS_VEC, typename OP, typename OPER_TRUE, typename OPER_FALSE >
 Vec<INS_VEC>  ApplySelectTransformUR_X(const Vec<INS_VEC>& rhs1, OP& cond, OPER_TRUE& trueOper, OPER_FALSE& falseOper  )
 {
+	return ApplySelectTransformUR_X_Impl(rhs1, cond, trueOper, falseOper);
+/*
+
 	check_vector(rhs1);
 	if (isScalar(rhs1))
 	{
@@ -1700,6 +1818,14 @@ Vec<INS_VEC>  ApplySelectTransformUR_X(const Vec<INS_VEC>& rhs1, OP& cond, OPER_
 
 	//Since vector is padded no odd end bits, just unused end bits 
 	return ret;
+	*/
+}
+
+
+template< typename INS_VEC, typename OP, typename OPER_TRUE, typename OPER_FALSE >
+VecView<INS_VEC>  ApplySelectTransformUR_X(const VecView<INS_VEC>& rhs1, OP& cond, OPER_TRUE& trueOper, OPER_FALSE& falseOper)
+{
+	return ApplySelectTransformUR_X_Impl(rhs1, cond, trueOper, falseOper);
 }
 
 
@@ -1719,6 +1845,98 @@ Vec<INS_VEC> ApplySelectionOperationFuncUR_X(BOOL_OPER& COND, const Vec<INS_VEC>
 	*/
 }
 
+
+
+
+template<  template <class> typename VEC_TYPE , typename INS_VEC, typename OP >
+VEC_TYPE<INS_VEC>  ApplySelectTransformUR_XC_Impl(const VEC_TYPE<INS_VEC >& rhs1, OP& cond, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType& falseVal)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1))
+	{
+		INS_VEC RHS = rhs1.getScalarValue();
+		INS_VEC TRU = trueVal;
+		INS_VEC FLS = falseVal;
+		INS_VEC RES = select(cond(RHS), TRU, FLS);
+		return Vec<INS_VEC>(RES[0]);
+	}
+
+	int sz = rhs1.size();
+	auto pRhs1 = rhs1.start();
+	VEC_TYPE<INS_VEC> ret(rhs1);// ret(sz);
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	INS_VEC RHS;
+	INS_VEC RES;
+	INS_VEC TRU = trueVal;
+	INS_VEC FLS = falseVal;
+
+	INS_VEC RHS1;
+	INS_VEC RES1;
+
+	INS_VEC RHS2;
+	INS_VEC RES2;
+
+	INS_VEC RHS3;
+	INS_VEC RES3;
+
+	int i = 0;
+
+	//int rhsSZ = sz - step;
+	int impSZ = rhs1.paddedSize();
+	//int rhsSZ = sz - step;
+	int rhsSZ = impSZ - step;
+
+	for (; i < rhsSZ; i += step)
+	{
+		RHS.load_a(pRhs1 + i);
+		RES = select(cond(RHS), TRU, FLS);
+		RES.store_a(pRet + i);
+
+		RHS1.load_a(pRhs1 + i + width);
+		RES1 = select(cond(RHS1), TRU, FLS);
+		RES1.store_a(pRet + i + width);
+
+		RHS2.load_a(pRhs1 + i + width * 2);
+		RES2 = select(cond(RHS2), TRU, FLS);
+		RES2.store_a(pRet + i + width * 2);
+
+		RHS3.load_a(pRhs1 + i + width * 3);
+		RES3 = select(cond(RHS3), TRU, FLS);
+		RES3.store_a(pRet + i + width * 3);
+	}
+
+	for (; i <= impSZ - width; i += width)
+	{
+		RHS.load_a(pRhs1 + i);
+		RES = select(cond(RHS), TRU, FLS);
+		RES.store_a(pRet + i);
+	}
+
+	//no odd end bit
+	return ret;
+}
+
+
+
+template< typename INS_VEC, typename OP >
+Vec<INS_VEC>  ApplySelectTransformUR_XC(const Vec<INS_VEC>& rhs1, OP& cond, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType& falseVal)
+{
+	return ApplySelectTransformUR_XC_Impl(rhs1, cond, trueVal, falseVal);
+}
+
+
+template< typename INS_VEC, typename OP >
+VecView<INS_VEC>  ApplySelectTransformUR_XC(const VecView<INS_VEC>& rhs1, OP& cond, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType& falseVal)
+{
+	return ApplySelectTransformUR_XC_Impl(rhs1, cond, trueVal, falseVal);
+}
+
+
+/*
 template< typename INS_VEC, typename OP >
 Vec<INS_VEC>  ApplySelectTransformUR_XC(const Vec<INS_VEC>& rhs1, OP& cond, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType& falseVal)
 {
@@ -1791,13 +2009,19 @@ Vec<INS_VEC>  ApplySelectTransformUR_XC(const Vec<INS_VEC>& rhs1, OP& cond, type
 	return ret;
 }
 
+*/
 
+
+
+//looks redundant ?
+/*
 template< typename INS_VEC, typename BOOL_OPER>
 Vec<INS_VEC> ApplySelectionOperationCUR_X(BOOL_OPER& COND, const Vec<INS_VEC>& testData, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType& falseVal)
 {
 	return ApplySelectTransformUR_XC(testData, COND, trueVal, falseVal);
 
 }
+*/
 
 
 
