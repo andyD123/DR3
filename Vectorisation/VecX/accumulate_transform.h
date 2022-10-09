@@ -1002,12 +1002,88 @@ VecView<INS_VEC> ApplyTransformUR_X(const VecView<INS_VEC>& rhs1, OP& oper)
 
 
 
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
+void ApplyTransformUR_X_Impl(VEC_TYPE<INS_VEC>& rhs1, OP& oper)
+{
+
+	if (!rhs1.isScalar())
+	{
+
+		check_vector(rhs1); //calls overload with a view
+		//views are not scalar
+
+		auto pRhs1 = rhs1.start();
+		auto pRet = pRhs1;
+
+		const int width = InstructionTraits<INS_VEC>::width;
+		int step = 4 * width;
+
+		INS_VEC RHS1;
+		INS_VEC RES;
+
+		INS_VEC RHS2;
+		INS_VEC RES1;
+
+		INS_VEC RHS3;
+		INS_VEC RES2;
+
+		INS_VEC RHS4;
+		INS_VEC RES3;
+
+		int i = 0;
+
+
+		int impSZ = rhs1.paddedSize();
+		int rhsSZ = impSZ - step;
+
+		for (; i < rhsSZ; i += step)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RHS1);
+			RES.store_a(pRet + i);
+
+			RHS2.load_a(pRhs1 + i + width);
+			RES1 = oper(RHS2);
+			RES1.store_a(pRet + i + width);
+
+			RHS3.load_a(pRhs1 + i + width * 2);
+			RES2 = oper(RHS3);
+			RES2.store_a(pRet + i + width * 2);
+
+			RHS4.load_a(pRhs1 + i + width * 3);
+			RES3 = oper(RHS4);
+			RES3.store_a(pRet + i + width * 3);
+		}
+
+		for (; i <= impSZ - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RHS1);
+			RES.store_a(pRet + i);
+		}
+
+		//views are padded and filled to width of register 
+		// so no end bits
+
+	}
+	else
+	{
+		auto val = rhs1.getScalarValue();
+		auto scalarRes = oper(INS_VEC(val))[0];
+		VEC_TYPE<INS_VEC> result;
+		result = scalarRes;
+		rhs1 = result;
+	}
+
+}
+
+
 template< typename INS_VEC, typename OP >
 void ApplyTransformUR_X(VecView<INS_VEC>& rhs1, OP& oper)
 {
+	ApplyTransformUR_X_Impl(rhs1, oper);
 
-
-
+	/*
 	if (!rhs1.isScalar())
 	{
 
@@ -1081,14 +1157,20 @@ void ApplyTransformUR_X(VecView<INS_VEC>& rhs1, OP& oper)
 		rhs1 = result;
 	}
 
+	*/
+}
 
+template< typename INS_VEC, typename OP >
+void ApplyTransformUR_X(Vec<INS_VEC>& rhs1, OP& oper)
+{
+	ApplyTransformUR_X_Impl(rhs1, oper);
 }
 
 
 
 
-template< typename INS_VEC, typename OP >
-Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
+VEC_TYPE<INS_VEC>  ApplyTransformUR_XX_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& oper)
 {
 	check_vector(rhs1);
 	if (isScalar(rhs1))
@@ -1098,7 +1180,7 @@ Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
 
 	int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	Vec<INS_VEC> ret(sz);
+	VEC_TYPE<INS_VEC> ret(sz);
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1131,9 +1213,9 @@ Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
 
 	int i = 0;
 
-	//int rhsSZ = sz - step;
+
 	int impSZ = rhs1.paddedSize();
-	//int rhsSZ = sz - step;
+
 	int rhsSZ = impSZ - step;
 
 	for (; i < rhsSZ; i += step)
@@ -1158,9 +1240,9 @@ Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
 		RES4 = oper(RHS5);
 		RES4.store_a(pRet + i + width * 4);
 
-		RHS6.load_a(pRhs1 + i + width*5);
+		RHS6.load_a(pRhs1 + i + width * 5);
 		RES5 = oper(RHS6);
-		RES5.store_a(pRet + i + width*5);
+		RES5.store_a(pRet + i + width * 5);
 
 		RHS7.load_a(pRhs1 + i + width * 6);
 		RES6 = oper(RHS7);
@@ -1171,7 +1253,7 @@ Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
 		RES7.store_a(pRet + i + width * 7);
 	}
 
-	for (; i <= impSZ -width; i += width)
+	for (; i <= impSZ - width; i += width)
 	{
 		RHS1.load_a(pRhs1 + i);
 		RES = oper(RHS1);
@@ -1180,6 +1262,24 @@ Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
 
 	return ret;
 }
+
+
+
+template< typename INS_VEC, typename OP >
+Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
+{
+	return ApplyTransformUR_XX_Impl(rhs1, oper);
+}
+
+
+
+template< typename INS_VEC, typename OP >
+VecView<INS_VEC>  ApplyTransformUR_XX( const VecView<INS_VEC>& rhs1, OP& oper)
+{
+	return ApplyTransformUR_XX_Impl(rhs1, oper);
+
+}
+
 
 ////////////////////
 
