@@ -48,7 +48,7 @@ public:
 		m_pIndex = nullptr;
 	}
 
-	explicit VecView(size_t sz) : m_scalarVal(InstructionTraits<INS_VEC>::nullValue), m_size(static_cast<int>(sz)), m_implSize(sz), m_implSizeIdx(sz)
+	explicit VecView(size_t sz, int unused1 =0, int unused2 = 1) : m_scalarVal(InstructionTraits<INS_VEC>::nullValue), m_size(static_cast<int>(sz)), m_implSize(sz), m_implSizeIdx(sz)
 	{
 		alloc(m_implSize, m_pData);
 		alloc(m_implSizeIdx, m_pIndex);

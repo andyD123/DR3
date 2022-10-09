@@ -1,6 +1,6 @@
 #include "pch.h"
 
-//#include "../Vectorisation/VecX/instruction_traits.h"
+
 
 
 #include "../Vectorisation/VecX/vec.h"
@@ -25,6 +25,7 @@
 #include <random>
 
 //using namespace DRC::VecDb;
+
 using namespace DRC::VecF4F;
 //using namespace DRC::VecD2D;
 //using namespace DRC::VecD4D;
@@ -2447,7 +2448,7 @@ TEST(TestDR3, testTransformReduceBinary_Vec)
 
 //broken on AVX512 
 
-/*
+///*
 
 void testFilterBoolVecXX(int SZ)
 {
@@ -2581,5 +2582,5 @@ TEST(TestDR3, testFilterBool_vw)
 }
 
 
-*/
+//*/
 
