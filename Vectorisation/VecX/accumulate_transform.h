@@ -1285,10 +1285,95 @@ VecView<INS_VEC>  ApplyTransformUR_XX( const VecView<INS_VEC>& rhs1, OP& oper)
 
 //TO DO BINARY
 
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
+VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& lhs, const VEC_TYPE<INS_VEC>& rhs, OP& oper)
+{
+	check_pair(lhs, rhs);
+	if (isScalar(lhs))
+	{
+		return ApplyBinaryTransformUR_X(lhs.getScalarValue(), rhs, oper);
+	}
+	if (isScalar(rhs))
+	{
+		return ApplyBinaryTransformUR_X(lhs, rhs.getScalarValue(), oper);
+	}
+
+	int sz = rhs.size();
+	auto pRhs = rhs.start();
+	auto pLhs = lhs.start();
+	VEC_TYPE<INS_VEC> ret(sz);
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	INS_VEC RHS;
+	INS_VEC LHS;
+	INS_VEC RES;
+
+	INS_VEC RHS1;
+	INS_VEC LHS1;
+	INS_VEC RES1;
+
+	INS_VEC RHS2;
+	INS_VEC LHS2;
+	INS_VEC RES2;
+
+	INS_VEC RHS3;
+	INS_VEC LHS3;
+	INS_VEC RES3;
+
+
+	int i = 0;
+
+	int impSZ = lhs.paddedSize();
+	int rhsSZ = impSZ - step;
+
+	for (; i < rhsSZ; i += step)
+	{
+		LHS.load_a(pLhs + i);
+		RHS.load_a(pRhs + i);
+		RES = oper(LHS, RHS);
+		RES.store_a(pRet + i);
+
+		LHS1.load_a(pLhs + i + width);
+		RHS1.load_a(pRhs + i + width);
+		RES1 = oper(LHS1, RHS1);
+		RES1.store_a(pRet + i + width);
+
+		LHS2.load_a(pLhs + i + 2 * width);
+		RHS2.load_a(pRhs + i + 2 * width);
+		RES2 = oper(LHS2, RHS2);
+		RES2.store_a(pRet + i + 2 * width);
+
+		LHS3.load_a(pLhs + i + 3 * width);
+		RHS3.load_a(pRhs + i + 3 * width);
+		RES3 = oper(LHS3, RHS3);
+		RES3.store_a(pRet + i + 3 * width);
+	}
+
+	for (; i <= impSZ - width; i += width)
+	{
+		LHS.load_a(pLhs + i);
+		RHS.load_a(pRhs + i);
+		RES = oper(LHS, RHS);
+		RES.store_a(pRet + i);
+	}
+
+	//Since vector is padded no odd end bits, just unused end bits 
+	return ret;
+}
+
+
+
+
 
 template< typename INS_VEC, typename OPER >
 Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, const Vec<INS_VEC>& rhs, OPER& oper)
 {
+
+	return ApplyBinaryTransformUR_X_Impl(lhs, rhs, oper);
+/*
 	check_pair(lhs, rhs);
 	if (isScalar(lhs))
 	{
@@ -1327,9 +1412,7 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, const Vec<INS_VE
 
 	int i = 0;
 
-	//int rhsSZ = sz - step;
 	int impSZ = lhs.paddedSize();
-	//int rhsSZ = sz - step;
 	int rhsSZ = impSZ - step;
 
 	for (; i < rhsSZ; i += step)
@@ -1365,6 +1448,15 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, const Vec<INS_VE
 
 	//Since vector is padded no odd end bits, just unused end bits 
 	return ret;
+	*/
+}
+
+
+
+template< typename INS_VEC, typename OPER >
+VecView<INS_VEC>  ApplyBinaryTransformUR_X(const VecView<INS_VEC>& lhs, const VecView<INS_VEC>& rhs, OPER& oper)
+{
+	return ApplyBinaryTransformUR_X_Impl(lhs, rhs, oper);
 }
 
 
