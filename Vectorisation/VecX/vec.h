@@ -111,7 +111,7 @@ public:
 		m_scalarVal = 0.0;
 	}
 
-	explicit Vec(int sz,int unused1 =1,int unused2 =1) :m_size(sz), m_implSize(sz)
+	explicit Vec(int sz):m_size(sz), m_implSize(sz)
 	{
 		alloc(m_implSize, m_pData);
 		m_isScalar = false;

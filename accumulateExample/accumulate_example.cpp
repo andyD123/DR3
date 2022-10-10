@@ -47,11 +47,11 @@ precision of results compare for float types is incorrect.
 //using namespace DRC::VecD2D;  //sse2   double
 //using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-using namespace DRC::VecD8D;  //avx512 double
-//using namespace DRC::VecF16F; //avx512   float
+//using namespace DRC::VecD8D;  //avx512 double
+using namespace DRC::VecF16F; //avx512   float
 
 
-
+using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
 
 const double billion = 1000000000.0;
 
@@ -89,11 +89,29 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 }
 
 
-template<typename T>
-bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3, const std::vector<T>& input,  double ERR = 1e-13)
+double getErr(const  std::vector<double>& t) 
 {
+	ignore(t);
+	return 1e-13;
+}
+
+
+float getErr(const  std::vector<float>& t)
+{
+	ignore(t);
+	return 1.0;// 3.6e-5;
+}
+
+
+template<typename T>
+bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3, const std::vector<T>& input,  T ERR = 1e-13 )
+{
+
+	
+	ERR = getErr(C1);
+
 	bool  testOK = true;
-	//const double ERR = 1e-13;
+	
 	if (C1.size() != C2.size())
 	{
 		std::cout << "wrong size C1,C2"<< C1.size() << ", " << C2.size() <<std::endl;
@@ -108,14 +126,14 @@ bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std
 
 	for (size_t i = 0; i < C3.size(); i++)
 	{
-		auto err1 = fabs((C1[i] - C2[i]) / (C2[i] + C1[i]));
-		auto err2 = fabs((C1[i] - C3[i]) / (C1[i] + C3[i]));
+		auto err1 = fabs((C1[i] - C2[i]) / (fabs(C2[i]) + fabs(C1[i])));
+		auto err2 = fabs((C1[i] - C3[i]) / (fabs(C1[i])+ fabs(C3[i])));
 
 		if ((err1 > ERR) || (err2 > ERR))
 		{
 			testOK = false;
 			std::cout << "\n err diff@ " << i << " err1 =" << err1 << ", err2 = " << err2 << "\n";
-			std::cout << "\n val @ " << i << " C1[i] =" << C1[i] << ", C3[i] = " << C3[i] << "input val=" << input[i] <<"\n";
+			std::cout << "\n val @ " << i << " C1[i] =" << C1[i] << ", C2[i] = " << C2[i] << ", C3[i] = " << C3[i] << "input val=" << input[i] <<"\n";
 			std::cout << std::endl;
 			break;
 		}
@@ -127,7 +145,8 @@ bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std
 
 bool valuesAreEqual(double x, double y,double tol =  1e-14)
 {
-	auto err1 = fabs((x - y) / (x + y));
+
+	auto err1 = fabs((x - y) / (fabs(x) + fabs(y)));
 
 	return (err1 > tol) ? false : true;
 }
@@ -178,8 +197,8 @@ double getnull(double)
 	return 0.0;
 }
 
-using Calc_Values = std::map<int, double>;
-using Calc_Values_V = std::map<int,std::vector<double> >;
+using Calc_Values = std::map<int, FLOAT>;
+using Calc_Values_V = std::map<int,std::vector<FLOAT> >;
 using  Mapped_Performance_Results = std::map<int, std::vector<double> >; // array size  v vector<throughput for runs>
 using Mapped_Stats = std::map<int, std::pair<double, double> >; // size -.pair ( throughput ,  std dev of through put)
 
@@ -228,7 +247,7 @@ auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int 
 			results.m_raw_results[VEC_SZ].push_back(calculation_rate);
 			if (j == 0)
 			{
-				results.m_calc_results[VEC_SZ] = calc_value;
+				results.m_calc_results[VEC_SZ] = static_cast<FLOAT>(calc_value);
 			}
 		}
 	}
@@ -253,7 +272,7 @@ auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, i
 
 			if (j == 0)
 			{
-				std::vector<double> tmp = res.first;
+				std::vector<FLOAT> tmp = res.first;
 				results.m_calc_results[VEC_SZ] = tmp;
 			}
 			
@@ -578,7 +597,7 @@ void doTransform()
 			}
 		}
 		
-		std::vector<double> vvv = res;
+		std::vector<FLOAT> vvv = res;
 		return std::make_pair(vvv, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
 	};
 
@@ -966,7 +985,7 @@ void binarySelectionBetweenConst()
 		VecXX testVec(v1);
 		VecXX res;
 
-		double halfSize = SZ * 0.5;
+		FLOAT halfSize = SZ * static_cast<FLOAT>(0.5); 0.5;
 		auto upperHalfLmbda = [&](auto x) { return x > halfSize; };
 		//warm up
 		for (long l = 0; l < 100; l++)
@@ -982,7 +1001,7 @@ void binarySelectionBetweenConst()
 			}
 		}
 		
-		std::vector<double> vec = res;
+		std::vector<FLOAT> vec = res;
 		return std::make_pair(vec, numOps(TEST_LOOP_SZ, SZ) / time);
 
 	};
@@ -1123,7 +1142,7 @@ void binarySelectionBetweenLinearFunction()
 		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
 		VecXX testVec(v1);
 		VecXX res;
-		double halfSize = SZ * 0.5;
+		FLOAT halfSize = SZ * static_cast<FLOAT>(0.5);
 		auto halfOfLmbda = [&](auto x) { return x > halfSize; };
 
 		//warm up
@@ -1140,7 +1159,7 @@ void binarySelectionBetweenLinearFunction()
 			}
 		}
 		
-		std::vector<double> v = res;
+		std::vector<FLOAT> v = res;
 		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
 
 	};
@@ -1264,7 +1283,7 @@ void binarySelectionBetweenMiddleWeightFunction()
 		auto v1 = getRandomShuffledVector(SZ);
 		VecXX testVec(v1);
 		VecXX res;	
-		double halfSize = SZ * 0.5;
+		FLOAT halfSize = SZ * static_cast<FLOAT>(0.5);
 		auto halfOfLmbda = [&](auto x) { return x > halfSize; };
 			
 		for (long l = 0; l < 100; l++)//warm up
@@ -1280,7 +1299,7 @@ void binarySelectionBetweenMiddleWeightFunction()
 			}
 		}
 		
-		std::vector<double> v = res;
+		std::vector<FLOAT> v = res;
 		return std::make_pair(v, numOps(TEST_LOOP_SZ, SZ) / time);
 
 	};
@@ -1292,7 +1311,7 @@ void binarySelectionBetweenMiddleWeightFunction()
 		VecXX testVec(v1);
 		VecXX res;
 		{
-			double halfSize = SZ * 0.5;
+			FLOAT halfSize = SZ * static_cast<FLOAT>(0.5);
 			auto MyOddLmbda = [&](auto x) { return x > halfSize; };
 
 			//warm up
@@ -1310,7 +1329,7 @@ void binarySelectionBetweenMiddleWeightFunction()
 				}
 			}
 		}
-		std::vector<double> v = res;
+		std::vector<FLOAT> v = res;
 		return std::make_pair(v, numOps(TEST_LOOP_SZ, SZ) / time);
 
 	};
@@ -1415,7 +1434,7 @@ void binarySelectionBetweenHeavyWeightFunction()
 		VecXX  res;
 		auto v1 = getRandomShuffledVector(SZ); 
 		VecXX testVec(v1);
-		double halfSize = SZ * 0.5;
+		FLOAT halfSize = SZ * static_cast<FLOAT>(0.5);
 		auto halfOfLmbda = [&](auto x) { return x > halfSize; };
 
 		//warm up
@@ -1432,7 +1451,7 @@ void binarySelectionBetweenHeavyWeightFunction()
 			}
 		}
 		
-		std::vector<double> v = res;
+		std::vector<FLOAT> v = res;
 		return std::make_pair(v, numOps(TEST_LOOP_SZ, SZ) / time);
 
 	};
@@ -1443,7 +1462,7 @@ void binarySelectionBetweenHeavyWeightFunction()
 		VecXX  res;
 		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
 		VecXX testVec(v1);
-		double halfSize = SZ * 0.5;
+		FLOAT halfSize = SZ * static_cast<FLOAT>(0.5);
 		auto halfOfLmbda = [&](auto x) { return x > halfSize; };
 
 		//warm up
@@ -1460,7 +1479,7 @@ void binarySelectionBetweenHeavyWeightFunction()
 			}
 		}
 		
-		std::vector<double> v = res;
+		std::vector<FLOAT> v = res;
 		return std::make_pair(v, numOps(TEST_LOOP_SZ, SZ) / time);
 
 	};
@@ -1483,7 +1502,7 @@ void binarySelectionBetweenHeavyWeightFunction()
 		auto  valStl = run_res_for_loop.m_calc_results[elem.first];
 		auto  valDr3_filterTransform = dr3_raw_resultsFilter.m_calc_results[elem.first];
 
-		bool VecsOK = vectorsEqualD(valDr3_select, valStl,valDr3_filterTransform, valDr3_filterTransform,3e-11);
+		bool VecsOK = vectorsEqualD(valDr3_select, valStl,valDr3_filterTransform, valDr3_filterTransform, getErr(valDr3_select));
 		auto strMatch = VecsOK ? "calcs match" : "cal difference";
 
 		std::cout << "for loop binarySelectionBetweenHeavyFunctions , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 filter_transform heavy weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << ", +- ," << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection heavy Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << " , +- , " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";
@@ -1538,7 +1557,8 @@ void doCountIf()
 		auto v1 = getRandomShuffledVector(SZ); // std stl vector double or float 
 		VecXX test(v1);
 
-		double halfSize = SZ * 0.5;
+		//double halfSize = SZ * 0.5;
+		FLOAT halfSize = SZ * static_cast<FLOAT>(0.5);
 
 		auto oneIfOverHalfLambda = [&](auto x) 
 		{

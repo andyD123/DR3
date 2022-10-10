@@ -19,7 +19,38 @@
 
 #include <stdexcept>
 
-// split the accumulate and transform
+
+/*
+when we init a vec for transform we  just allocate a  new one using size
+when we init a view for transform. if this is a transform of the existrig
+view we need to copy the index so we do a copy construct.
+
+*/
+template<typename INS_VEC>
+Vec<INS_VEC> init(const Vec<INS_VEC>& rhs)
+{
+	return Vec<INS_VEC>(rhs.size());
+}
+
+template<typename INS_VEC>
+Vec<INS_VEC> initTransformer(const Vec<INS_VEC>& rhs)
+{
+	return Vec<INS_VEC>(rhs.size());
+}
+
+template<typename INS_VEC>
+VecView<INS_VEC> init(const VecView<INS_VEC>& rhs)
+{
+	return VecView<INS_VEC>(rhs.size());
+}
+
+//we need to copy the indexing
+template<typename INS_VEC>
+VecView<INS_VEC> initTransformer(const VecView<INS_VEC>& rhs)
+{
+	return VecView<INS_VEC>(rhs.size(),rhs);
+}
+
 
 
 /////////////////////////////////////////////////////////////////
@@ -154,7 +185,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR(const Vec<INS_
 
 }
 
-
 //accumulate needs a scalar operator  since is a reduction
 template< typename INS_VEC, typename OP, typename OPT_SCALAR, typename OPT, typename OP_ACC_SCALAR>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate(const Vec<INS_VEC>& rhs1, OPT& operTransform, OPT_SCALAR& operTransformScalar, OP& operAcc, OP_ACC_SCALAR& operAccScalar, typename InstructionTraits<INS_VEC>::FloatType initVal)
@@ -206,7 +236,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate(const Ve
 	return result;
 
 }
-
 
 
 template< typename INS_VEC, typename OP, typename OPT_SCALAR, typename OPT, typename OP_ACC_SCALAR>
@@ -281,8 +310,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulateUR(const 
 
 }
 
-
-
 //scalar operations will be implemented using vector types operating on single lane, saves switching instructions sets and giving multiple lambda
 //deprecate the above lambda
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -335,7 +362,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate(const Vec<INS_VEC
 }
 
 
-
 template< typename INS_VEC, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2(const Vec<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal, bool singularInit = true)
 {
@@ -366,7 +392,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR(const Vec<INS_
 	return Unroll_Accumulate<INS_VEC, OP>::apply_4(sz, pRhs, oper, initVal, singularInit);
 }
 
-//////////////////////
 
 //unrolled version helps greatly with VC2019
 template< typename INS_VEC, typename OP>
@@ -570,10 +595,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VecVie
 }
 
 
-
-
-
-
 template< typename INS_VEC,  typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate(const Vec<INS_VEC>& rhs1, OPT& operTransform,  OP& operAcc,  typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
@@ -590,8 +611,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate(const Ve
 }
 
 
-
-
 template< typename INS_VEC, typename OP, typename OPT>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulateUR(const Vec<INS_VEC>& rhs1, OPT& operTransform,  OP& operAcc,  typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
@@ -606,11 +625,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulateUR(const 
 	int sz = rhs1.size();
 	return  Unroll_TransformAccumulate<INS_VEC, OP, OPT>::apply_4(sz, pRhs, operAcc, operTransform, initVal, singularInit);
 }
-
-
-
-//////////////////// replacement version //////////////
-// 
 
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OPT, typename OP>
@@ -733,7 +747,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X(con
 }
 
 
-//TO DO refactor these two using template template ie vec and view and then just forward to a vec or view instantiation
 template< typename INS_VEC, typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X(const VecView<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc)
 {
@@ -741,9 +754,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X(con
 }
 
 
-
-
-/////////////////////////////////////////
 template< typename INS_VEC, typename OP, typename OPT>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulateUR(const Vec<INS_VEC>& lhs1, const Vec<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
@@ -760,7 +770,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulateUR(const 
 	return  Unroll_TransformAccumulate<INS_VEC, OP, OPT>::apply_4(sz,pLhs, pRhs, operAcc, operTransform, initVal, singularInit);
 }
 
-///////////////////////////////
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_ImplBin(const VEC_TYPE<INS_VEC>& lhs1, const VEC_TYPE<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc)
@@ -898,8 +907,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 }
 
 
-
-
 template< typename INS_VEC, typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_XBin(const Vec<INS_VEC>& lhs1, const Vec<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc)
 {
@@ -915,7 +922,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_XBin(
 }
 
 
-///////////////////////////////
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
 VEC_TYPE<INS_VEC>  ApplyTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& oper)
 {
@@ -926,7 +932,7 @@ VEC_TYPE<INS_VEC>  ApplyTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& op
 	}
 
 	auto pRhs1 = rhs1.start();
-	VEC_TYPE<INS_VEC> ret(rhs1); //ret(sz,1,1);// ret(rhs1); //???
+	VEC_TYPE<INS_VEC> ret(initTransformer(rhs1)); //ret(sz,1,1);// ret(rhs1); //???
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -982,7 +988,6 @@ VEC_TYPE<INS_VEC>  ApplyTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& op
 }
 
 
-
 template< typename INS_VEC, typename OP >
 Vec<INS_VEC>  ApplyTransformUR_X(const Vec<INS_VEC>& rhs1, OP& oper)
 {
@@ -990,15 +995,11 @@ Vec<INS_VEC>  ApplyTransformUR_X(const Vec<INS_VEC>& rhs1, OP& oper)
 }
 
 
-
-
-
 template< typename INS_VEC, typename OP >
 VecView<INS_VEC> ApplyTransformUR_X(const VecView<INS_VEC>& rhs1, OP& oper)
 {
 	return ApplyTransformUR_X_Impl(rhs1, oper);
 }
-
 
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
@@ -1166,8 +1167,6 @@ void ApplyTransformUR_X(Vec<INS_VEC>& rhs1, OP& oper)
 }
 
 
-
-
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
 VEC_TYPE<INS_VEC>  ApplyTransformUR_XX_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& oper)
 {
@@ -1179,7 +1178,7 @@ VEC_TYPE<INS_VEC>  ApplyTransformUR_XX_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& o
 
 	
 	auto pRhs1 = rhs1.start();
-	VEC_TYPE<INS_VEC> ret(rhs1);
+	VEC_TYPE<INS_VEC> ret(initTransformer(rhs1));
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1263,13 +1262,11 @@ VEC_TYPE<INS_VEC>  ApplyTransformUR_XX_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& o
 }
 
 
-
 template< typename INS_VEC, typename OP >
 Vec<INS_VEC>  ApplyTransformUR_XX(const Vec<INS_VEC>& rhs1, OP& oper)
 {
 	return ApplyTransformUR_XX_Impl(rhs1, oper);
 }
-
 
 
 template< typename INS_VEC, typename OP >
@@ -1279,10 +1276,6 @@ VecView<INS_VEC>  ApplyTransformUR_XX( const VecView<INS_VEC>& rhs1, OP& oper)
 
 }
 
-
-////////////////////
-
-//TO DO BINARY
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
 VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& lhs, const VEC_TYPE<INS_VEC>& rhs, OP& oper)
@@ -1297,10 +1290,10 @@ VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& lhs, c
 		return ApplyBinaryTransformUR_X(lhs, rhs.getScalarValue(), oper);
 	}
 
-	int sz = rhs.size();
+	//int sz = rhs.size();
 	auto pRhs = rhs.start();
 	auto pLhs = lhs.start();
-	VEC_TYPE<INS_VEC> ret(lhs);
+	VEC_TYPE<INS_VEC> ret(initTransformer(lhs));
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1364,9 +1357,6 @@ VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& lhs, c
 }
 
 
-
-
-
 template< typename INS_VEC, typename OPER >
 Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, const Vec<INS_VEC>& rhs, OPER& oper)
 {
@@ -1374,13 +1364,11 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, const Vec<INS_VE
 }
 
 
-
 template< typename INS_VEC, typename OPER >
 VecView<INS_VEC>  ApplyBinaryTransformUR_X(const VecView<INS_VEC>& lhs, const VecView<INS_VEC>& rhs, OPER& oper)
 {
 	return ApplyBinaryTransformUR_X_Impl(lhs, rhs, oper);
 }
-
 
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
@@ -1404,7 +1392,7 @@ VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(typename InstructionTraits<INS_
 
 	//int sz = rhs.size();
 	auto pRhs = rhs.start();
-	VEC_TYPE<INS_VEC> ret(rhs);
+	VEC_TYPE<INS_VEC> ret(initTransformer(rhs));
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1455,13 +1443,11 @@ VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(typename InstructionTraits<INS_
 }
 
 
-
 template< typename INS_VEC, typename OPER >
-VecView<INS_VEC>  ApplyBinaryTransformUR_X_Impl(typename InstructionTraits<INS_VEC>::FloatType  lhs, const VecView<INS_VEC>& rhs, OPER& oper)
+VecView<INS_VEC>  ApplyBinaryTransformUR_X(typename InstructionTraits<INS_VEC>::FloatType  lhs, const VecView<INS_VEC>& rhs, OPER& oper)
 {
 	return ApplyBinaryTransformUR_X_Impl(lhs,rhs, oper);
 }
-
 
 
 template< typename INS_VEC, typename OPER >
@@ -1469,8 +1455,6 @@ Vec<INS_VEC>  ApplyBinaryTransformUR_X(typename InstructionTraits<INS_VEC>::Floa
 {
 	return ApplyBinaryTransformUR_X_Impl(lhs,rhs, oper);
 }
-
-
 
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP >
@@ -1494,7 +1478,7 @@ VEC_TYPE<INS_VEC>  ApplyBinaryTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& lhs, t
 
 	//int sz = lhs.size();
 	auto pLhs = lhs.start();
-	VEC_TYPE<INS_VEC> ret(lhs);// ret(sz);
+	VEC_TYPE<INS_VEC> ret(initTransformer(lhs));// ret(sz);
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1556,81 +1540,9 @@ template< typename INS_VEC, typename OPER >
 Vec<INS_VEC>  ApplyBinaryTransformUR_X(const Vec<INS_VEC>& lhs, typename InstructionTraits<INS_VEC>::FloatType  rhs,  OPER& oper)
 {
 	return ApplyBinaryTransformUR_X_Impl(lhs, rhs, oper);
-	/*
 
-	check_vector(lhs);
-
-	INS_VEC LHS;
-	INS_VEC RHS;
-	INS_VEC RES;
-	RHS = rhs;
-
-	if (isScalar(lhs))
-	{
-		// both are scalar
-		LHS = lhs.getScalarValue();
-		RES = oper(LHS, RHS);
-		return Vec<INS_VEC>(RES[0]);
-	}
-
-
-	int sz = lhs.size();
-	auto pLhs = lhs.start();
-	Vec<INS_VEC> ret(sz);
-	auto pRet = ret.start();
-
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 4 * width;
-
-	INS_VEC LHS1;
-	INS_VEC RES1;
-
-	INS_VEC LHS2;
-	INS_VEC RES2;
-
-	INS_VEC LHS3;
-	INS_VEC RES3;
-
-	int i = 0;
-
-	int impSZ = lhs.paddedSize();
-	//int rhsSZ = sz - step;
-	int rhsSZ = impSZ - step;
-	for (; i < rhsSZ; i += step)
-	{
-		LHS.load_a(pLhs + i);
-		RES = oper(LHS, RHS);
-		RES.store_a(pRet + i);
-
-		LHS1.load_a(pLhs + i + width);
-		RES1 = oper(LHS1, RHS);
-		RES1.store_a(pRet + i +width);
-
-		LHS2.load_a(pLhs + i + 2 * width);
-		RES2 = oper(LHS2, RHS);
-		RES2.store_a(pRet + i +2 * width);
-
-		LHS3.load_a(pLhs + i + 3 * width);
-		RES3 = oper(LHS3, RHS);
-		RES3.store_a(pRet + i + 3 * width);
-	}
-
-	for (; i <= impSZ - width; i += width)
-	{
-		LHS.load_a(pLhs + i);
-		RES = oper(LHS, RHS);
-		RES.store_a(pRet + i);
-	}
-
-	//Since vector is padded no odd end bits, just unused end bits 
-	return ret;
-	*/
 }
 
-
-
-
-//////////////////////////////
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename OPER_TRUE, typename OPER_FALSE >
 VEC_TYPE<INS_VEC>  ApplySelectTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, OP& cond, OPER_TRUE& trueOper, OPER_FALSE& falseOper)
@@ -1647,9 +1559,9 @@ VEC_TYPE<INS_VEC>  ApplySelectTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, 
 		return VEC_TYPE<INS_VEC>(RES[0]);
 	}
 
-	int sz = rhs1.size();
+	//int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	VEC_TYPE<INS_VEC> ret(rhs1);////ret(sz);
+	VEC_TYPE<INS_VEC> ret(initTransformer(rhs1));////ret(sz);
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1722,8 +1634,6 @@ VEC_TYPE<INS_VEC>  ApplySelectTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, 
 	//Since vector is padded no odd end bits, just unused end bits 
 	return ret;
 }
-
-
 
 
 template< typename INS_VEC, typename OP, typename OPER_TRUE, typename OPER_FALSE >
@@ -1834,18 +1744,7 @@ Vec<INS_VEC> ApplySelectionOperationFuncUR_X(BOOL_OPER& COND, const Vec<INS_VEC>
 {
 	return ApplySelectTransformUR_X(testData, COND, trueOper, falseOper);
 
-	/*
-	check_vector(testData);
-	Vec<INS_VEC> result(testData.size());
-	auto pRes = result.start();
-	auto pX = testData.start();
-	int sz = testData.paddedSize();
-	Unroll_Select< INS_VEC, BOOL_OPER, TRUE_OPER, FALSE_OPER>::apply_4(sz, pX, trueOper, falseOper, pRes, COND);
-	return result;
-	*/
 }
-
-
 
 
 template<  template <class> typename VEC_TYPE , typename INS_VEC, typename OP >
@@ -1861,9 +1760,9 @@ VEC_TYPE<INS_VEC>  ApplySelectTransformUR_XC_Impl(const VEC_TYPE<INS_VEC >& rhs1
 		return Vec<INS_VEC>(RES[0]);
 	}
 
-	int sz = rhs1.size();
+	//int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	VEC_TYPE<INS_VEC> ret(rhs1);// ret(sz);
+	VEC_TYPE<INS_VEC> ret(initTransformer(rhs1));// ret(sz);
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1919,7 +1818,6 @@ VEC_TYPE<INS_VEC>  ApplySelectTransformUR_XC_Impl(const VEC_TYPE<INS_VEC >& rhs1
 	//no odd end bit
 	return ret;
 }
-
 
 
 template< typename INS_VEC, typename OP >
@@ -1935,99 +1833,6 @@ VecView<INS_VEC>  ApplySelectTransformUR_XC(const VecView<INS_VEC>& rhs1, OP& co
 	return ApplySelectTransformUR_XC_Impl(rhs1, cond, trueVal, falseVal);
 }
 
-
-/*
-template< typename INS_VEC, typename OP >
-Vec<INS_VEC>  ApplySelectTransformUR_XC(const Vec<INS_VEC>& rhs1, OP& cond, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType& falseVal)
-{
-	check_vector(rhs1);
-	if (isScalar(rhs1))
-	{
-		INS_VEC RHS = rhs1.getScalarValue();
-		INS_VEC TRU = trueVal;
-		INS_VEC FLS = falseVal;
-		INS_VEC RES = select(cond(RHS), TRU, FLS);
-		return Vec<INS_VEC>(RES[0]);
-	}
-
-	int sz = rhs1.size();
-	auto pRhs1 = rhs1.start();
-	Vec<INS_VEC> ret(sz);
-	auto pRet = ret.start();
-
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 4 * width;
-
-	INS_VEC RHS;
-	INS_VEC RES;
-	INS_VEC TRU = trueVal;
-	INS_VEC FLS = falseVal;
-
-	INS_VEC RHS1;
-	INS_VEC RES1;
-
-	INS_VEC RHS2;
-	INS_VEC RES2;
-
-	INS_VEC RHS3;
-	INS_VEC RES3;
-
-	int i = 0;
-
-	//int rhsSZ = sz - step;
-	int impSZ = rhs1.paddedSize();
-	//int rhsSZ = sz - step;
-	int rhsSZ = impSZ - step;
-
-	for (; i < rhsSZ; i += step)
-	{
-		RHS.load_a(pRhs1 + i);
-		RES = select(cond(RHS), TRU, FLS);
-		RES.store_a(pRet + i);
-
-		RHS1.load_a(pRhs1 + i + width);
-		RES1 = select(cond(RHS1), TRU, FLS);
-		RES1.store_a(pRet + i + width);
-
-		RHS2.load_a(pRhs1 + i + width * 2);
-		RES2 = select(cond(RHS2), TRU, FLS);
-		RES2.store_a(pRet + i + width * 2);
-
-		RHS3.load_a(pRhs1 + i + width * 3);
-		RES3 = select(cond(RHS3), TRU, FLS);
-		RES3.store_a(pRet + i + width * 3);
-	}
-
-	for (; i <= impSZ - width; i += width)
-	{
-		RHS.load_a(pRhs1 + i);
-		RES = select(cond(RHS), TRU, FLS);
-		RES.store_a(pRet + i);
-	}
-
-	//no odd end bit
-	return ret;
-}
-
-*/
-
-
-
-//looks redundant ?
-/*
-template< typename INS_VEC, typename BOOL_OPER>
-Vec<INS_VEC> ApplySelectionOperationCUR_X(BOOL_OPER& COND, const Vec<INS_VEC>& testData, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType& falseVal)
-{
-	return ApplySelectTransformUR_XC(testData, COND, trueVal, falseVal);
-
-}
-*/
-
-
-
-
-
-///////////////////////////
 
 template< typename INS_VEC, typename OP>
 Vec<INS_VEC> ApplyAdjacentDiff(const Vec<INS_VEC>& rhs1, OP& oper)

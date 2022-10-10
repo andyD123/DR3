@@ -14,6 +14,7 @@
 #include <iterator>
 #include "alloc_policy.h"
 #include "apply_operation.h"
+#include "error_utils.h"
 #include <vector>
 
 
@@ -48,7 +49,7 @@ public:
 		m_pIndex = nullptr;
 	}
 
-	explicit VecView(size_t sz, int unused1 =0, int unused2 = 1) : m_scalarVal(InstructionTraits<INS_VEC>::nullValue), m_size(static_cast<int>(sz)), m_implSize(sz), m_implSizeIdx(sz)
+	explicit VecView(size_t sz): m_scalarVal(InstructionTraits<INS_VEC>::nullValue), m_size(static_cast<int>(sz)), m_implSize(sz), m_implSizeIdx(sz)
 	{
 		alloc(m_implSize, m_pData);
 		alloc(m_implSizeIdx, m_pIndex);
@@ -56,6 +57,20 @@ public:
 		m_scalarVal = 0.0;
 		m_fillSize = 0;
 		m_last = 0;
+
+	}
+
+
+	explicit VecView(int sz, const VecView& rhs) : m_scalarVal(InstructionTraits<INS_VEC>::nullValue), m_size(static_cast<int>(sz)), m_implSize(sz), m_implSizeIdx(sz)
+	{
+		alloc(m_implSize, m_pData);
+		alloc(m_implSizeIdx, m_pIndex);
+		std::copy(rhs.m_pIndex, rhs.m_pIndex + m_implSizeIdx, m_pIndex);
+		m_isScalar = false;
+		m_scalarVal = 0.0;
+		m_fillSize = 0;
+		m_last = 0;
+
 	}
 
 
