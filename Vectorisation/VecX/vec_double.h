@@ -475,6 +475,17 @@ static inline VecDouble floor(VecDouble const & a)
 }
 
 
+static inline VecDouble sin(VecDouble const& a)
+{
+	return VecDouble(::sin(a[0]), ::sin(a[1]));
+}
+
+static inline VecDouble cos(VecDouble const& a)
+{
+	return VecDouble(::cos(a[0]), ::cos(a[1]));
+}
+
+
 
 static inline VecDouble cdfnorm(VecDouble const & a) 
 {

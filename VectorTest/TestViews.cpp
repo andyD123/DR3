@@ -15,9 +15,11 @@
 #include "../Vectorisation/VecX/target_name_space.h"
 
 
-//using namespace VecDb;
+
 
 #include <numeric>
+
+//using namespace DRC::VecDb;
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
@@ -713,10 +715,10 @@ void testCountedFilterViewZAllTrue(int SZ, int count)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x > -1200.0; };
+	auto condTest = [](auto x) {return x > VecXX::INS(-1200.0); };
 
 
-	auto trueFilter = [](auto x) {return true; };
+	auto trueFilter = [](auto x) {return x==x; };
 
 	VecVW trueView = ApplyFilter(trueFilter, initVals);
 
@@ -973,11 +975,11 @@ TEST(TestViews, binaryFilterZView)
 
 	VecXX test(v);
 
-	auto trueTest = [](auto x) {return true; };
+	auto trueTest = [](auto x) {return x==x; };
 
 	auto initialVW = ApplyFilter(trueTest, test);
 
-	auto condTest = [](auto x) {return x >= 2.0; };
+	auto condTest = [](auto x) {return x >= VecXX::INS(2.0); };
 
 	auto tupple_vw = ApplyBinaryFilter(condTest, initialVW);
 

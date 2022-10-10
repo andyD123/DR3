@@ -12,14 +12,14 @@
 #include "../Vectorisation/VecX/dr3.h"
 
 
-/**/
+/*
 typedef VecD<VecDouble>  VecxD;
 typedef VecD<VecDouble>  Vecx;
 typedef Vec<VecDouble>  VecXX;
+*/
 
-//using namespace DRC::VecD4D;
 
-//using namespace DRC::VecDb;
+using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
 //  using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
@@ -264,12 +264,12 @@ TEST(TestFuncions, TestExp)
 	auto res = exp(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], exp(mix[0]));
-	EXPECT_EQ(res[1], exp(mix[1]));
-	EXPECT_EQ(res[2], exp(mix[2]));
+	EXPECT_DOUBLE_EQ(res[0], exp(mix[0]));
+	EXPECT_DOUBLE_EQ(res[1], exp(mix[1]));
+	EXPECT_DOUBLE_EQ(res[2], exp(mix[2]));
 
 	auto res2 = exp(vecScalar);
-	EXPECT_EQ(res2.getScalarValue(), exp(vecScalar.getScalarValue()));
+	EXPECT_DOUBLE_EQ(res2.getScalarValue(), exp(vecScalar.getScalarValue()));
 }
 
 
@@ -285,12 +285,12 @@ TEST(TestFuncions, TestLog)
 	auto res = log(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], log(mix[0]));
-	EXPECT_EQ(res[1], log(mix[1]));
-	EXPECT_EQ(res[2], log(mix[2]));
+	EXPECT_DOUBLE_EQ(res[0], log(mix[0]));
+	EXPECT_DOUBLE_EQ(res[1], log(mix[1]));
+	EXPECT_DOUBLE_EQ(res[2], log(mix[2]));
 
 	auto res2 = log(vecScalar);
-	EXPECT_EQ(res2.getScalarValue(), log(vecScalar.getScalarValue()));
+	EXPECT_DOUBLE_EQ(res2.getScalarValue(), log(vecScalar.getScalarValue()));
 }
 
 TEST(TestFuncions, Testabs)
@@ -305,12 +305,12 @@ TEST(TestFuncions, Testabs)
 	auto res = abs(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], abs(mix[0]));
-	EXPECT_EQ(res[1], abs(mix[1]));
-	EXPECT_EQ(res[2], abs(mix[2]));
+	EXPECT_DOUBLE_EQ(res[0], abs(mix[0]));
+	EXPECT_DOUBLE_EQ(res[1], abs(mix[1]));
+	EXPECT_DOUBLE_EQ(res[2], abs(mix[2]));
 
 	auto res2 = abs(vecScalar);
-	EXPECT_EQ(res2.getScalarValue(), abs(vecScalar.getScalarValue()));
+	EXPECT_DOUBLE_EQ(res2.getScalarValue(), abs(vecScalar.getScalarValue()));
 }
 
 
@@ -326,12 +326,12 @@ TEST(TestFuncions, Testfloor)
 	auto res = floor(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], floor(mix[0]));
-	EXPECT_EQ(res[1], floor(mix[1]));
-	EXPECT_EQ(res[2], floor(mix[2]));
+	EXPECT_DOUBLE_EQ(res[0], floor(mix[0]));
+	EXPECT_DOUBLE_EQ(res[1], floor(mix[1]));
+	EXPECT_DOUBLE_EQ(res[2], floor(mix[2]));
 
 	auto res2 = floor(vecScalar);
-	EXPECT_EQ(res2.getScalarValue(), floor(vecScalar.getScalarValue()));
+	EXPECT_DOUBLE_EQ(res2.getScalarValue(), floor(vecScalar.getScalarValue()));
 }
 
 TEST(TestFuncions, cdfnorminv)
@@ -346,12 +346,12 @@ TEST(TestFuncions, cdfnorminv)
 	auto res = cdfnorminv(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], cdfnorminv(mix[0]));
-	EXPECT_EQ(res[1], cdfnorminv(mix[1]));
-	EXPECT_EQ(res[2], cdfnorminv(mix[2]));
+	EXPECT_DOUBLE_EQ(res[0], cdfnorminv(mix[0]));
+	EXPECT_DOUBLE_EQ(res[1], cdfnorminv(mix[1]));
+	EXPECT_DOUBLE_EQ(res[2], cdfnorminv(mix[2]));
 
 	auto res2 = cdfnorminv(vecScalar);
-	EXPECT_EQ(res2.getScalarValue(), cdfnorminv(vecScalar.getScalarValue()));
+	EXPECT_DOUBLE_EQ(res2.getScalarValue(), cdfnorminv(vecScalar.getScalarValue()));
 }
 
 TEST(TestFuncions, cdfnorm)
@@ -366,12 +366,12 @@ TEST(TestFuncions, cdfnorm)
 	auto res = cdfnorm(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], cdfnorm(mix[0]));
-	EXPECT_EQ(res[1], cdfnorm(mix[1]));
-	EXPECT_EQ(res[2], cdfnorm(mix[2]));
+	EXPECT_DOUBLE_EQ(res[0], cdfnorm(mix[0]));
+	EXPECT_DOUBLE_EQ(res[1], cdfnorm(mix[1]));
+	EXPECT_DOUBLE_EQ(res[2], cdfnorm(mix[2]));
 
 	auto res2 = cdfnorm(vecScalar);
-	EXPECT_EQ(res2.getScalarValue(), cdfnorm(vecScalar.getScalarValue()));
+	EXPECT_DOUBLE_EQ(res2.getScalarValue(), cdfnorm(vecScalar.getScalarValue()));
 }
 
 
@@ -387,12 +387,12 @@ TEST(TestFuncions, cdfnormD)
 	auto res = cdfnormD(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], cdfnormD(mix[0]));
-	EXPECT_EQ(res[1], cdfnormD(mix[1]));
-	EXPECT_EQ(res[2], cdfnormD(mix[2]));
+	EXPECT_DOUBLE_EQ(res[0], cdfnormD(mix[0]));
+	EXPECT_DOUBLE_EQ(res[1], cdfnormD(mix[1]));
+	EXPECT_DOUBLE_EQ(res[2], cdfnormD(mix[2]));
 
 	auto res2 = cdfnormD(vecScalar);
-	EXPECT_EQ(res2.getScalarValue(), cdfnormD(vecScalar.getScalarValue()));
+	EXPECT_DOUBLE_EQ(res2.getScalarValue(), cdfnormD(vecScalar.getScalarValue()));
 }
 
 
@@ -466,9 +466,9 @@ TEST(TestFuncions, pow)
 	auto res = pow(Vec1, 0.5);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], sqrt(mix[0]));
-	EXPECT_EQ(res[1], sqrt(mix[1]));
-	EXPECT_EQ(res[2], sqrt(mix[2]));
+	EXPECT_DOUBLE_EQ(res[0], sqrt(mix[0]));
+	EXPECT_DOUBLE_EQ(res[1], sqrt(mix[1]));
+	EXPECT_DOUBLE_EQ(res[2], sqrt(mix[2]));
 
 	std::vector<double> mix1{ 1.0, 2.0, 3.0 };
 	VecXX powers(mix1);

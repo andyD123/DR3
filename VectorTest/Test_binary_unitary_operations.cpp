@@ -13,9 +13,9 @@
 
 
 
-//using namespace DRC::VecDb;
+using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
-using namespace DRC::VecD4D;
+//using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
@@ -857,7 +857,7 @@ void testApplySparse(int start, int SZ, int mod)
 	VecXX smallVec(v);
 
 
-	auto sinOper = [](auto x) {return sin(0.25 * x); };
+	auto sinOper = [](auto x) {return sin( VecXX::INS(0.25) * x); };
 
 	auto twenty = VecXX::scalar(20.);
 	auto sparseFunc = [=](auto x) { return ((x / twenty - floor(x / twenty)) < 0.000001); };

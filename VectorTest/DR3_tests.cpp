@@ -24,11 +24,11 @@
 #include <algorithm>
 #include <random>
 
-//using namespace DRC::VecDb;
+using namespace DRC::VecDb;
 
 //using namespace DRC::VecF4F;
 //using namespace DRC::VecD2D;
-using namespace DRC::VecD4D;
+//using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
@@ -77,7 +77,12 @@ void testTransform_1(int SZ)
 
 	for (int j = 0; j < SZ; ++j)
 	{
-		auto onlyJlambda = [=](auto x) { return select ( ((asNumber(j)-asNumber(0.0001) ) < x  && ( (asNumber(j)+ asNumber(0.00001) )> x )) ,x,-x); };
+		auto onlyJlambda = [&](auto x) {
+			return select(
+			( 
+				((asNumber(j) - asNumber(0.0001) ) < x) 
+			&&  ((asNumber(j) + asNumber(0.0001) ) > x )
+				),x,-x); };
 		VecXX res = transform(onlyJlambda, testVec);
 
 		std::vector<Numeric> inspect = res;
