@@ -17,6 +17,10 @@
 
 #include "../Vectorisation/VecX/dr3.h"
 
+#include "dr3TestUtil.h"
+
+#include "testNamespace.h"
+
 
 
 
@@ -24,7 +28,7 @@
 #include <algorithm>
 #include <random>
 
-using namespace DRC::VecDb;
+//using namespace DRC::VecDb;
 
 //using namespace DRC::VecF4F;
 //using namespace DRC::VecD2D;
@@ -35,8 +39,8 @@ using namespace DRC::VecDb;
 
 
 
-using Numeric =  InstructionTraits<VecXX::INS>::FloatType;
-
+//using Numeric =  InstructionTraits<VecXX::INS>::FloatType;
+/*
 Numeric asNumber(double x)
 {
 	return static_cast<Numeric>(x);
@@ -54,7 +58,7 @@ void EXPECT_NUMERIC_EQ(float x, float y)
 	EXPECT_FLOAT_EQ(x, y);
 }
 
-
+*/
 
 void testTransform_1(int SZ)
 {
