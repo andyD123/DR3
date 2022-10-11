@@ -22,21 +22,22 @@
 
 #include <numeric>
 
-using namespace DRC::VecDb;
+//using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
 //using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
-
+#include "testNamespace.h"
 
 
 void testFilterTransform(int SZ )
 {
 
-	std::vector<double> input(SZ, 0.0);
-	std::iota(begin(input), end(input), 0.0);
+	auto onlyJlambda = [=](auto x) { return (asNumber(j) > (x - asNumber(0.0001)) && (asNumber(j) < x + asNumber(0.00001))); };
+	std::vector<Numeric> input(SZ,asNumber( 0.0));
+	std::iota(begin(input), end(input), asNumber(0.0));
 
 	VecXX testVec(input);
 	auto trueLambdaS = [&](auto x) { return x; };
@@ -45,18 +46,18 @@ void testFilterTransform(int SZ )
 
 	for (int j = 0; j < SZ; ++j)
 	{
-		auto onlyJlambda = [=](auto x) { return (j > (x - 0.0001) && (j < x + 0.00001)); };
+		auto onlyJlambda = [=](auto x) { return (asNumber(j) > (x - asNumber(0.0001)) && (asNumber(j) < x + asNumber(0.00001))); };
 		VecXX res =  filterTransform(onlyJlambda, testVec, trueLambdaS, falseLambdaS);
 
 		for (int k = 0; k < SZ; k++)
 		{
 			if( k==j)
 			{
-				EXPECT_DOUBLE_EQ(res[k],  k);
+				EXPECT_NUMERIC_EQ(res[k], asNumber( k));
 			}
 			else
 			{
-				EXPECT_DOUBLE_EQ(res[k], -1.0 * k);
+				EXPECT_NUMERIC_EQ(res[k],  asNumber(-k));
 			}
 		}		
 	}
