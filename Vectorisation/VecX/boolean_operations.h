@@ -38,6 +38,7 @@ void storeBool_a(typename InstructionTraits<INS_VEC>::BoolType& toStore, typenam
 	data.store_a(pdata);
 }
 
+
 //probably same as above 
 template< typename INS_VEC>
 void storeBool2_a(typename InstructionTraits<INS_VEC>::RegBoolType& toStore, typename InstructionTraits<INS_VEC>::FloatType* pdata)
@@ -47,6 +48,10 @@ void storeBool2_a(typename InstructionTraits<INS_VEC>::RegBoolType& toStore, typ
 
 	INS_VEC(cnvrt).store_a(pdata);
 
+	//cnvrt.store_a(pdata);
+	//cnvrt.store(pdata);
+
+
 	//perhaps
 	//boolConvert<INS_VEC>(toStore).store_a(pdata);
 
@@ -55,14 +60,14 @@ void storeBool2_a(typename InstructionTraits<INS_VEC>::RegBoolType& toStore, typ
 }
 
 
-/*
+
 template< typename INS_VEC>
 void storeBool(typename InstructionTraits<INS_VEC>::BoolType& tostore, typename InstructionTraits<INS_VEC>::FloatType* pdata)
 {
 	INS_VEC data(tostore);
 	data.store_a(pdata);
 }
-*/
+
 
 template<typename INS_VEC, typename OP, int OFFSET>
 struct  UnitaryBoolOpElement
@@ -148,8 +153,9 @@ struct  BinaryBoolNumericOpElement
 		//INS_VEC(RES).store_a(pRes + relativeOffset +i);
 		storeBool2_a<INS_VEC>(RES, pRes + relativeOffset + i);
 
-		//storeBool2_a(RES, pRes + relativeOffset + i);
+		//storeBool_a<INS_VEC > (RES, (pRes + relativeOffset + i) );
 
+		//RES.store((pRes + relativeOffset + i));
 		
 	}
 

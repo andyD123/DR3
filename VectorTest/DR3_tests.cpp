@@ -2427,8 +2427,7 @@ TEST(TestDR3, testTransformReduceBinary_Vec)
 
 //broken on AVX512 
 
-//
-/*
+///*
 
 void testFilterBoolVecXX(int SZ)
 {
@@ -2438,7 +2437,7 @@ void testFilterBoolVecXX(int SZ)
 	const VecXX testVec(input);
 
 	auto copyLambda = [&](auto x) {return x; };
-	//VecVW inputView = transformV(copyLambda, testVec);
+	
 
 	auto allowAll = [](auto x) {return x == x; };
 
@@ -2453,6 +2452,7 @@ void testFilterBoolVecXX(int SZ)
 	{
 		EXPECT_NUMERIC_EQ(resAll[i], testVec[i]);
 	}
+
 
 	auto allowNone = [](auto x) {return x != x; };
 
@@ -2470,6 +2470,7 @@ void testFilterBoolVecXX(int SZ)
 		EXPECT_NUMERIC_EQ(res[0], j);
 
 	}
+		 /**/
 
 }
 
@@ -2496,6 +2497,7 @@ TEST(TestDR3, testFilterBool_vec)
 
 
 
+///*
 
 void testFilterBool_vw(int SZ)
 {
@@ -2562,6 +2564,6 @@ TEST(TestDR3, testFilterBool_vw)
 }
 
 
-//
-*/
+//*/
+
 

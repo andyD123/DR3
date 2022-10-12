@@ -66,8 +66,8 @@ struct InstructionTraits<VecDouble>
 template<>
 struct InstructionTraits<Vec2d>
 {
-	using IdxType = Vec2q;//Vec2q;
-	using BoolType = Vec2db;// VecBoolD;
+	using IdxType = Vec2q;
+	using BoolType = Vec2db;
 	using FloatType = double;
 	static const int width = 2;
 	static const double nullValue;
@@ -162,11 +162,9 @@ struct InstructionTraits<Vec8d>
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = true;
 
-	static constexpr  bool isCompact =  true;// false;// true;
-	using RegBoolType = Vec8db;// Vec8db;
+	static constexpr  bool isCompact =  true;
+	using RegBoolType = Vec8db;
 	using MemBoolType = Vec8d;
-
-	//using BoolType = NOT_KNOWN_HERE;
 
 };
 
@@ -185,19 +183,45 @@ struct InstructionTraits<Vec16f>
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = true;
 
-	static constexpr  bool isCompact = true; //to do
-	using RegBoolType = Vec16b;
-	using MemBoolType = Vec16b;
+	static constexpr  bool isCompact = true; 
+	using RegBoolType = Vec16fb;
+	using MemBoolType = Vec16f;
 };
-
 
 
 
 template<typename TRAIT>
 inline  typename InstructionTraits<TRAIT>::MemBoolType boolCompactSave(typename InstructionTraits<TRAIT>::RegBoolType regVal )
 {
-	return  static_cast<typename InstructionTraits<TRAIT>::MemBoolType>(regVal);
+	return boolCompactConvert(regVal);
 }
+
+
+template<typename TRAIT>
+inline  typename InstructionTraits<TRAIT>::MemBoolType boolCompactConvert(typename InstructionTraits<TRAIT>::RegBoolType regVal)
+{
+	return  static_cast<typename InstructionTraits<TRAIT>::MemBoolType>(regVal);
+
+}
+
+
+
+
+inline  Vec8d boolCompactConvert(Vec8db regVal)
+{
+	Vec8d const b = 0.;
+	return select(regVal, -nan8d(), b);
+}
+
+
+
+inline  Vec16f boolCompactConvert(Vec16fb regVal)
+{
+	Vec16f const b = 0.f;
+	return select(regVal, -nan16f(), b);
+}
+
+
 
 
 template<typename TRAIT  >
@@ -214,29 +238,3 @@ inline  auto boolConvert(typename  InstructionTraits<TRAIT>::RegBoolType regVal)
 }
 
 
-
-static inline Vec8d boolCompactSave(Vec8db regVal)
-{
-	//auto in = to_bits(regVal);
-	Vec8db ret = regVal;
-	//ret.load_bits(in);
-	Vec8d ones = 11111111111.;
-	Vec8d zeros = 0;
-	auto result = select(ret, ones, zeros);
-	return result;
-}
-
-
-/*
-static inline Vec8d boolCompactSave( Vec8b regVal)
-{
-	auto in = to_bits(regVal);
-	Vec8db ret;
-	ret.load_bits(in);
-	Vec8d ones = 11111111111.;
-	Vec8d zeros = 0;
-	auto result = select(ret, ones, zeros);
-	return result;
-
-}
-*/

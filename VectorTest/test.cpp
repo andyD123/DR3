@@ -19,9 +19,9 @@ typedef Vec<VecDouble>  VecXX;
 */
 
 
-using namespace DRC::VecDb;
+//using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
-//  using namespace DRC::VecD4D;
+  using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
@@ -643,7 +643,7 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 
 	VecXX Vec1(one);
 
-	auto myFunc = [](auto X, auto Y) {return ((X * X - Y * Y + X * Y) < 4 * X); };
+	auto myFunc = [](auto X, auto Y) {return ((X * X - Y * Y + X * Y) < VecXX::reg(4.) * X); };
 
 	auto res = ApplyLambda2(Vec2, Vec1, myFunc);
 	//	EXPECT_EQ(res.size(), 3);
