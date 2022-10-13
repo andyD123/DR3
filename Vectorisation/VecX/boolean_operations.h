@@ -138,15 +138,19 @@ struct  BinaryBoolOpElement
 template<typename INS_VEC, typename OP, int OFFSET>
 struct  BinaryBoolNumericOpElement
 {
-	INS_VEC LHS;
-	INS_VEC RHS;
-	typename InstructionTraits<INS_VEC>::BoolType RES;
+	//INS_VEC LHS;
+	//INS_VEC RHS;
+	//typename InstructionTraits<INS_VEC>::BoolType RES;
 	using Float = typename InstructionTraits<INS_VEC>::FloatType;
 	const int width = InstructionTraits< INS_VEC>::width;
 	const int relativeOffset = InstructionTraits< INS_VEC>::width * OFFSET;
 
 	inline void apply(Float* pLhs, Float* pRhs, int  i, Float* pRes, OP oper)
 	{
+		typename InstructionTraits<INS_VEC>::BoolType RES;
+		INS_VEC LHS;
+		INS_VEC RHS;
+
 		LHS.load_a(pLhs + relativeOffset +i);
 		RHS.load_a(pRhs + relativeOffset +i);
 		RES = oper.apply(LHS, RHS);
@@ -159,16 +163,24 @@ struct  BinaryBoolNumericOpElement
 		
 	}
 
-	inline void apply(typename InstructionTraits<INS_VEC>::BoolType LHS, Float* pRhs, int i, Float* pRes, OP oper)
+	//inline void apply(typename InstructionTraits<INS_VEC>::BoolType LHS, Float* pRhs, int i, Float* pRes, OP oper)
+	inline void apply(INS_VEC LHS, Float* pRhs, int i, Float* pRes, OP oper)
 	{
+		typename InstructionTraits<INS_VEC>::BoolType RES;
+		INS_VEC RHS;
+
 		RHS.load_a(pRhs + relativeOffset + i);
 		RES = oper.apply(LHS, RHS);
 		//INS_VEC(RES).store_a(pRes + relativeOffset +i);
 		storeBool2_a<INS_VEC>(RES, pRes + relativeOffset + i);
 	}
 
-	inline void apply(Float* pLhs, typename InstructionTraits<INS_VEC>::BoolType RHS, int i, Float* pRes,  OP oper)
+	//inline void apply(Float* pLhs, typename InstructionTraits<INS_VEC>::BoolType RHS, int i, Float* pRes,  OP oper)
+	inline void apply(Float* pLhs, INS_VEC RHS, int i, Float* pRes, OP oper)
 	{
+		typename InstructionTraits<INS_VEC>::BoolType RES;
+		INS_VEC LHS;
+
 		LHS.load_a(pLhs + relativeOffset + i);
 		RES = oper.apply(LHS, RHS);
 		//INS_VEC(RES).store_a(pRes + relativeOffset + i);
@@ -240,20 +252,43 @@ VecBool<INS_VEC> ApplyBooleanUnitaryOperation(const VecBool<INS_VEC>& rhs)
 	return result;
 }
 
-//for binary boolean logical operators &&, OR  
+
 template< typename INS_VEC, typename OP>
-VecBool<INS_VEC> ApplyBooleanBinaryOperation(const VecBool<INS_VEC>& lhs, const VecBool<INS_VEC>& rhs)
+VecBool<INS_VEC> ApplyBooleanBinaryOperation(  typename InstructionTraits<INS_VEC>::FloatType lhs,
+												typename InstructionTraits<INS_VEC>::FloatType rhs)
 {
-	check_pair(lhs, rhs);
-	VecBool<INS_VEC> result(rhs.size());
-	auto pRes = result.start();
-	auto pLhs = lhs.start();
-	auto pRhs = rhs.start();
-	int sz = lhs.paddedSize();
 	OP oper;
-	BinaryBoolUnroll<INS_VEC, OP>::apply_4( sz, pLhs, pRhs, pRes, oper);
+	bool rrs = oper.apply(lhs, rhs);
+	return VecBool<INS_VEC>(rrs);
+}
+
+
+
+
+
+// for binary numeric conditional operators   eg A < b  overload 
+//aligned load
+template< typename INS_VEC, typename OP>
+VecBool<INS_VEC> ApplyBooleanBinaryOperation(typename InstructionTraits<INS_VEC>::FloatType lhs, const Vec<INS_VEC>& rhs)
+{	
+	check_vector(rhs);
+
+	if (rhs.isScalar())
+	{
+		return ApplyBooleanBinaryOperation<INS_VEC, OP>(lhs, rhs.getScalarValue());
+	}
+
+	
+	VecBool<INS_VEC> result(rhs.size());
+	OP oper;
+	auto pRes = result.start();
+	auto pRhs = rhs.start();
+	int sz = rhs.paddedSize();
+	INS_VEC LHS(lhs);
+	BinaryBoolNumericUnroll<INS_VEC, OP>::apply_4(sz, LHS, pRhs, pRes, oper);
 	return result;
 }
+
 
 // for binary numeric conditional operators   eg A < b
 //aligned load
@@ -263,16 +298,16 @@ VecBool<INS_VEC> ApplyBooleanBinaryOperation(const Vec<INS_VEC>& lhs, const Vec<
 {
 	check_pair(lhs, rhs);
 
-	/*
+
 	if (lhs.isScalar())
 	{
-		return ApplyBooleanBinaryOperation< INS_VEC,OP>(lhs.getScalarValue(), rhs);
+		return ApplyBooleanBinaryOperation< INS_VEC, OP>(lhs.getScalarValue(), rhs);
 	}
 	if (rhs.isScalar())
 	{
 		return ApplyBooleanBinaryOperation< INS_VEC, OP>(lhs, rhs.getScalarValue());
 	}
-	*/
+	
 
 	VecBool<INS_VEC> result(static_cast<int>(lhs.size()));
 	auto pRes = result.start();
@@ -284,40 +319,21 @@ VecBool<INS_VEC> ApplyBooleanBinaryOperation(const Vec<INS_VEC>& lhs, const Vec<
 	return result;
 }
 
-// for binary numeric conditional operators   eg A < b  overload 
-//aligned load
-template< typename INS_VEC, typename OP>
-VecBool<INS_VEC> ApplyBooleanBinaryOperation(typename InstructionTraits<INS_VEC>::FloatType lhs, const Vec<INS_VEC>& rhs)
-{
-	check_vector(rhs);
-	/*
-	if (rhs.isScalar())
-	{
-		return ApplyBooleanBinaryOperation(lhs, rhs.getScalarValue());
-	}
 
-	*/
-	VecBool<INS_VEC> result(rhs.size());
-	OP oper;
-	auto pRes = result.start();
-	auto pRhs = rhs.start();
-	int sz = rhs.paddedSize();
-	INS_VEC LHS(lhs);
-	BinaryBoolNumericUnroll<INS_VEC, OP>::apply_4(sz, LHS, pRhs, pRes, oper);
-	return result;
-}
+
+
+
 
 // for binary numeric conditional operators   eg A < b  overload 
 template< typename INS_VEC, typename OP>
 VecBool<INS_VEC> ApplyBooleanBinaryOperation(const Vec<INS_VEC>& lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
 {
 	check_vector(lhs);
-	/*
 	if (lhs.isScalar())
 	{
-		return ApplyBooleanBinaryOperation(lhs.getScalarValue(), rhs);
+		return ApplyBooleanBinaryOperation<INS_VEC,OP>(lhs.getScalarValue(), rhs );
 	}
-	*/
+
 
 	VecBool< INS_VEC> result(static_cast<int>(lhs.size()) );
 

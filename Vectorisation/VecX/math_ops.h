@@ -398,6 +398,12 @@ namespace DR_CUBED
 			return vLhs < rhs;
 		}
 
+
+		inline  bool apply(typename InstructionTraits<INS_VEC>::FloatType lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
+		{
+			return lhs < rhs;
+		}
+
 	};
 
 	template < typename INS_VEC>
@@ -418,6 +424,11 @@ namespace DR_CUBED
 		{
 			INS_VEC vLhs(lhs);
 			return vLhs <= rhs;
+		}
+
+		inline  bool apply(typename InstructionTraits<INS_VEC>::FloatType lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
+		{
+			return lhs <= rhs;
 		}
 
 	};
@@ -442,6 +453,11 @@ namespace DR_CUBED
 			return vLhs > rhs;
 		}
 
+		inline  bool apply(typename InstructionTraits<INS_VEC>::FloatType lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
+		{
+			return lhs > rhs;
+		}
+
 	};
 
 	template < typename INS_VEC>
@@ -463,6 +479,12 @@ namespace DR_CUBED
 			INS_VEC vLhs(lhs);
 			return vLhs >= rhs;
 		}
+
+		inline  bool apply(typename InstructionTraits<INS_VEC>::FloatType lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
+		{
+			return lhs >= rhs;
+		}
+
 
 	};
 
@@ -486,6 +508,11 @@ namespace DR_CUBED
 			return vLhs == rhs;
 		}
 
+		inline  bool apply(typename InstructionTraits<INS_VEC>::FloatType lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
+		{
+			return lhs == rhs;
+		}
+
 	};
 
 	template < typename INS_VEC>
@@ -506,6 +533,11 @@ namespace DR_CUBED
 		{
 			INS_VEC vLhs(lhs);
 			return vLhs != rhs;
+		}
+
+		inline  bool apply(typename InstructionTraits<INS_VEC>::FloatType lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
+		{
+			return lhs != rhs;
 		}
 
 	};

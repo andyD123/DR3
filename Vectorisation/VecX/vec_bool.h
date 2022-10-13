@@ -21,6 +21,7 @@ class VecBool
 {
 private:
 
+
 	typename InstructionTraits<INS_VEC>::FloatType* m_pData;
 	size_t m_size;
 	size_t m_implSize;
@@ -29,7 +30,7 @@ private:
 	bool m_isScalar = false;
 
 public:
-	explicit VecBool(bool scalar) :m_scalarVal(scalar),m_size(0), m_implSize(0)
+	explicit VecBool(bool scalar) :m_size(0), m_implSize(0), m_scalarVal(scalar)
 	{
 		
 	}
