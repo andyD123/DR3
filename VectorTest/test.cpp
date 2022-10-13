@@ -725,14 +725,16 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 	EXPECT_FALSE(res2);
 
 
-	/*	VecXX scalar1(100.);
+	VecXX scalar1(100.);
 	VecXX scalar2(100.);
 
-	//auto vc2 = (Vec2 <= scalar1);
+	
 
 	auto vc2a = (scalar2 == scalar1);
 
-	EXPECT_TRUE(vc2a.isScalar()); // wrong always false, do we allow scala bool vectors
+
+
+/*	EXPECT_TRUE(vc2a.isScalar()); // wrong always false, do we allow scala bool vectors
 
 	//vc2a.
 
