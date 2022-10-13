@@ -207,13 +207,13 @@ struct BinaryBoolNumericUnroll
 {
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
-	static inline void apply_4(int sz, typename InstructionTraits<INS_VEC>::BoolType LHS, Float* pRhs, Float* pOut, OP oper)
+	static inline void apply_4(int sz, INS_VEC LHS, Float* pRhs, Float* pOut, OP oper)
 	{
 		UnrollBinaryBody_4< BinaryBoolNumericOpElement, INS_VEC, OP>  binaryUnrolled;
 		binaryUnrolled.apply(sz, LHS, pRhs, pOut, oper);
 	}
 
-	static inline void apply_4(int sz, Float* pLhs, typename InstructionTraits<INS_VEC>::BoolType RHS, Float* pOut, OP oper)
+	static inline void apply_4(int sz, Float* pLhs, INS_VEC RHS, Float* pOut, OP oper)
 	{
 		UnrollBinaryBody_4< BinaryBoolNumericOpElement, INS_VEC, OP>  binaryUnrolled;
 		binaryUnrolled.apply(sz, pLhs, RHS, pOut, oper);
@@ -257,10 +257,23 @@ VecBool<INS_VEC> ApplyBooleanBinaryOperation(const VecBool<INS_VEC>& lhs, const 
 
 // for binary numeric conditional operators   eg A < b
 //aligned load
+
 template< typename INS_VEC, typename OP>
 VecBool<INS_VEC> ApplyBooleanBinaryOperation(const Vec<INS_VEC>& lhs, const Vec<INS_VEC>& rhs)
 {
 	check_pair(lhs, rhs);
+
+	/*
+	if (lhs.isScalar())
+	{
+		return ApplyBooleanBinaryOperation< INS_VEC,OP>(lhs.getScalarValue(), rhs);
+	}
+	if (rhs.isScalar())
+	{
+		return ApplyBooleanBinaryOperation< INS_VEC, OP>(lhs, rhs.getScalarValue());
+	}
+	*/
+
 	VecBool<INS_VEC> result(static_cast<int>(lhs.size()));
 	auto pRes = result.start();
 	auto pLhs = lhs.start();
@@ -277,6 +290,13 @@ template< typename INS_VEC, typename OP>
 VecBool<INS_VEC> ApplyBooleanBinaryOperation(typename InstructionTraits<INS_VEC>::FloatType lhs, const Vec<INS_VEC>& rhs)
 {
 	check_vector(rhs);
+	/*
+	if (rhs.isScalar())
+	{
+		return ApplyBooleanBinaryOperation(lhs, rhs.getScalarValue());
+	}
+
+	*/
 	VecBool<INS_VEC> result(rhs.size());
 	OP oper;
 	auto pRes = result.start();
@@ -292,6 +312,12 @@ template< typename INS_VEC, typename OP>
 VecBool<INS_VEC> ApplyBooleanBinaryOperation(const Vec<INS_VEC>& lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
 {
 	check_vector(lhs);
+	/*
+	if (lhs.isScalar())
+	{
+		return ApplyBooleanBinaryOperation(lhs.getScalarValue(), rhs);
+	}
+	*/
 
 	VecBool< INS_VEC> result(static_cast<int>(lhs.size()) );
 

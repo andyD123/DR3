@@ -2465,7 +2465,7 @@ void testFilterBoolVecXX(int SZ)
 	for (Numeric j = 0; j < SZ; ++j)
 	{
 		auto testVecB = vBoolAllFalse;
-		testVecB.setAt(j, true);
+		testVecB.setAt(static_cast<int>(j), true);
 		auto res = filterB(testVecB, testVec);
 		EXPECT_NUMERIC_EQ(res[0], j);
 
@@ -2534,7 +2534,7 @@ void testFilterBool_vw(int SZ)
 	for (Numeric j = 0; j < SZ; ++j)
 	{
 		auto testVecB = vBoolAllFalse;
-		testVecB.setAt(j, true);
+		testVecB.setAt(static_cast<int>(j), true);
 		auto res = filterB(testVecB, inputView);
 		EXPECT_NUMERIC_EQ(res[0], j);
 

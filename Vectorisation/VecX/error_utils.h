@@ -41,15 +41,19 @@ bool check_pair(const VEC& lhs, const VEC& rhs)
 	check_vector(lhs);
 	check_vector(rhs);
 
-	if (lhs.size() == rhs.size()) 
+	if ( (lhs.size() == rhs.size() ) && (lhs.size() > 0 ) )
+	{
 		return true;
+	}
+	
+
 	if (rhs.isScalar() || lhs.isScalar())
 	{
 		return true;
 	}
 	else
 	{
-		//std::
+		
 		assert(false);
 		throw std::exception("bad vector size");
 	}

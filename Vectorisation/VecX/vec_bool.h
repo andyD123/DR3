@@ -25,7 +25,15 @@ private:
 	size_t m_size;
 	size_t m_implSize;
 
+	bool m_scalarVal;
+	bool m_isScalar = false;
+
 public:
+	explicit VecBool(bool scalar) :m_scalarVal(scalar),m_size(0), m_implSize(0)
+	{
+		
+	}
+
 	VecBool(int sz) :m_size(sz), m_implSize(sz)
 	{
 		alloc(m_implSize, m_pData);
@@ -42,6 +50,8 @@ public:
 
 	VecBool(const VecBool& rhs)
 	{
+		m_isScalar = rhs.m_isScalar;
+		m_scalarVal = rhs.m_scalarVal;
 		m_size = rhs.m_size;
 		m_implSize = m_size;
 		alloc(m_implSize, m_pData);
@@ -53,6 +63,8 @@ public:
 	{
 		if (&rhs != this)
 		{
+			m_isScalar = rhs.m_isScalar;
+			m_scalarVal = rhs.m_scalarVal;
 			m_size = rhs.m_size;
 			m_implSize = rhs.m_implSize;
 			std::copy(rhs.m_pData, rhs.m_pData + m_implSize, m_pData);
@@ -63,6 +75,8 @@ public:
 
 	VecBool(VecBool&& rhs) noexcept
 	{
+		m_isScalar = rhs.m_isScalar;
+		m_scalarVal = rhs.m_scalarVal;
 		m_implSize = 0;
 		m_implSize= rhs.m_implSize;
 		m_size = rhs.size();
@@ -77,6 +91,9 @@ public:
 			std::swap(m_implSize, rhs.m_implSize);
 			std::swap(m_size, rhs.m_size);
 			std::swap(m_pData, rhs.m_pData);
+			std::swap(m_scalarVal,rhs.m_scalarVal);
+			std::swap(m_isScalar, rhs.m_isScalar);
+			
 		}
 		return *this;
 	}
@@ -98,10 +115,14 @@ public:
 		return m_implSize;
 	}
 
+	inline bool getScalarValue() const
+	{
+		return m_scalarVal;
+	}
 
 	inline bool isScalar() const
 	{
-		return false;
+		return m_isScalar;
 	}
 
 	inline bool operator[](int j)const

@@ -71,6 +71,42 @@ struct CustomBinary
 	LAMBDA myLambda;
 };
 
+
+template<typename LAMBDA>
+struct CustomBinaryBool
+{
+	CustomBinaryBool(LAMBDA& lamb) :myLambda(lamb) {}
+	template<typename INS_VEC>
+	inline typename InstructionTraits<INS_VEC>::BoolType operator()(const INS_VEC& X, const INS_VEC& Y)
+	{
+		return myLambda(X, Y);
+	}
+
+	template<typename INS_VEC>
+	inline typename InstructionTraits<INS_VEC>::BoolType apply(const INS_VEC& X, const INS_VEC& Y)
+	{
+		return myLambda(X,Y);
+	}
+
+
+	template<typename INS_VEC>
+	inline typename InstructionTraits<INS_VEC>::BoolType apply(const typename InstructionTraits<INS_VEC>::FloatType& X, const INS_VEC& Y)
+	{
+		return myLambda(X, Y);
+	}
+
+	template<typename INS_VEC>
+	inline typename InstructionTraits<INS_VEC>::BoolType apply(const INS_VEC& X, const typename InstructionTraits<INS_VEC>::FloatType& Y)
+	{
+		return myLambda(X, Y);
+	}
+
+
+
+	LAMBDA myLambda;
+};
+
+
 template<typename LAMBDA>
 struct CustomSparseBinary
 {
@@ -119,6 +155,15 @@ Vec<INS_VEC> ApplyLambda2(const Vec<INS_VEC>& in1, const Vec<INS_VEC>& in2, LAMB
 	CustomBinary<LAMBDA> oper(lamb);
 	return ApplyBinaryOperation1(in1, in2, oper);
 }
+
+template< typename INS_VEC, typename LAMBDA>
+VecBool<INS_VEC> ApplyBoolLambda2(const Vec<INS_VEC>& in1, const Vec<INS_VEC>& in2, LAMBDA& lamb)
+{
+	check_pair(in2, in1);
+	CustomBinaryBool<LAMBDA> oper(lamb);
+	return ApplyBoolBinaryOperation1(in1, in2, oper);
+}
+
 
 //////////////////////////sparse update lambdas /////////////////////////////////
 
@@ -532,6 +577,74 @@ Vec<INS_VEC> ApplyBinaryOperation1(const Vec<INS_VEC>& rhs1, const Vec<INS_VEC>&
 	Unroll_Binary<INS_VEC, OP>::apply_1(sz, pRhs1, pRhs2, pRes, oper);
 	return result;
 }
+
+
+template< typename INS_VEC, typename OP>
+VecBool<INS_VEC> ApplyBoolBinaryOperation1(const Vec<INS_VEC>& rhs1, const Vec<INS_VEC>& rhs2, OP& oper)
+{
+	check_pair(rhs1, rhs2);
+	//assert equality of size ?
+	if (rhs1.isScalar())
+	{
+		return ApplyBoolBinaryOperation1<INS_VEC, OP>(rhs1.getScalarValue(), rhs2, oper);
+	}
+	if (rhs2.isScalar())
+	{
+//		return ApplyBoolBinaryOperation1<INS_VEC, OP>(rhs1, rhs2.getScalarValue(), oper);
+	}
+
+	VecBool<INS_VEC> result(rhs1.size());
+	auto pRes = result.start();
+	auto pRhs1 = rhs1.start();
+	auto pRhs2 = rhs2.start();
+	int sz = rhs1.paddedSize();
+
+	BinaryBoolNumericUnroll<INS_VEC, OP>::apply_4(sz, pRhs1, pRhs2, pRes, oper);
+	return result;
+}
+
+
+template< typename INS_VEC, typename OP>
+VecBool<INS_VEC> ApplyBoolBinaryOperation1(typename InstructionTraits<INS_VEC>::FloatType lhs, typename InstructionTraits<INS_VEC>::FloatType rhs, OP& oper)
+{
+	INS_VEC LHS(lhs);
+	INS_VEC RHS(rhs);
+
+	auto res = oper(LHS, RHS);
+	bool val = res[0];
+	return VecBool<INS_VEC>(val);
+}
+
+
+/**/
+template< typename INS_VEC, typename OP>
+VecBool<INS_VEC> ApplyBoolBinaryOperation1(typename InstructionTraits<INS_VEC>::FloatType lhs, const Vec<INS_VEC>& rhs, OP& oper)
+{
+	//check_pair(lhs, rhs);
+	//assert equality of size ?
+
+	if (rhs.isScalar())
+	{
+		return ApplyBoolBinaryOperation1<INS_VEC, OP>(lhs, rhs.getScalarValue(), oper);
+		/*
+		INS_VEC LHS = lhs;
+		INS_VEC RHS = rhs.getScalarValue();
+
+		INS_VEC res = oper(LHS, RHS);
+		return VecBool<INS_VEC>(res[0]);
+		*/
+	}
+
+	VecBool<INS_VEC> result(rhs.size());
+	auto pRes = result.start();
+	INS_VEC LHS(lhs);
+	auto pRhs = rhs.start();
+	int sz = rhs.paddedSize();
+
+//	BinaryBoolNumericUnroll<INS_VEC, OP>::apply_4(sz, LHS, pRhs, pRes, oper);
+	return result;
+}
+
 
 
 template< typename INS_VEC, typename OP>

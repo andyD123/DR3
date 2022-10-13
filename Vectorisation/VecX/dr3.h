@@ -178,8 +178,8 @@ Vec<INS_VEC> ApplySelection(const VecBool<INS_VEC>& condition, typename Instruct
 	return ApplySelectionOperation(condition, trueVal, falseVal);
 
 }
-
 */
+
 
 template< typename INS_VEC, typename BOOL_OPER>
 Vec<INS_VEC> select(BOOL_OPER& COND, const Vec<INS_VEC>& testData, const Vec<INS_VEC>& trueVals, const Vec<INS_VEC>& falseVals)
