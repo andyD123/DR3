@@ -21,8 +21,8 @@ typedef Vec<VecDouble>  VecXX;
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
-  using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
+//  using namespace DRC::VecD4D;
+using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
@@ -734,7 +734,7 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 
 
 
-/*	EXPECT_TRUE(vc2a.isScalar()); // wrong always false, do we allow scala bool vectors
+	EXPECT_TRUE(vc2a.isScalar()); // wrong always false, do we allow scala bool vectors
 
 	//vc2a.
 
@@ -772,15 +772,29 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 	res1 = res[1];
 	res2 = res[2];
 
+
+	EXPECT_FALSE(res0);
+	EXPECT_FALSE(res1);
+	EXPECT_FALSE(res2);
+
+
+	res = ApplyBoolLambda2( Vec1, scalar1, myFunc);
+	EXPECT_EQ(res.size(), 3);
+
+	res0 = res[0];
+	res1 = res[1];
+	res2 = res[2];
+
 	EXPECT_TRUE(res0);
 	EXPECT_TRUE(res1);
 	EXPECT_TRUE(res2);
 		
 
-	*/
+
 }
 
 
+/*
 
 TEST(TestFuncions, testIff)
 {
@@ -799,8 +813,9 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[2], 1.0);
 
 
-}
 
+}
+	*/
 
 double getNull(double)
 {

@@ -985,7 +985,7 @@ void binarySelectionBetweenConst()
 		VecXX testVec(v1);
 		VecXX res;
 
-		FLOAT halfSize = SZ * static_cast<FLOAT>(0.5); 0.5;
+		FLOAT halfSize = SZ * static_cast<FLOAT>(0.5); 
 		auto upperHalfLmbda = [&](auto x) { return x > halfSize; };
 		//warm up
 		for (long l = 0; l < 100; l++)

@@ -590,7 +590,7 @@ VecBool<INS_VEC> ApplyBoolBinaryOperation1(const Vec<INS_VEC>& rhs1, const Vec<I
 	}
 	if (rhs2.isScalar())
 	{
-//		return ApplyBoolBinaryOperation1<INS_VEC, OP>(rhs1, rhs2.getScalarValue(), oper);
+		return ApplyBoolBinaryOperation1<INS_VEC, OP>(rhs1, rhs2.getScalarValue(), oper);
 	}
 
 	VecBool<INS_VEC> result(rhs1.size());
@@ -616,7 +616,7 @@ VecBool<INS_VEC> ApplyBoolBinaryOperation1(typename InstructionTraits<INS_VEC>::
 }
 
 
-/**/
+
 template< typename INS_VEC, typename OP>
 VecBool<INS_VEC> ApplyBoolBinaryOperation1(typename InstructionTraits<INS_VEC>::FloatType lhs, const Vec<INS_VEC>& rhs, OP& oper)
 {
@@ -626,13 +626,6 @@ VecBool<INS_VEC> ApplyBoolBinaryOperation1(typename InstructionTraits<INS_VEC>::
 	if (rhs.isScalar())
 	{
 		return ApplyBoolBinaryOperation1<INS_VEC, OP>(lhs, rhs.getScalarValue(), oper);
-		/*
-		INS_VEC LHS = lhs;
-		INS_VEC RHS = rhs.getScalarValue();
-
-		INS_VEC res = oper(LHS, RHS);
-		return VecBool<INS_VEC>(res[0]);
-		*/
 	}
 
 	VecBool<INS_VEC> result(rhs.size());
@@ -641,9 +634,32 @@ VecBool<INS_VEC> ApplyBoolBinaryOperation1(typename InstructionTraits<INS_VEC>::
 	auto pRhs = rhs.start();
 	int sz = rhs.paddedSize();
 
-//	BinaryBoolNumericUnroll<INS_VEC, OP>::apply_4(sz, LHS, pRhs, pRes, oper);
+	BinaryBoolNumericUnroll<INS_VEC, OP>::apply_4(sz, LHS, pRhs, pRes, oper);
 	return result;
 }
+
+
+template< typename INS_VEC, typename OP>
+VecBool<INS_VEC> ApplyBoolBinaryOperation1( const Vec<INS_VEC>& lhs, typename InstructionTraits<INS_VEC>::FloatType rhs, OP& oper)
+{
+	//check_pair(lhs, rhs);
+	//assert equality of size ?
+
+	if (lhs.isScalar())
+	{
+		return ApplyBoolBinaryOperation1<INS_VEC, OP>(lhs.getScalarValue(), rhs, oper);
+	}
+
+	VecBool<INS_VEC> result(lhs.size());
+	auto pRes = result.start();
+	INS_VEC RHS(rhs);
+	auto pLhs = lhs.start();
+	int sz = lhs.paddedSize();
+
+	BinaryBoolNumericUnroll<INS_VEC, OP>::apply_4(sz, pLhs, RHS, pRes, oper);
+	return result;
+}
+
 
 
 

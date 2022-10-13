@@ -30,7 +30,7 @@ private:
 	bool m_isScalar = false;
 
 public:
-	explicit VecBool(bool scalar) :m_size(0), m_implSize(0), m_scalarVal(scalar)
+	explicit VecBool(bool scalar) :m_size(0), m_implSize(0), m_scalarVal(scalar), m_isScalar(true)
 	{
 		
 	}
