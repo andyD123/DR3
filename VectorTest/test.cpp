@@ -794,7 +794,6 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 }
 
 
-/*
 
 TEST(TestFuncions, testIff)
 {
@@ -803,19 +802,41 @@ TEST(TestFuncions, testIff)
 
 	std::vector<double> one{ 1.0,  1.0, 1.0 };
 
-	VecXX Vec1(one);
+	std::vector<double> other{ 8.0,  7.0, 6.0 };
 
-	auto res = iff(Vec2 > Vec1 + 1.0, Vec1, -Vec1);
+	VecXX Vec1(one);
+	VecXX otherFalse(other);
+
+	auto boolCond = Vec2 > (Vec1 + 1.0);
+
+	auto res = ApplySelection(boolCond, Vec1, -Vec1);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], -1.0);
 	EXPECT_EQ(res[1], -1.0);
 	EXPECT_EQ(res[2], 1.0);
 
+	res = ApplySelection(boolCond, Vec1, otherFalse);
 
+	EXPECT_EQ(res.size(), 3);
+	EXPECT_EQ(res[0], 8.0);
+	EXPECT_EQ(res[1], 7.0);
+	EXPECT_EQ(res[2], 1.0);
+
+
+
+	//auto res = iff(Vec2 > Vec1 + 1.0, Vec1, -Vec1);
+	res = iff(boolCond, Vec1, -Vec1);
+	//res = iff(Vec2 > Vec1 + 1.0, Vec1, -Vec1);
+	EXPECT_EQ(res.size(), 3);
+	EXPECT_EQ(res[0], -1.0);
+	EXPECT_EQ(res[1], -1.0);
+	EXPECT_EQ(res[2], 1.0);
+		/**/
 
 }
-	*/
+	
+/**/
 
 double getNull(double)
 {

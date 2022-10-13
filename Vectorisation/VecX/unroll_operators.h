@@ -277,7 +277,12 @@ struct  SelectOpElement
 		elem_test.load(ptest + i);
 		elem_true.load(plhs + i);
 		elem_false.load(prhs + i);
-		INS_VEC res = select(typename InstructionTraits<INS_VEC>::BoolType(elem_test.value), elem_true.value, elem_false.value);
+
+		
+		typename InstructionTraits<INS_VEC>::BoolType selectCond = boolConvert<INS_VEC>(elem_test.value);
+			//boolCompactConvert(elem_test.value);
+		//INS_VEC res = select(typename InstructionTraits<INS_VEC>::BoolType(elem_test.value), elem_true.value, elem_false.value);
+		INS_VEC res = select(selectCond, elem_true.value, elem_false.value);
 		res.store_a(pOut + i + elem_test.relativeOffset);
 	}
 	

@@ -222,8 +222,24 @@ inline  Vec16f boolCompactConvert(Vec16fb regVal)
 }
 
 
+inline  Vec8db boolCompactConvert(Vec8d regVal)
+{
+	Vec8d allZeros = false;
+	Vec8db ret = !(allZeros == regVal);
+	return ret;
+}
 
 
+inline  Vec16fb boolCompactConvert(Vec16f regVal)
+{
+	Vec16f allZeros = false;
+	Vec16fb ret = !(allZeros == regVal);
+	return ret;
+}
+
+
+
+//for save
 template<typename TRAIT  >
 inline  auto boolConvert(typename  InstructionTraits<TRAIT>::RegBoolType regVal)
 {
@@ -236,5 +252,21 @@ inline  auto boolConvert(typename  InstructionTraits<TRAIT>::RegBoolType regVal)
 		return  boolCompactSave< TRAIT>(regVal);
 	}
 }
+
+
+//for load
+template<typename TRAIT  >
+inline  auto boolConvert(typename  InstructionTraits<TRAIT>::MemBoolType regVal)
+{
+	if constexpr (!InstructionTraits<TRAIT>::isCompact)
+	{
+		return regVal;
+	}
+	else
+	{
+		return  boolCompactConvert(regVal);
+	}
+}
+
 
 

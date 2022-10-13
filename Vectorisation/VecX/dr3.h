@@ -164,13 +164,13 @@ void transformM(LAMBDA& lambda, typename InstructionTraits<INS_VEC>::FloatType L
 // and by calculating the true or false value in situ
 
 //  appears broken on boolean vector type conversion
-/*
+/**/
 template< typename INS_VEC>
 Vec<INS_VEC> ApplySelection(const VecBool<INS_VEC>& condition, const Vec<INS_VEC>& trueVals, const Vec<INS_VEC>& falseVals)
 {
 	return ApplySelectionOperation(condition, trueVals, falseVals);
 }
-*/
+
 /*  to do
 template< typename INS_VEC>
 Vec<INS_VEC> ApplySelection(const VecBool<INS_VEC>& condition, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType falseVal)
