@@ -107,6 +107,29 @@ if the condition at point [i] in the bool condition vector is true,  sets the it
 template< typename INS_VEC>
 Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, const Vec<INS_VEC>& trueVals, const Vec<INS_VEC>& falseVals)
 {
+	
+	if (condition.isScalar())
+	{
+		auto condValue = condition.getScalarValue();
+		auto trueVal = trueVals.isScalar() ? trueVals.getScalarValue() : trueVals[0];
+		auto falseVal = falseVals.isScalar() ? falseVals.getScalarValue() : falseVals[0];
+		auto ret = condValue ? trueVal : falseVal;
+
+		return Vec<INS_VEC>(ret);
+	}
+
+
+	if (trueVals.isScalar())
+	{
+		return ApplySelectionOperation(condition, trueVals.getScalarValue(), falseVals);
+	}
+
+	if (falseVals.isScalar())
+	{
+		return ApplySelectionOperation(condition, trueVals, falseVals.getScalarValue());
+	}
+	
+
 	check_pair(trueVals, falseVals);
 	check_pair_different_type(condition, trueVals);
 
@@ -115,10 +138,67 @@ Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, const Ve
 	auto pCond = condition.start();
 	auto pLhs = trueVals.start();
 	auto pRhs = falseVals.start();
-	int sz = trueVals.paddedSize();
+	int sz = static_cast<int>(condition.paddedSize());
 	Unroll_Select< INS_VEC, UnUsed>::apply_4(sz, pCond, pLhs, pRhs, pRes);
 	return result;
 }
+
+
+template< typename INS_VEC>
+Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, typename InstructionTraits<INS_VEC>::FloatType trueVal, const Vec<INS_VEC>& falseVals)
+{
+
+	if (falseVals.isScalar())
+	{
+		return ApplySelectionOperation(condition, trueVal, falseVals.getScalarValue());
+	}
+	check_pair_different_type(condition, falseVals);
+
+	Vec<INS_VEC> result(falseVals.size());
+	auto pRes = result.start();
+	auto pCond = condition.start();
+	
+	auto pRhs = falseVals.start();
+	int sz = static_cast<int>(condition.paddedSize());
+	Unroll_Select< INS_VEC, UnUsed>::apply_4(sz, pCond, INS_VEC(trueVal), pRhs, pRes);
+	return result;
+}
+
+
+
+template< typename INS_VEC>
+Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, const Vec<INS_VEC>& trueVals, typename InstructionTraits<INS_VEC>::FloatType falseVal )
+{
+
+	if (trueVals.isScalar())
+	{
+		return ApplySelectionOperation(condition, trueVals.getScalarValue(), falseVal);
+	}
+
+	check_pair_different_type(condition, trueVals);
+
+	Vec<INS_VEC> result(trueVals.size());
+	auto pRes = result.start();
+	auto pCond = condition.start();
+	auto pLhs = trueVals.start();
+	int sz = static_cast<int>(condition.paddedSize());
+	Unroll_Select< INS_VEC, UnUsed>::apply_4(sz, pCond, pLhs, INS_VEC(falseVal), pRes);
+	return result;
+}
+
+template< typename INS_VEC>
+Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType falseVal)
+{
+
+	Vec<INS_VEC> result(static_cast<int>(condition.size()) );
+	auto pRes = result.start();
+	auto pCond = condition.start();
+
+	int sz = static_cast<int>(condition.paddedSize());
+	Unroll_Select< INS_VEC, UnUsed>::apply_4(sz, pCond, INS_VEC(trueVal), INS_VEC(falseVal), pRes);
+	return result;
+}
+
 
 /*
 * selecting between constant values from vectors

@@ -277,15 +277,42 @@ struct  SelectOpElement
 		elem_test.load(ptest + i);
 		elem_true.load(plhs + i);
 		elem_false.load(prhs + i);
-
-		
+	
 		typename InstructionTraits<INS_VEC>::BoolType selectCond = boolConvert<INS_VEC>(elem_test.value);
-			//boolCompactConvert(elem_test.value);
-		//INS_VEC res = select(typename InstructionTraits<INS_VEC>::BoolType(elem_test.value), elem_true.value, elem_false.value);
 		INS_VEC res = select(selectCond, elem_true.value, elem_false.value);
 		res.store_a(pOut + i + elem_test.relativeOffset);
 	}
 	
+
+	inline void applyBool(Float* ptest, INS_VEC LHS, Float* prhs, int i, Float* pOut)
+	{
+		elem_test.load(ptest + i);
+		elem_false.load(prhs + i);
+		typename InstructionTraits<INS_VEC>::BoolType selectCond = boolConvert<INS_VEC>(elem_test.value);
+		INS_VEC res = select(selectCond, LHS, elem_false.value);
+		res.store_a(pOut + i + elem_test.relativeOffset);
+	}
+
+
+	inline void applyBool(Float* ptest, Float* plhs, INS_VEC RHS, int i, Float* pOut)
+	{
+		elem_test.load(ptest + i);
+		elem_true.load(plhs + i);
+		typename InstructionTraits<INS_VEC>::BoolType selectCond = boolConvert<INS_VEC>(elem_test.value);
+		INS_VEC res = select(selectCond, elem_true.value, RHS);
+		res.store_a(pOut + i + elem_test.relativeOffset);
+	}
+
+	inline void applyBool(Float* ptest, INS_VEC LHS, INS_VEC RHS, int i, Float* pOut)
+	{
+		elem_test.load(ptest + i);
+		typename InstructionTraits<INS_VEC>::BoolType selectCond = boolConvert<INS_VEC>(elem_test.value);
+		INS_VEC res = select(selectCond, LHS, RHS);
+		res.store_a(pOut + i + elem_test.relativeOffset);
+	}
+
+
+
 	inline void apply(Float* ptest, Float* plhs, Float* prhs, int i, Float* pOut, OP cond)
 	{
 		elem_test.load(ptest + i);
@@ -487,6 +514,69 @@ struct UnrollBinaryBody_4
 		}
 
 	}
+
+
+
+	inline void apply_4_bool(int sz, Float* pTest, Float* pTrueVals, INS_VEC RHS, Float* pOut)
+	{
+		int i = 0;
+		for (; i < sz - (UNROLL * width); i += step)
+		{
+			elem_0.applyBool(pTest, pTrueVals, RHS, i, pOut);
+			elem_1.applyBool(pTest, pTrueVals, RHS, i, pOut);
+			elem_2.applyBool(pTest, pTrueVals, RHS, i, pOut);
+			elem_3.applyBool(pTest, pTrueVals, RHS, i, pOut);
+		}
+
+
+		for (; i <= sz - width; i += width)
+		{
+			elem_0.applyBool(pTest, pTrueVals, RHS, i, pOut);
+		}
+
+	}
+
+
+
+	inline void apply_4_bool(int sz, Float* pTest, INS_VEC LHS , Float* pFalseVals, Float* pOut)
+	{
+		int i = 0;
+		for (; i < sz - (UNROLL * width); i += step)
+		{
+			elem_0.applyBool(pTest, LHS, pFalseVals, i, pOut);
+			elem_1.applyBool(pTest, LHS, pFalseVals, i, pOut);
+			elem_2.applyBool(pTest, LHS, pFalseVals, i, pOut);
+			elem_3.applyBool(pTest, LHS, pFalseVals, i, pOut);
+		}
+
+
+		for (; i <= sz - width; i += width)
+		{
+			elem_0.applyBool(pTest, LHS, pFalseVals, i, pOut);
+		}
+	}
+
+
+	inline void apply_4_bool(int sz, Float* pTest, INS_VEC LHS, INS_VEC RHS, Float* pOut)
+	{
+		int i = 0;
+		for (; i < sz - (UNROLL * width); i += step)
+		{
+			elem_0.applyBool(pTest, LHS, RHS, i, pOut);
+			elem_1.applyBool(pTest, LHS, RHS, i, pOut);
+			elem_2.applyBool(pTest, LHS, RHS, i, pOut);
+			elem_3.applyBool(pTest, LHS, RHS, i, pOut);
+		}
+
+
+		for (; i <= sz - width; i += width)
+		{
+			elem_0.applyBool(pTest, LHS, RHS, i, pOut);
+		}
+	}
+
+
+
 
 	inline void apply(int sz, Float* pLhs, INS_VEC MID, Float* pRhs, Float* pOut, OP oper)
 	{
@@ -1253,6 +1343,26 @@ struct Unroll_Select
 		UnrollBinaryBody_4< SelectOpElement, INS_VEC, OP>  selectUnrolled;
 		selectUnrolled.apply_4_bool(sz, pTest, pTrueVals, pFalseVals, pOut);
 	}
+
+	static inline void apply_4(int sz, Float* pTest, Float* pTrueVals, INS_VEC FalseVal, Float* pOut)
+	{
+		UnrollBinaryBody_4< SelectOpElement, INS_VEC, OP>  selectUnrolled;
+		selectUnrolled.apply_4_bool(sz, pTest, pTrueVals, FalseVal, pOut);
+	}
+
+	static inline void apply_4(int sz, Float* pTest, INS_VEC TrueVal, Float* pFalseVals, Float* pOut)
+	{
+		UnrollBinaryBody_4< SelectOpElement, INS_VEC, OP>  selectUnrolled;
+		selectUnrolled.apply_4_bool(sz, pTest, TrueVal, pFalseVals, pOut);
+	}
+	
+
+	static inline void apply_4(int sz, Float* pTest, INS_VEC TrueVal, INS_VEC FalseVal, Float* pOut)
+	{
+		UnrollBinaryBody_4< SelectOpElement, INS_VEC, OP>  selectUnrolled;
+		selectUnrolled.apply_4_bool(sz, pTest, TrueVal, FalseVal, pOut);
+	}
+	
 
 	static inline void apply_4(int sz, Float* pTest, Float* pTrueVals, Float* pFalseVals, Float* pOut, OP oper)
 	{

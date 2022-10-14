@@ -21,7 +21,10 @@ typedef Vec<VecDouble>  VecXX;
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
-//  using namespace DRC::VecD4D;
+// 
+
+//using namespace DRC::VecD4D;
+
 using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
@@ -804,6 +807,9 @@ TEST(TestFuncions, testIff)
 
 	std::vector<double> other{ 8.0,  7.0, 6.0 };
 
+	VecXX scalar = 999.;
+	VecXX scalar2 = 222.;
+
 	VecXX Vec1(one);
 	VecXX otherFalse(other);
 
@@ -816,12 +822,33 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[1], -1.0);
 	EXPECT_EQ(res[2], 1.0);
 
+
+
 	res = ApplySelection(boolCond, Vec1, otherFalse);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 8.0);
 	EXPECT_EQ(res[1], 7.0);
 	EXPECT_EQ(res[2], 1.0);
+
+
+	res = ApplySelection(boolCond, scalar, scalar2);
+
+	EXPECT_EQ(res.size(), 3);
+	EXPECT_EQ(res[0], 222.0);
+	EXPECT_EQ(res[1], 222.0);
+	EXPECT_EQ(res[2], 999.0);
+
+
+	res = ApplySelection(boolCond, 999.0, 222.0);
+
+	EXPECT_EQ(res.size(), 3);
+	EXPECT_EQ(res[0], 222.0);
+	EXPECT_EQ(res[1], 222.0);
+	EXPECT_EQ(res[2], 999.0);
+
+
+
 
 
 
