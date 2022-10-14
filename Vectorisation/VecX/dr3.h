@@ -416,11 +416,11 @@ typename InstructionTraits<INS_VEC>::FloatType reduce1(const Vec<INS_VEC>& rhs1,
 template< typename INS_VEC, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType reduce(const Vec<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue,  bool singularInit = true)
 {
-	
+	ignore(initVal);
+	ignore(singularInit);	
 #ifdef _MSC_VER
 	return ApplyAccumulate2UR_X(rhs1, oper);
-	ignore(initVal);
-	ignore(singularInit);
+
 
 #else
 	return ApplyAccumulate2UR(rhs1, oper, initVal, singularInit);
