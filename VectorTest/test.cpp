@@ -847,6 +847,20 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[1], 222.0);
 	EXPECT_EQ(res[2], 999.0);
 
+	res = ApplySelection(boolCond, Vec2, 333.1);
+
+	EXPECT_EQ(res.size(), 3);
+	EXPECT_EQ(res[0], 333.1);
+	EXPECT_EQ(res[1], 333.1);
+	EXPECT_EQ(res[2], 3.0);
+
+
+	res = ApplySelection(boolCond,  333.1, Vec2);
+
+	EXPECT_EQ(res.size(), 3);
+	EXPECT_EQ(res[0], 1.0);
+	EXPECT_EQ(res[1], 2.0);
+	EXPECT_EQ(res[2], 333.1);
 
 
 
