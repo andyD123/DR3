@@ -815,7 +815,7 @@ TEST(TestFuncions, testIff)
 
 	auto boolCond = Vec2 > (Vec1 + 1.0);
 
-	auto res = ApplySelection(boolCond, Vec1, -Vec1);
+	auto res = select(boolCond, Vec1, -Vec1);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], -1.0);
@@ -824,7 +824,7 @@ TEST(TestFuncions, testIff)
 
 
 
-	res = ApplySelection(boolCond, Vec1, otherFalse);
+	res = select(boolCond, Vec1, otherFalse);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 8.0);
@@ -832,7 +832,7 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[2], 1.0);
 
 
-	res = ApplySelection(boolCond, scalar, scalar2);
+	res = select(boolCond, scalar, scalar2);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 222.0);
@@ -840,14 +840,14 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[2], 999.0);
 
 
-	res = ApplySelection(boolCond, 999.0, 222.0);
+	res = select(boolCond, 999.0, 222.0);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 222.0);
 	EXPECT_EQ(res[1], 222.0);
 	EXPECT_EQ(res[2], 999.0);
 
-	res = ApplySelection(boolCond, Vec2, 333.1);
+	res = select(boolCond, Vec2, 333.1);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 333.1);
@@ -855,7 +855,7 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[2], 3.0);
 
 
-	res = ApplySelection(boolCond,  333.1, Vec2);
+	res = select(boolCond,  333.1, Vec2);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 1.0);
@@ -873,7 +873,16 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[0], -1.0);
 	EXPECT_EQ(res[1], -1.0);
 	EXPECT_EQ(res[2], 1.0);
-		/**/
+		
+
+
+	//res = iff(boolCond, Vec1, -Vec1);
+	res = iff(Vec2 > (Vec1 + 1.0), Vec1, -Vec1);
+	EXPECT_EQ(res.size(), 3);
+	EXPECT_EQ(res[0], -1.0);
+	EXPECT_EQ(res[1], -1.0);
+	EXPECT_EQ(res[2], 1.0);
+
 
 }
 	

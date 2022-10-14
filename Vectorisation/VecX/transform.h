@@ -135,23 +135,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformReduce(const Vec<IN
 
 /////////////////////////////////
 
-//  appears broken on boolean vector type conversio
-/*
-template< typename INS_VEC>
-Vec<INS_VEC> ApplySelection(const VecBool<INS_VEC>& condition, const Vec<INS_VEC>& trueVals, const Vec<INS_VEC>& falseVals)
-{
-	return ApplySelectionOperation(condition, trueVals, falseVals);
-}
-*/
-/*  to do
-template< typename INS_VEC>
-Vec<INS_VEC> ApplySelection(const VecBool<INS_VEC>& condition, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType falseVal)
-{
-	return ApplySelectionOperation(condition, trueVal, falseVal);
-
-}
-
-*/
 
 template< typename INS_VEC, typename BOOL_OPER>
 Vec<INS_VEC> ApplySelection(BOOL_OPER& COND, const Vec<INS_VEC>& testData, const Vec<INS_VEC>& lhs, const Vec<INS_VEC>& rhs)
