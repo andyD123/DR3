@@ -207,7 +207,7 @@ public:
 	//explicit
 	operator std::vector<typename InstructionTraits<INS_VEC>::FloatType>()
 	{
-		return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(begin(), end());
+		return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(begin(), begin() + size());// end());
 	}
 
 

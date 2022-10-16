@@ -28,3 +28,9 @@ void EXPECT_NUMERIC_EQ(float x, float y)
 	EXPECT_FLOAT_EQ(x, y);
 }
 
+
+void EXPECT_NUMERIC_EQ(int x, int y)
+{
+	EXPECT_EQ(x, y);
+}
+

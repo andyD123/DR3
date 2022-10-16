@@ -401,7 +401,8 @@ std::pair< Vec<INS_VEC>, VecView<INS_VEC> > ApplyOperationAndFilter(OP& oper, FI
 	Vec<INS_VEC> result(in.size());
 	auto pRes = result.start();
 	auto pRhs = in.start();
-	int sz = static_cast<int>(in.size());
+	//int sz = static_cast<int>(in.size());
+	int sz = static_cast<int>(in.paddedSize());
 
 	auto psn = Unroll_Unitary<INS_VEC, OP>::apply_4_filter(sz, pRhs, pRes, oper, pVw, filt, pIdx);
 	vw.setSizeAndPad(psn);

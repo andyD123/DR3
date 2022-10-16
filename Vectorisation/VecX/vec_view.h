@@ -384,7 +384,7 @@ public:
 	std::vector<int> getIndex() const
 	{
 		std::vector<int> ret;
-		for (int i = 0; i < m_size; ++i)
+		for (int i = 0; i < size(); ++i)
 		{
 			ret.push_back(m_pIndex[i]);	
 		}
@@ -396,7 +396,10 @@ public:
 
 		typename InstructionTraits<INS_VEC>::FloatType* pTrgt = vec.start();
 		size_t i = 0;
-		for (; i < m_size - (size_t)(4); ++i)
+
+		auto sz = size();
+
+		for (; i < sz - (size_t)(4); ++i)
 		{
 			pTrgt[(m_pIndex[i])] = m_pData[i];
 			pTrgt[(m_pIndex[i + 1])] = m_pData[i + 1];
@@ -404,7 +407,7 @@ public:
 			pTrgt[(m_pIndex[i + 3])] = m_pData[i + 3];
 		}
 
-		auto resid = (m_size - 1) % 4;
+		auto resid = (sz - 1) % 4;
 		switch (resid)
 		{
 		case 3:
