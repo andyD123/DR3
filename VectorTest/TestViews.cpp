@@ -20,10 +20,11 @@
 #include <numeric>
 
 //using namespace DRC::VecDb;
+//using namespace DRC::VecF4F; //not used
 
-//using namespace DRC::VecDb;
+using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
-using namespace DRC::VecD4D;
+//using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
@@ -853,6 +854,11 @@ TEST(TestViews, ApplyOperationAndWrite)
 
 	auto betweenFiveAndFiffteen = aboveFive && lessThanFifteen;
 	auto view_WithElementsAboveFive = ApplyFilter(aboveFive, data);
+
+	std::vector<double> valss = view_WithElementsAboveFive;
+	std::vector<int> index = view_WithElementsAboveFive.getIndex();
+
+
 	auto copyOfData = data;
 
     ApplyUnitaryOperationWrite(SQR, view_WithElementsAboveFive, copyOfData);

@@ -81,18 +81,22 @@ struct  UnitaryOpElement
 	inline void calcAndWrite(Float* plhs, int i, Float* pOut, OP oper, Float* pRes, unsigned int* pIdx)
 	{
 		pOut = 0;
-		idx.load(pIdx + i + elem_lhs.relativeOffset);
-		elem_lhs.load(plhs + i);
+
+		elem_lhs.load(plhs + i);	
 		INS_VEC res = oper(elem_lhs.value);
 		if constexpr (InstructionTraits< INS_VEC>::useScatter)
 		{
+			idx.load(pIdx + i + elem_lhs.relativeOffset);
 			scatter(idx, limit, res, pRes);
 		}
 		else
 		{
 			for (int j =0; j < InstructionTraits< INS_VEC>::width; ++j)
 			{
-				pRes[j + idx[j]] = res[j];
+
+				int idxToWrite = pIdx[i + elem_lhs.relativeOffset + j];
+				pRes[idxToWrite] = res[j];
+
 			}
 		}
 	}
