@@ -972,7 +972,8 @@ TEST(TestViews, binaryFilterZVec)
 	auto addFive = [](auto rhs) { return rhs + VecXX::scalar(5.0); };
 	ApplyUnitaryOperation(vw_other,addFive);
 
-	vw_other.writeView(test);
+	//vw_other.writeView(test);
+	vw_other.write(test);
 	EXPECT_NUMERIC_EQ(test[0], asNumber(6.0));
 	EXPECT_NUMERIC_EQ(test[2], asNumber(6.0));
 	EXPECT_NUMERIC_EQ(test[5], asNumber(6.0));

@@ -391,38 +391,16 @@ public:
 		return ret;
 	}
 
+
 	void writeView(Vec<INS_VEC>& vec) const
 	{
-
-		typename InstructionTraits<INS_VEC>::FloatType* pTrgt = vec.start();
-		size_t i = 0;
-
-		auto sz = size();
-
-		for (; i < sz - (size_t)(4); ++i)
-		{
-			pTrgt[(m_pIndex[i])] = m_pData[i];
-			pTrgt[(m_pIndex[i + 1])] = m_pData[i + 1];
-			pTrgt[(m_pIndex[i + 2])] = m_pData[i + 2];
-			pTrgt[(m_pIndex[i + 3])] = m_pData[i + 3];
-		}
-
-		auto resid = (sz - 1) % 4;
-		switch (resid)
-		{
-		case 3:
-			pTrgt[(m_pIndex[i + 3])] = m_pData[i + 3];
-			[[fallthrough]];
-		case 2:
-			pTrgt[(m_pIndex[i + 2])] = m_pData[i + 2];
-			[[fallthrough]];
-		case 1:
-			pTrgt[(m_pIndex[i + 1])] = m_pData[i + 1];
-			[[fallthrough]];
-		case 0:
-			pTrgt[(m_pIndex[i])] = m_pData[i];
-		}
+		write(vec);
 	}
+
+
+
+
+
 	// do using scatter instructions
 
 	void write(Vec<INS_VEC>& rhs) const
