@@ -555,19 +555,19 @@ TEST(TestViews, applyFilterRangeAllW)
 
 
 
-/*
+
 void testFilterViewZ(int SZ)
 {
 
 	std::vector<Numeric>  v(SZ, asNumber(6.66));
 	int i = 0;
-	for (auto& x : v) { x -= 500.0 + i; ++i; }
+	for (auto& x : v) { x -= asNumber(500.0 + i); ++i; }
 	VecXX test(v);
 
 	auto initVals = test;
 	auto condTest = [](auto x) {return x <= 200.0; };
 
-	auto evenTest = [](auto x) {return (floor((x - 0.00000001)) / 2.0) == ( floor( (x-0.00000001) / 2.0)); };
+	auto evenTest = [](auto x) {return (floor((x - asNumber(0.00000001))) / asNumber(2.0)) == ( floor( (x- asNumber(0.00000001)) / asNumber(2.0))); };
 
 
 	VecVW evenView = ApplyFilter(evenTest, initVals);
@@ -603,7 +603,7 @@ TEST(TestViews, applyFilterRangeAllViewZ)
 	}
 
 }
-*/
+
 
 void testCountedFilterZ(int SZ, int count)
 {
