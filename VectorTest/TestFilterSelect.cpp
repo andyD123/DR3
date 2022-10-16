@@ -15,26 +15,32 @@
 #include "../Vectorisation/VecX/target_name_space.h"
 
 
+#include "../Vectorisation/VecX/dr3.h"
+#include "testNamespace.h"
+#include "dr3TestUtil.h"
 
 
 #include <numeric>
 
-using namespace DRC::VecDb;
+/*
+
+//using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
 //using namespace DRC::VecD4D;
 //using namespace DRC::VecD8D;
+
 //using namespace DRC::VecF16F;
-//using namespace DRC::VecF8F;
+using namespace DRC::VecF8F;
 
-
-
+using Numeric = InstructionTraits<VecXX::INS>::FloatType;
+*/
 
 void testSelectFilterB(int SZ, int Pos)
 {
 	//int SZ = 21;
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 	auto boolVecAboveTenAndHalf = data < VecXX::scalar(Pos);
@@ -45,7 +51,7 @@ void testSelectFilterB(int SZ, int Pos)
 
 	for (int i = 0; i < filterView.size(); ++i)
 	{
-		EXPECT_DOUBLE_EQ(filterView[i], i );
+		EXPECT_NUMERIC_EQ(asNumber(filterView[i]), asNumber(i) );
 	}
 
 	auto trueCond = [](auto x) { return VecXX::reg(1.0) == VecXX::reg(1.0); };
@@ -58,7 +64,7 @@ void testSelectFilterB(int SZ, int Pos)
 
 		for (int i = 0; i < filterView.size(); ++i)
 		{
-			EXPECT_DOUBLE_EQ(filterView[i], i);
+			EXPECT_NUMERIC_EQ(asNumber(filterView[i]), asNumber(i));
 		}
 	}
 }
@@ -81,9 +87,9 @@ TEST(TestFilterSelect, ApplyFilterB)
 void testSelectFilter(int SZ, int Pos)
 {
 	//int SZ = 21;
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 	auto abovePos = [=](auto x) { return  x < VecXX::scalar(Pos); };
@@ -94,7 +100,7 @@ void testSelectFilter(int SZ, int Pos)
 
 	for (int i = 0; i < filterView.size(); ++i)
 	{
-		EXPECT_DOUBLE_EQ(filterView[i], i);
+		EXPECT_NUMERIC_EQ(asNumber(filterView[i]), asNumber(i));
 	}
 
 	auto trueCond = [](auto x) { return VecXX::reg(1.0) == VecXX::reg(1.0); };
@@ -108,7 +114,7 @@ void testSelectFilter(int SZ, int Pos)
 
 		for (int i = 0; i < filterView.size(); ++i)
 		{
-			EXPECT_DOUBLE_EQ(filterView[i], i);
+			EXPECT_NUMERIC_EQ(asNumber(filterView[i]), asNumber(i));
 		}
 	}
 }
@@ -132,9 +138,9 @@ TEST(TestFilterSelect, ApplyFilter)
 void testCountedFilter(int SZ, int Pos, int count)
 {
 	//int SZ = 21;
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 	auto abovePos = [=](auto x) { return  x < VecXX::scalar(Pos); };
@@ -145,7 +151,7 @@ void testCountedFilter(int SZ, int Pos, int count)
 
 	for (int i = 0; i < filterView.size(); ++i)
 	{
-		EXPECT_DOUBLE_EQ(filterView[i], i);
+		EXPECT_NUMERIC_EQ(asNumber(filterView[i]), asNumber(i));
 	}
 
 	auto trueCond = [](auto x) { return VecXX::reg(1.0) == VecXX::reg(1.0); };
@@ -159,7 +165,7 @@ void testCountedFilter(int SZ, int Pos, int count)
 
 		for (int i = 0; i < filterView.size(); ++i)
 		{
-			EXPECT_DOUBLE_EQ(filterView[i], i);
+			EXPECT_NUMERIC_EQ(asNumber(filterView[i]), asNumber(i));
 		}
 	}
 }
@@ -184,9 +190,9 @@ TEST(TestFilterSelect, ApplyCountedFilter)
 void testBinaryFilter(int SZ, int Pos)
 {
 	//int SZ = 21;
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 	auto abovePos = [=](auto x) { return  x < VecXX::scalar(Pos); };
@@ -196,7 +202,7 @@ void testBinaryFilter(int SZ, int Pos)
 
 	for (int i = 0; i < trueView.size(); ++i)
 	{
-		EXPECT_DOUBLE_EQ(trueView[i], i);
+		EXPECT_NUMERIC_EQ(asNumber(trueView[i]),asNumber( i));
 	}
 
 
@@ -204,7 +210,7 @@ void testBinaryFilter(int SZ, int Pos)
 	EXPECT_EQ(falseView.size(), (SZ-Pos));
 	for (int i = 0; i < falseView.size(); ++i)
 	{
-		EXPECT_DOUBLE_EQ(falseView[i], i+Pos);
+		EXPECT_NUMERIC_EQ(asNumber(falseView[i]), asNumber(i+Pos));
 	}
 
 
@@ -219,14 +225,14 @@ void testBinaryFilter(int SZ, int Pos)
 
 		for (int i = 0; i < trueView.size(); ++i)
 		{
-			EXPECT_DOUBLE_EQ(trueView[i], i);
+			EXPECT_NUMERIC_EQ(asNumber(trueView[i]), asNumber(i));
 		}
 
 		auto falseView = std::get<1>(filterView);
 		EXPECT_EQ(falseView.size(), (SZ - Pos));
 		for (int i = 0; i < falseView.size(); ++i)
 		{
-			EXPECT_DOUBLE_EQ(falseView[i], i + Pos);
+			EXPECT_NUMERIC_EQ(asNumber(falseView[i]), asNumber(i + Pos));
 		}
 	}
 
@@ -253,9 +259,9 @@ TEST(TestFilterSelect, ApplyBinaryFilter)
 void testUnitaryOpVecViewRef(int SZ)
 {
 
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 	auto SQR = [](auto x) { return  x * x; };
@@ -273,7 +279,7 @@ void testUnitaryOpVecViewRef(int SZ)
 	for (int i = 0; i < resultView.size(); ++i)
 	{
 		double ii = i;
-		EXPECT_DOUBLE_EQ(resultView[i], i*i);
+		EXPECT_NUMERIC_EQ(asNumber(resultView[i]), asNumber(i*i) );
 	}
 
 
@@ -293,9 +299,9 @@ TEST(TestFilterSelect, ApplyUnitaryOperationToView)
 void testUnitaryOpVec(int SZ)
 {
 
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 	auto SQR = [](auto x) { return  x * x; };
@@ -308,7 +314,7 @@ void testUnitaryOpVec(int SZ)
 	for (int i = 0; i < resultView.size(); ++i)
 	{
 		double ii = i;
-		EXPECT_DOUBLE_EQ(resultView[i], i * i);
+		EXPECT_NUMERIC_EQ(asNumber(resultView[i]), asNumber(i * i));
 	}
 
 
@@ -328,12 +334,12 @@ TEST(TestFilterSelect, ApplyUnitaryOperationToVec)
 void testBinaryOpVecViewRef(int SZ)
 {
 
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data_Lhs(v);
 
-	std::vector<double>  r(SZ, 0.0);
+	std::vector<Numeric>  r(SZ, 0.0);
 	i = 0;
 	for (auto& x : r) { x = SZ-i; ++i; }
 	VecXX data_Rhs(r);
@@ -356,7 +362,7 @@ void testBinaryOpVecViewRef(int SZ)
 	for (int i = 0; i < resultView.size(); ++i)
 	{
 		double ii = i;
-		EXPECT_DOUBLE_EQ(resultView[i], SZ );
+		EXPECT_NUMERIC_EQ(asNumber(resultView[i]), asNumber(SZ) );
 	}
 
 
@@ -384,7 +390,7 @@ TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 	const int SZ = 40;
 
 	const double NUMBER = SZ * 0.5;
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
 	for (auto& x : v) { x = i; ++i; }
 	VecXX data(v);
@@ -400,8 +406,8 @@ TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 	auto res = ApplyFilter(isEvenLessThanThirty, data);
 	//auto res = ApplyFilter(lessThanThirty, data);
 
-	std::vector<double> inspect = data;
-	std::vector<double> re_insp  = res;
+	std::vector<Numeric> inspect = data;
+	std::vector<Numeric> re_insp  = res;
 
 	for (auto x : res)
 	{
@@ -451,8 +457,8 @@ TEST(TestFilterSelect, ApplyJoinedFilterToView)
 {
 	const int SZ = 40;
 
-	const double NUMBER = SZ * 0.5;
-	std::vector<double>  v(SZ, 0.0);
+	const Numeric NUMBER = SZ * 0.5;
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
 	for (auto& x : v) { x = i; ++i; }
 	VecXX dataVec(v);
@@ -514,8 +520,8 @@ TEST(TestFilterSelect, ApplyComplexJoinedFilterToVec)
 {
 	const int SZ = 40;
 
-	const double NUMBER = SZ * 0.5;
-	std::vector<double>  v(SZ, 0.0);
+	const Numeric NUMBER = SZ * 0.5;
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
 	for (auto& x : v) { x = i; ++i; }
 	VecXX data(v);
@@ -592,8 +598,8 @@ TEST(TestFilterSelect, ApplyComplexJoinedLambdasToVec)
 {
 	const int SZ = 40;
 
-	const double NUMBER = SZ * 0.5;
-	std::vector<double>  v(SZ, 0.0);
+	const Numeric NUMBER = SZ * 0.5;
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
 	for (auto& x : v) { x = i; ++i; }
 	VecXX data(v);
@@ -625,7 +631,7 @@ TEST(TestFilterSelect, ApplyComplexJoinedLambdasToVec)
 		x =(x > 10) ? -x : x;
 		auto calcResult = x* x;
 
-		EXPECT_DOUBLE_EQ(resItem, calcResult);
+		EXPECT_NUMERIC_EQ(asNumber(resItem), asNumber(calcResult));
 	}
 
 	//DO THIS WITH A VIEW
@@ -643,8 +649,8 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 
 	const int SZ = 40;
 
-	const double NUMBER = SZ * 0.5;
-	std::vector<double>  v(SZ, 0.0);
+	const Numeric NUMBER = SZ * 0.5;
+	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
 	for (auto& x : v) { x = i; ++i; }
 	VecXX data(v);
@@ -679,7 +685,7 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 		x= (x > 10) ? -x : x;   //negate
 		auto calcResult = x +10.0;
 
-		EXPECT_DOUBLE_EQ(resItem, calcResult);
+		EXPECT_NUMERIC_EQ(asNumber(resItem), asNumber(calcResult));
 
 
 	}
@@ -703,7 +709,7 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 		x = (x > 10) ? -x : x;   //negate
 		auto calcResult = x + 10.0;
 
-		EXPECT_DOUBLE_EQ(resItem, calcResult);
+		EXPECT_NUMERIC_EQ(asNumber(resItem), asNumber(calcResult));
 	}
 
 }
