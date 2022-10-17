@@ -16,6 +16,8 @@
 
 
 #include "../Vectorisation/VecX/dr3.h"
+#include "dr3TestUtil.h"
+
 
 
 
