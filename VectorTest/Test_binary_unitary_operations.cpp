@@ -9,19 +9,26 @@
 #include "../Vectorisation/VecX/binary_unitary_operations.h"
 #include "../Vectorisation/VecX/target_name_space.h"
 
+/*
+#include "../Vectorisation/VecX/dr3.h"
+
+#include "testNamespace.h"
+#include "dr3TestUtil.h"
+*/
 #include <numeric>
 
 
 
-using namespace DRC::VecDb;
+
+//sing namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
 //using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
+using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
 
-
+using Numeric = InstructionTraits<VecXX::INS>::FloatType;
 
 
 
@@ -33,7 +40,7 @@ void evalApplyTernaryOperation_VFF(size_t startLen, size_t endLen)
 
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] =  i; }
 		VecXX test(v);
 
@@ -57,7 +64,7 @@ void evalApplyTernaryOperation_VVF(size_t startLen, size_t endLen)
 
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX test(v);
 
@@ -66,9 +73,9 @@ void evalApplyTernaryOperation_VVF(size_t startLen, size_t endLen)
 
 		auto resAcc = FMA(test, mult, VecXX::scalar(1.0));
 
-		double ii = 0.;
+		Numeric ii = 0.;
 		int i = 0;
-		for (double x : resAcc)
+		for (Numeric x : resAcc)
 		{
 			EXPECT_NEAR(x, ii * mult[i] + 1.0, testEpsilon);
 			ii++;
@@ -84,13 +91,13 @@ void evalApplyTernaryOperation_VVF(size_t startLen, size_t endLen)
 template <typename INS_VEC>
 void evalApplyTernaryOperation_VVV(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
-		std::vector<double>  v(SZ, 0.0);
-		std::vector<double>  z(SZ, 0.0);
-		std::vector<double>  y(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
+		std::vector<Numeric>  z(SZ, 0.0);
+		std::vector<Numeric>  y(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX test(v);
 
@@ -102,9 +109,9 @@ void evalApplyTernaryOperation_VVV(size_t startLen, size_t endLen)
 
 		auto resAcc = FMA(test, mult, addd);
 
-		double ii = 0.;
+		Numeric ii = 0.;
 		int i = 0;
-		for (double x : resAcc)
+		for (Numeric x : resAcc)
 		{
 			EXPECT_NEAR(x, ii * mult[i] + addd[i], testEpsilon);
 			ii++;
@@ -119,11 +126,11 @@ void evalApplyTernaryOperation_VVV(size_t startLen, size_t endLen)
 template <typename INS_VEC>
 void evalApplyTernaryOperation_VFV(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX test(v);
 
@@ -132,9 +139,9 @@ void evalApplyTernaryOperation_VFV(size_t startLen, size_t endLen)
 
 		auto resAcc = FMA(test, VecXX::scalar(1.1), addd);
 
-		double ii = 0.;
+		Numeric ii = 0.;
 		int i = 0;
-		for (double x : resAcc)
+		for (Numeric x : resAcc)
 		{
 			EXPECT_NEAR(x, ii * 1.1 + addd[i], testEpsilon);
 			ii++;
@@ -151,11 +158,11 @@ void evalApplyTernaryOperation_VFV(size_t startLen, size_t endLen)
 template <typename INS_VEC>
 void evalApplyTernaryOperation_FFF(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX test(v);
 
@@ -163,8 +170,8 @@ void evalApplyTernaryOperation_FFF(size_t startLen, size_t endLen)
 
 		auto resAcc = FMA(test, VecXX::scalar(3.0), VecXX::scalar(1.0));
 
-		double ii = 0.;
-		for (double x : resAcc)
+		Numeric ii = 0.;
+		for (Numeric x : resAcc)
 		{
 			EXPECT_NEAR(x, 1.123 * 3.0 + 1.0, testEpsilon);
 			ii++;
@@ -177,11 +184,11 @@ void evalApplyTernaryOperation_FFF(size_t startLen, size_t endLen)
 template <typename INS_VEC>
 void evalApplyTernaryOperation_FVF(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX test(v);
 		test = 1.123; //scalar
@@ -191,9 +198,9 @@ void evalApplyTernaryOperation_FVF(size_t startLen, size_t endLen)
 
 		auto resAcc = FMA(test, mult, VecXX::scalar(1.0));
 
-		double ii = 0.;
+		Numeric ii = 0.;
 		int i = 0;
-		for (double x : resAcc)
+		for (Numeric x : resAcc)
 		{
 			EXPECT_NEAR(x, 1.123 * mult[i] + 1.0, testEpsilon);
 			ii++;
@@ -209,13 +216,13 @@ void evalApplyTernaryOperation_FVF(size_t startLen, size_t endLen)
 template <typename INS_VEC>
 void evalApplyTernaryOperation_FVV(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
-		std::vector<double>  v(SZ, 0.0);
-		std::vector<double>  z(SZ, 0.0);
-		std::vector<double>  y(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
+		std::vector<Numeric>  z(SZ, 0.0);
+		std::vector<Numeric>  y(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX test(v);
 		test = 1.123; //scalar
@@ -230,9 +237,9 @@ void evalApplyTernaryOperation_FVV(size_t startLen, size_t endLen)
 
 		auto resAcc = FMA(test, mult, addd);
 
-		double ii = 0.;
+		Numeric ii = 0.;
 		int i = 0;
-		for (double x : resAcc)
+		for (Numeric x : resAcc)
 		{
 			EXPECT_NEAR(x, 1.123 * mult[i] + addd[i], testEpsilon);
 			ii++;
@@ -251,7 +258,7 @@ void evalApplyTernaryOperation_FFV(size_t startLen, size_t endLen)
 
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX test(v);
 		test = 1.123; //scalar
@@ -261,9 +268,9 @@ void evalApplyTernaryOperation_FFV(size_t startLen, size_t endLen)
 
 		auto resAcc = FMA(test, VecXX::scalar(1.1), addd);
 
-		double ii = 0.;
+		Numeric ii = 0.;
 		int i = 0;
-		for (double x : resAcc)
+		for (Numeric x : resAcc)
 		{
 			EXPECT_NEAR(x, 1.123 * 1.1 + addd[i], testEpsilon);
 			ii++;
@@ -335,12 +342,12 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyTernaryOperation)
 template <typename INS_VEC>
 void evalApplyUnitaryOperation(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 	//int SZ = 1000;
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{	
 
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = (0==i%2)? -i:i;  }
 		VecXX test(v);
 
@@ -348,7 +355,7 @@ void evalApplyUnitaryOperation(size_t startLen, size_t endLen)
 		auto negativeRes = -test;
 
 		int i = 0;
-		for (double x : negativeRes)
+		for (Numeric x : negativeRes)
 		{
 			EXPECT_NEAR(x, -test[i], testEpsilon);
 			i++;
@@ -360,12 +367,12 @@ void evalApplyUnitaryOperation(size_t startLen, size_t endLen)
 template <typename INS_VEC>
 void evalApplyUnitaryOperation1(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 	//int SZ = 1000;
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
 
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = (0 == i % 2) ? -i : i; }
 		VecXX test(v);
 
@@ -373,7 +380,7 @@ void evalApplyUnitaryOperation1(size_t startLen, size_t endLen)
 		auto negativeRes = ApplyUnitaryOperation1<  VecXX::INS, DR_CUBED::_unitaryMinus<VecXX::INS > >(test, DR_CUBED::_unitaryMinus<VecXX::INS >());
 
 		int i = 0;
-		for (double x : negativeRes)
+		for (Numeric x : negativeRes)
 		{
 			EXPECT_NEAR(x, -test[i], testEpsilon);
 			i++;
@@ -390,7 +397,7 @@ void evalApplyUnitaryOperation_4(size_t startLen, size_t endLen)
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
 
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = (0 == i % 2) ? -i : i; }
 		VecXX test(v);
 
@@ -398,7 +405,7 @@ void evalApplyUnitaryOperation_4(size_t startLen, size_t endLen)
 		auto negativeRes = ApplyUnitaryOperation<  VecXX::INS, DR_CUBED::_unitaryMinus<VecXX::INS > >(test);
 
 		int i = 0;
-		for (double x : negativeRes)
+		for (Numeric x : negativeRes)
 		{
 			EXPECT_NEAR(x, -test[i], testEpsilon);
 			i++;
@@ -411,7 +418,7 @@ void evalApplyUnitaryOperation_4(size_t startLen, size_t endLen)
 
 TEST(TestBinaryAndUnitaryFunctions, ApplyUnitaryOperation)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 	{
 		auto  testValue = VecXX::scalar(1.1);
 		VecXX res = ApplyUnitaryOperation<  VecXX::INS, DR_CUBED::_unitaryMinus<VecXX::INS > >(testValue);
@@ -474,11 +481,11 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyUnitaryOperation)
 template <typename INS_VEC>
 void evalApplyBinaryOperationVV(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
 
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }// (0 == i % 2) ? -i : i;
 
 		VecXX Lhs(v);
@@ -488,7 +495,7 @@ void evalApplyBinaryOperationVV(size_t startLen, size_t endLen)
 		auto res =ApplyBinaryOperation<  VecXX::INS, DR_CUBED::_plus<VecXX::INS > >(Lhs,Rhs);
 
 		int i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, v[i]*(1+3.2) -1.0   , testEpsilon);
 			i++;
@@ -504,7 +511,7 @@ void evalApplyBinaryOperationVF(size_t startLen, size_t endLen)
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
 
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 
 		VecXX Lhs(v);
@@ -514,7 +521,7 @@ void evalApplyBinaryOperationVF(size_t startLen, size_t endLen)
 		auto res = ApplyBinaryOperation<  VecXX::INS, DR_CUBED::_plus<VecXX::INS > >(Lhs, Rhs);
 
 		int i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, v[i] +10.1, testEpsilon);
 			i++;
@@ -526,11 +533,11 @@ void evalApplyBinaryOperationVF(size_t startLen, size_t endLen)
 template <typename INS_VEC>
 void evalApplyBinaryOperationFV(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
 
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 
 		VecXX Lhs(v);
@@ -540,7 +547,7 @@ void evalApplyBinaryOperationFV(size_t startLen, size_t endLen)
 		auto res = ApplyBinaryOperation<  VecXX::INS, DR_CUBED::_plus<VecXX::INS > >(Rhs,Lhs);
 
 		int i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, v[i] + 10.1, testEpsilon);
 			i++;
@@ -553,7 +560,7 @@ void evalApplyBinaryOperationFV(size_t startLen, size_t endLen)
 
 TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVV)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 	{
 		VecXX  LHS = VecXX::scalar(1.1);
 		VecXX  RHS = VecXX::scalar(3.1);
@@ -566,7 +573,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVV)
 		////////////////// both inputs scalar /////////////
 
 		int SZ = 13;
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX smallVec(v);
 
@@ -574,7 +581,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVV)
 		EXPECT_TRUE(!res.isScalar());
 
 		int i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, smallVec[i] + 3.1, testEpsilon);
 			i++;
@@ -584,7 +591,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVV)
 		res = ApplyBinaryOperation<  VecXX::INS, DR_CUBED::_plus<VecXX::INS > >(LHS, smallVec);
 		EXPECT_TRUE(!res.isScalar());
 		i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, smallVec[i] + 1.1, testEpsilon);
 			i++;
@@ -607,7 +614,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVV)
 
 TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVF)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 
 	{
 
@@ -615,7 +622,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVF)
 		//auto  RHS = VecXX::scalar(3.1);
 
 		int SZ = 13;
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX smallVec(v);
 
@@ -624,7 +631,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVF)
 		auto res = ApplyBinaryOperation<  VecXX::INS, DR_CUBED::_plus<VecXX::INS > >(smallVec, floatVal);
 		EXPECT_TRUE(!res.isScalar());
 		int i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, smallVec[i] + 11.1, testEpsilon);
 			i++;
@@ -647,7 +654,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVF)
 		VecXX  RHS = VecXX::scalar(1.1);
 
 		int SZ = 13;
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }
 		VecXX smallVec(v);
 
@@ -656,7 +663,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVF)
 		auto res = ApplyBinaryOperation<  VecXX::INS, DR_CUBED::_plus<VecXX::INS > >( floatVal, smallVec);
 		EXPECT_TRUE(!res.isScalar());
 		int i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, smallVec[i] + 11.1, testEpsilon);
 			i++;
@@ -692,11 +699,11 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationVF)
 template <typename INS_VEC>
 void evalApplyBinaryOperation1VV(size_t startLen, size_t endLen)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 	for (size_t SZ = startLen; SZ <= endLen; SZ++)
 	{
 
-		std::vector<double>  v(SZ, 0.0);
+		std::vector<Numeric>  v(SZ, 0.0);
 		for (int i = 0; i < SZ; i++) { v[i] = i; }// (0 == i % 2) ? -i : i;
 
 		VecXX Lhs(v);
@@ -719,7 +726,7 @@ void evalApplyBinaryOperation1VV(size_t startLen, size_t endLen)
 
 TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperation1VV)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 	{
 		VecXX  LHS = VecXX::scalar(1.1);
 		VecXX  RHS = VecXX::scalar(3.1);
@@ -751,10 +758,10 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperation1VV)
 //TO DO make these run over variable length arrays on test
 TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationsMutating)
 {
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 
 	int SZ = 13;
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	for (int i = 0; i < SZ; i++) { v[i] = i; }
 	VecXX smallVec(v);
 	int i = 0;
@@ -769,7 +776,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationsMutating)
 		auto res = ApplyBinaryOperationM<VecXX::INS, DR_CUBED::_plus<VecXX::INS > >(floatVal1, smallVec);
 		EXPECT_TRUE(!res.isScalar());
 		i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, v[i] + 11.1, testEpsilon);
 			i++;
@@ -795,7 +802,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationsMutating)
 		auto res = ApplyBinaryOperationM<VecXX::INS, DR_CUBED::_plus<VecXX::INS > >( smallVec1, floatVal1);
 		EXPECT_TRUE(!res.isScalar());
 		i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, v[i] + 11.1, testEpsilon);
 			i++;
@@ -820,7 +827,7 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationsMutating)
 		auto res = ApplyBinaryOperationM<VecXX::INS, DR_CUBED::_plus<VecXX::INS > >(smallVec1, scalarVec);
 		EXPECT_TRUE(!res.isScalar());
 		i = 0;
-		for (double x : res)
+		for (Numeric x : res)
 		{
 			EXPECT_NEAR(x, v[i] + 11.1, testEpsilon);
 			i++;
@@ -831,9 +838,9 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationsMutating)
 		res = ApplyBinaryOperationM<  VecXX::INS, DR_CUBED::_plus<VecXX::INS > >(smallVec2, anotherVec);
 		EXPECT_TRUE(!res.isScalar());  //not a scalar a vec with one element
 		int i = 0;
-	    for (double x : res)
+	    for (Numeric x : res)
 		{
-			double expected = v[i];
+			Numeric expected = v[i];
 			expected *= 2.1;
 			EXPECT_NEAR(x, expected, testEpsilon);
 			i++;
@@ -849,10 +856,10 @@ TEST(TestBinaryAndUnitaryFunctions, ApplyBinaryOperationsMutating)
 void testApplySparse(int start, int SZ, int mod)
 {
 
-	const double testEpsilon = 0.000001;
+	const Numeric testEpsilon = 0.000001;
 
 	SZ = 130;
-	std::vector<double>  v(SZ, 0.0);
+	std::vector<Numeric>  v(SZ, 0.0);
 	for (int i = 0; i < SZ; i++) { v[i] = i; }
 	VecXX smallVec(v);
 
@@ -867,9 +874,9 @@ void testApplySparse(int start, int SZ, int mod)
 	auto res = ApplyUnitaryOperation1(smallVec, sinOper);
 
 	int i = 0;
-	for (double x : res)
+	for (Numeric x : res)
 	{
-		double expected = v[i];
+		Numeric expected = v[i];
 		expected = sin(0.25 * i);
 		EXPECT_NEAR(x, expected, testEpsilon);
 		i++;
@@ -880,7 +887,7 @@ void testApplySparse(int start, int SZ, int mod)
 
 
 	i = 0;
-	for (double x : res)
+	for (Numeric x : res)
 	{
 		if (i % 20 == 0)
 		{
@@ -888,7 +895,7 @@ void testApplySparse(int start, int SZ, int mod)
 		}
 		else
 		{
-			double expected = v[i];
+			Numeric expected = v[i];
 			expected = sin(0.25 * i);
 			EXPECT_NEAR(x, expected, testEpsilon);
 		}
