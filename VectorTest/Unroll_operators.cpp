@@ -172,9 +172,9 @@ TEST(TestUnroll, BinaryOpElement_XXX_apply4)
 	Numeric  alignas(64) OUT[SZ];
 	for (int i = 0; i < SZ; ++i)
 	{
-		input_A[i] = static_cast<double>(i);
+		input_A[i] = static_cast<Numeric>(i);
 
-		input_B[i] = static_cast<double>(100 - i);
+		input_B[i] = static_cast<Numeric>(100 - i);
 
 		OUT[i] = 0.0;
 	}

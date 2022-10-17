@@ -341,7 +341,7 @@ void testBinaryOpVecViewRef(int SZ)
 
 	std::vector<Numeric>  r(SZ, 0.0);
 	i = 0;
-	for (auto& x : r) { x = SZ-i; ++i; }
+	for (auto& x : r) { x = asNumber(SZ-i); ++i; }
 	VecXX data_Rhs(r);
 
 
@@ -392,7 +392,7 @@ TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 	const double NUMBER = SZ * 0.5;
 	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 
@@ -460,7 +460,7 @@ TEST(TestFilterSelect, ApplyJoinedFilterToView)
 	const Numeric NUMBER = SZ * 0.5;
 	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX dataVec(v);
 
 	auto trueCond = [](auto x) { return VecXX::reg(1.0) == VecXX::reg(1.0); };
@@ -470,7 +470,7 @@ TEST(TestFilterSelect, ApplyJoinedFilterToView)
 
 	using namespace JOIN;
 	auto lessThanThirty = [](const auto& X) { return X < static_cast<decltype(X)>(30); };
-	auto isEven = [](auto X) { return (floor(X) / 2.0 - floor(floor(X) / 2.0)) < 0.0001; };
+	auto isEven = [](auto X) { return (floor(X) / asNumber( 2.0) - floor(floor(X) / asNumber(2.0))) < asNumber(0.0001); };
 
 	auto isEvenLessThanThirty = lessThanThirty && isEven;
 
@@ -523,13 +523,13 @@ TEST(TestFilterSelect, ApplyComplexJoinedFilterToVec)
 	const Numeric NUMBER = SZ * 0.5;
 	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 
 	using namespace JOIN;
 	auto lessThanThirty = [](const auto& X) { return X < static_cast<decltype(X)>(30); };
-	auto isEven = [](auto X) { return (floor(X) / 2.0 - floor(floor(X) / 2.0)) < 0.0001; };
+	auto isEven = [](auto X) { return (floor(X) / asNumber(2.0) - floor(floor(X) / asNumber(2.0))) < asNumber(0.0001); };
 
 	auto isEvenLessThanThirty = lessThanThirty && isEven;
 
@@ -601,7 +601,7 @@ TEST(TestFilterSelect, ApplyComplexJoinedLambdasToVec)
 	const Numeric NUMBER = SZ * 0.5;
 	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 	auto SQR = [](auto x) { return (x * x); };
@@ -652,7 +652,7 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 	const Numeric NUMBER = SZ * 0.5;
 	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
-	for (auto& x : v) { x = i; ++i; }
+	for (auto& x : v) { x = asNumber(i); ++i; }
 	VecXX data(v);
 
 	auto SQR = [](auto x) { return (x * x); };
@@ -661,7 +661,8 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 
 	auto negateIfOverTen = [](auto x) { return iff(x > VecXX::scalar(10), -x, x); };
 
-	auto isEven = [](auto X) { return (floor(X) / 2.0 - floor(floor(X) / 2.0)) < 0.0001; };
+	//auto isEven = [](auto X) { return (floor(X) / 2.0 - floor(floor(X) / 2.0)) < 0.0001; };
+	auto isEven = [](auto X) { return (floor(X) / asNumber(2.0) - floor(floor(X) / asNumber(2.0))) < asNumber(0.0001); };
 
 	using namespace JOIN;
 
