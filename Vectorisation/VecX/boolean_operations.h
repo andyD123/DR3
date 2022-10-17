@@ -27,19 +27,44 @@
 template< typename INS_VEC>
 typename InstructionTraits<INS_VEC>::BoolType loadBool(typename InstructionTraits<INS_VEC>::FloatType* pdata)
 {
-	INS_VEC data;
-	return InstructionTraits<INS_VEC>::BoolType(data.load_a(pdata));
+	if constexpr (!InstructionTraits<INS_VEC>::isCompact)
+	{
+		INS_VEC data;
+		return InstructionTraits<INS_VEC>::BoolType(data.load_a(pdata));
+	}
+	else
+	{
+		using MEM_TYPE = typename InstructionTraits<INS_VEC>::MemBoolType;
+
+		using  REG_TYPE = typename InstructionTraits<INS_VEC>::RegBoolType;
+		MEM_TYPE data;
+		data.load_a(pdata);
+		REG_TYPE cnvrt = boolConvert<INS_VEC>(data);
+		return cnvrt;
+	}
 }
+
+
+
 
 template< typename INS_VEC>
 void storeBool_a(typename InstructionTraits<INS_VEC>::BoolType& toStore, typename InstructionTraits<INS_VEC>::FloatType* pdata)
 {
-	INS_VEC data(toStore);
-	data.store_a(pdata);
+	if constexpr (!InstructionTraits<INS_VEC>::isCompact)
+	{
+		INS_VEC data(toStore);
+		data.store_a(pdata);
+	}
+	else
+	{
+		auto cnvrt = boolConvert<INS_VEC>(toStore);
+		INS_VEC(cnvrt).store_a(pdata);
+
+	}
 }
 
 
-//probably same as above 
+//probably same as above rationalise
 template< typename INS_VEC>
 void storeBool2_a(typename InstructionTraits<INS_VEC>::RegBoolType& toStore, typename InstructionTraits<INS_VEC>::FloatType* pdata)
 {
@@ -48,15 +73,6 @@ void storeBool2_a(typename InstructionTraits<INS_VEC>::RegBoolType& toStore, typ
 
 	INS_VEC(cnvrt).store_a(pdata);
 
-	//cnvrt.store_a(pdata);
-	//cnvrt.store(pdata);
-
-
-	//perhaps
-	//boolConvert<INS_VEC>(toStore).store_a(pdata);
-
-	//INS_VEC data(tostore);
-	//data.store_a(pdata);
 }
 
 
