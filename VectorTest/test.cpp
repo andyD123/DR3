@@ -9,7 +9,19 @@
 #include "../Vectorisation/VecX/vec_d.h"
 #include "../Vectorisation/VecX/vec_bool.h"
 #include "../Vectorisation/VecX/apply_operation.h"
+
+
+
+#include "../Vectorisation/VecX/target_name_space.h"
 #include "../Vectorisation/VecX/dr3.h"
+#include "dr3TestUtil.h"
+
+#include "testNamespace.h"
+
+
+
+
+#include <numeric>
 
 
 /*
@@ -25,16 +37,23 @@ typedef Vec<VecDouble>  VecXX;
 
 //using namespace DRC::VecD4D;
 
-using namespace DRC::VecD8D;
+//using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
+/*
+void setVecx(VecXX& Vec1, VecXX& Vec2)
+{
+
+}
+
+*/
 
 TEST(TestCaseName, TestMakeVec)
 {
 
-	std::vector<double> three(3, 42.0);
-	std::vector<double> mix{ 1.0,2.0,3.0 };
+	std::vector<Numeric> three(3, asNumber(42.0));
+	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
 	VecXX Vec2(three);
 	VecXX Vec1(mix);
 
@@ -48,8 +67,8 @@ TEST(TestCaseName, TestMakeVec)
 TEST(TestCaseName, TestAddVec)
 {
 
-	std::vector<double> three(3, 42.0);
-	std::vector<double> mix{ 1.0,2.0,3.0 };
+	std::vector<Numeric> three(3, asNumber(42.0));
+	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
 	VecXX Vec2(three);
 	VecXX Vec1(mix);
 
@@ -101,8 +120,8 @@ TEST(TestCaseName, TestAddVec)
 TEST(TestCaseName, TestSubVec)
 {
 
-	std::vector<double> three(3, 42.0);
-	std::vector<double> mix{ 1.0,2.0,3.0 };
+	std::vector<Numeric> three(3, asNumber(42.0));
+	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
 	VecXX Vec2(three);
 	VecXX Vec1(mix);
 
@@ -153,8 +172,8 @@ TEST(TestCaseName, TestSubVec)
 TEST(TestCaseName, TestMultVec)
 {
 
-	std::vector<double> three(3, 42.0);
-	std::vector<double> mix{ 1.0,2.0,3.0 };
+	std::vector<Numeric> three(3, asNumber(42.0));
+	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
 	VecXX Vec2(three);
 	VecXX Vec1(mix);
 
@@ -205,8 +224,8 @@ TEST(TestCaseName, TestMultVec)
 TEST(TestCaseName, TestDivVec)
 {
 
-	std::vector<double> three(3, 4.0);
-	std::vector<double> mix{ 10.0,20.0,30.0 };
+	std::vector<Numeric> three(3, asNumber(4.0));
+	std::vector<Numeric> mix{ 10.0,20.,30.0 };
 	VecXX Vec2(mix);
 	VecXX Vec1(three);
 
@@ -258,11 +277,16 @@ TEST(TestCaseName, TestDivVec)
 TEST(TestFuncions, TestExp)
 {
 
-	std::vector<double> three(3, 4.0);
-	std::vector<double> mix{ 1.0,2.0,3.0 };
-	//VecXX Vec2(mix);
+	std::vector<Numeric> three(3, asNumber(4.0));
+	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
 	VecXX Vec1(mix);
-	VecXX vecScalar(2.2);
+	VecXX vecScalar(asNumber(2.2));
+
+//	std::vector<double> three(3, 4.0);
+//	std::vector<double> mix{ 1.0,2.0,3.0 };
+//	//VecXX Vec2(mix);
+//	VecXX Vec1(mix);
+//	VecXX vecScalar(2.2);
 
 	auto res = exp(Vec1);
 	EXPECT_EQ(res.size(), 3);
@@ -278,12 +302,17 @@ TEST(TestFuncions, TestExp)
 
 TEST(TestFuncions, TestLog)
 {
-
+/*
 	std::vector<double> three(3, 4.0);
 	std::vector<double> mix{ 1.0,2.0,3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(2.2);
+*/
+	std::vector<Numeric> three(3, asNumber(4.0));
+	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(2.2));
 
 	auto res = log(Vec1);
 	EXPECT_EQ(res.size(), 3);
@@ -298,12 +327,18 @@ TEST(TestFuncions, TestLog)
 
 TEST(TestFuncions, Testabs)
 {
-
+/*
 	std::vector<double> three(3, 4.0);
 	std::vector<double> mix{ 1.0,2.0,3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(2.2);
+*/
+	std::vector<Numeric> three(3, asNumber(4.0));
+	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(2.2));
+
 
 	auto res = abs(Vec1);
 	EXPECT_EQ(res.size(), 3);
@@ -319,13 +354,18 @@ TEST(TestFuncions, Testabs)
 
 TEST(TestFuncions, Testfloor)
 {
+	std::vector<Numeric> three(3, asNumber(4.0));
+	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(2.2));
+/*
 
 	std::vector<double> three(3, 4.0);
 	std::vector<double> mix{ 1.0,2.0,3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(2.2);
-
+*/
 	auto res = floor(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
@@ -339,14 +379,15 @@ TEST(TestFuncions, Testfloor)
 
 TEST(TestFuncions, cdfnorminv)
 {
-
-
-	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
+	
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1./ 3.0) };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
-	VecXX vecScalar(1.0 / 2.2);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
 
-	auto res = cdfnorminv(Vec1);
+	
+
+	auto res = cdfnorminv<VecXX::INS>(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
 	EXPECT_DOUBLE_EQ(res[0], cdfnorminv(mix[0]));
@@ -359,12 +400,9 @@ TEST(TestFuncions, cdfnorminv)
 
 TEST(TestFuncions, cdfnorm)
 {
-
-
-	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
-	//VecXX Vec2(mix);
+	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
 	VecXX Vec1(mix);
-	VecXX vecScalar(1.0 / 2.2);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
 
 	auto res = cdfnorm(Vec1);
 	EXPECT_EQ(res.size(), 3);
@@ -380,12 +418,16 @@ TEST(TestFuncions, cdfnorm)
 
 TEST(TestFuncions, cdfnormD)
 {
-
-
+	/*
 	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
+	*/
+
+	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
 
 	auto res = cdfnormD(Vec1);
 	EXPECT_EQ(res.size(), 3);
@@ -402,11 +444,15 @@ TEST(TestFuncions, cdfnormD)
 TEST(TestFuncions, unitaryMinus)
 {
 
-
+/*
 	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
+*/
+	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
 
 	auto res = -Vec1;
 	EXPECT_EQ(res.size(), 3);
@@ -421,10 +467,16 @@ TEST(TestFuncions, unitaryMinus)
 
 TEST(TestFuncions, ceil)
 {
+/*
 	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
+*/
+	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
+
 
 	auto res = ceil(Vec1);
 	EXPECT_EQ(res.size(), 3);
@@ -440,10 +492,16 @@ TEST(TestFuncions, ceil)
 
 TEST(TestFuncions, sqrt)
 {
+/*
 	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
+*/
+	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
+
 
 	auto res = sqrt(Vec1);
 	EXPECT_EQ(res.size(), 3);
@@ -459,12 +517,15 @@ TEST(TestFuncions, sqrt)
 
 TEST(TestFuncions, pow)
 {
+/*
 	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.0);
-
-
+*/
+	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
 
 	auto res = pow(Vec1, 0.5);
 	EXPECT_EQ(res.size(), 3);
@@ -473,7 +534,7 @@ TEST(TestFuncions, pow)
 	EXPECT_DOUBLE_EQ(res[1], sqrt(mix[1]));
 	EXPECT_DOUBLE_EQ(res[2], sqrt(mix[2]));
 
-	std::vector<double> mix1{ 1.0, 2.0, 3.0 };
+	std::vector<Numeric> mix1{ 1.0, 2.0, 3.0 };
 	VecXX powers(mix1);
 
 
@@ -492,10 +553,17 @@ TEST(TestFuncions, pow)
 
 TEST(TestFuncions, max)
 {
+/*
 	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
+*/
+
+	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
+
 	VecXX Vec2 = Vec1 + 1.0;
 	VecXX Vec3 = Vec1 - 1.0;
 
@@ -531,10 +599,18 @@ TEST(TestFuncions, max)
 
 TEST(TestFuncions, min)
 {
+/*
 	std::vector<double> mix{ 1.0 / 4.0,1 / 2.0,1 / 3.0 };
 	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
+*/
+	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	VecXX Vec1(mix);
+	VecXX vecScalar(asNumber(1.0 / 2.2));
+
+
+
 	VecXX Vec2 = Vec1 + 1.0;
 	VecXX Vec3 = Vec1 + 1.0;
 
@@ -559,10 +635,10 @@ TEST(TestFuncions, min)
 
 TEST(TestFuncions, multAdd)
 {
-	std::vector<double> mix{ 1.0,  2.0, 3.0 };
+	std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
 	VecXX Vec2(mix);
 
-	std::vector<double> one{ 1.0,  1.0, 1.0 };
+	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
 
 	VecXX Vec1(one);
 
@@ -593,10 +669,10 @@ TEST(TestFuncions, multAdd)
 
 TEST(TestFuncions, testLamdaOneD)
 {
-	std::vector<double> mix{ 1.0,  2.0, 3.0 };
+	std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
 	VecXX Vec2(mix);
 
-	std::vector<double> one{ 1.0,  1.0, 1.0 };
+	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
 
 	VecXX Vec1(one);
 
@@ -616,10 +692,10 @@ TEST(TestFuncions, testLamdaOneD)
 
 TEST(TestFuncions, testLamdaTwoD)
 {
-	std::vector<double> mix{ 1.0,  2.0, 3.0 };
+	std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
 	VecXX Vec2(mix);
 
-	std::vector<double> one{ 1.0,  1.0, 1.0 };
+	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
 
 	VecXX Vec1(one);
 
@@ -639,14 +715,12 @@ TEST(TestFuncions, testLamdaTwoD)
 
 TEST(TestFuncions, testBoolLamdaTwoD)
 {
-	std::vector<double> mix{ 1.0,  2.0, 0.1 };
+	std::vector<Numeric> mix{ 1.0,  2.0, 0.1 };
 	VecXX Vec2(mix);
 
-	std::vector<double> one{ 1.0,  1.0, 1.0 };
+	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
 
 	VecXX Vec1(one);
-
-	//auto myFunc = [](auto X, auto Y) {return ((X * X - Y * Y + X * Y) < VecXX::reg(4.) * X); };
 	auto myFunc = [](const auto& X, const auto& Y) {return ((X * X - Y * Y + X * Y) <  X * X); };
 
 //	auto wrap = CustomBinaryBool(myFunc);
@@ -728,8 +802,8 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 	EXPECT_FALSE(res2);
 
 
-	VecXX scalar1(100.);
-	VecXX scalar2(100.);
+	VecXX scalar1(asNumber(100.));
+	VecXX scalar2(asNumber(100.));
 
 	
 
@@ -741,7 +815,7 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 
 	//vc2a.
 
-	auto vc3 = (Vec2 <= 0.2);
+	auto vc3 = (Vec2 <= asNumber(0.2));
 
 	EXPECT_EQ(vc3.size(), 3);
 
@@ -754,7 +828,7 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 	EXPECT_TRUE(res2);
 
 
-	auto vc4 = (Vec2 >= 0.2);
+	auto vc4 = (Vec2 >= asNumber(0.2));
 
 	EXPECT_EQ(vc3.size(), 3);
 
@@ -800,12 +874,11 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 
 TEST(TestFuncions, testIff)
 {
-	std::vector<double> mix{ 1.0,  2.0, 3.0 };
+	std::vector<Numeric>  mix{ 1.0,  2.0, 3.0 };
 	VecXX Vec2(mix);
 
-	std::vector<double> one{ 1.0,  1.0, 1.0 };
-
-	std::vector<double> other{ 8.0,  7.0, 6.0 };
+	std::vector<Numeric>  one{ 1.0,  1.0, 1.0 };
+	std::vector<Numeric>  other{ 8.0,  7.0, 6.0 };
 
 	VecXX scalar = 999.;
 	VecXX scalar2 = 222.;
@@ -901,7 +974,7 @@ VecXX::INS getNull(VecXX::INS)
 
 TEST(TestFuncions, accum1)
 {
-	std::vector<double> oneOone(101, 1.0);
+	std::vector<Numeric> oneOone(101,asNumber(1.0) );
 	VecXX Vec(oneOone);
 
 	auto sum = [](auto lhs, auto rhs) {return rhs + lhs; };
@@ -932,8 +1005,8 @@ TEST(TestFuncions, accum1)
 
 	auto Add = [](auto lhs, auto rhs) { return lhs + rhs; };
 
-	auto sum1 = ApplyAccumulate2(Vec, KhanAddV, KhanAddS, 0.0);
-	auto sum2 = ApplyAccumulate2(Vec, Add, Add, 0.0);
+	auto sum1 = ApplyAccumulate2(Vec, KhanAddV, KhanAddS, asNumber(0.0));
+	auto sum2 = ApplyAccumulate2(Vec, Add, Add, asNumber(0.0));
 
 
 
