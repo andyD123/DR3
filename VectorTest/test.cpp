@@ -14,11 +14,8 @@
 
 #include "../Vectorisation/VecX/target_name_space.h"
 #include "../Vectorisation/VecX/dr3.h"
-#include "dr3TestUtil.h"
-
 #include "testNamespace.h"
-
-
+#include "dr3TestUtil.h"
 
 
 #include <numeric>
@@ -225,51 +222,50 @@ TEST(TestCaseName, TestDivVec)
 {
 
 	std::vector<Numeric> three(3, asNumber(4.0));
-	std::vector<Numeric> mix{ 10.0,20.,30.0 };
+	std::vector<Numeric> mix{ asNumber(10.0),asNumber(20.),asNumber(30.0) };
 	VecXX Vec2(mix);
 	VecXX Vec1(three);
 
 	auto added = Vec2 / Vec1;
 	EXPECT_EQ(added.size(), 3);
-	EXPECT_EQ(added[0], 2.5);
-	EXPECT_EQ(added[1], 5.0);
-	EXPECT_EQ(added[2], 7.5);
+	EXPECT_NUMERIC_EQ(added[0], asNumber(2.5));
+	EXPECT_NUMERIC_EQ(added[1], asNumber(5.0));
+	EXPECT_NUMERIC_EQ(added[2], asNumber(7.5));
 
 	auto added1 = Vec1 / Vec2;
 	EXPECT_EQ(added1.size(), 3);
-	EXPECT_EQ(added1[0], 0.40);
-	EXPECT_EQ(added1[1], 0.20);
-	EXPECT_EQ(added1[2], 4.0 / 30.0);
+	EXPECT_NUMERIC_EQ(added1[0], asNumber(0.40));
+	EXPECT_NUMERIC_EQ(added1[1], asNumber(0.20));
+	EXPECT_NUMERIC_EQ(added1[2], asNumber(4.0 / 30.0));
 
 	auto added2 = Vec1;
 	added2 /= Vec2;
 	EXPECT_EQ(added2.size(), 3);
-	EXPECT_EQ(added2[0], 0.4);
-	EXPECT_EQ(added2[1], 0.2);
-	EXPECT_EQ(added2[2], 4.0 / 30.0);
+	EXPECT_NUMERIC_EQ(added2[0], asNumber(0.40));
+	EXPECT_NUMERIC_EQ(added2[1], asNumber(0.20));
+	EXPECT_NUMERIC_EQ(added2[2], asNumber(4.0 / 30.0));
+
 
 	Numeric val = 4.0;
 	auto added3 = Vec2 / val;
 	EXPECT_EQ(added3.size(), 3);
-	EXPECT_EQ(added3[0], 2.5);
-	EXPECT_EQ(added3[1], 5.0);
-	EXPECT_EQ(added3[2], 7.5);
+	EXPECT_NUMERIC_EQ(added3[0], asNumber(2.5));
+	EXPECT_NUMERIC_EQ(added3[1], asNumber(5.0));
+	EXPECT_NUMERIC_EQ(added3[2], asNumber(7.5));
 
 
 	auto added4 = val / Vec1;
 	EXPECT_EQ(added4.size(), 3);
-	EXPECT_EQ(added4[0], 1.0);
-	EXPECT_EQ(added4[1], 1.0);
-	EXPECT_EQ(added4[2], 1.0);
+	EXPECT_NUMERIC_EQ(added4[0], asNumber(1.));
+	EXPECT_NUMERIC_EQ(added4[1], asNumber(1.));
+	EXPECT_NUMERIC_EQ(added4[2], asNumber(1.));
 
 
-	//VecXX added5(val);
-	//added5 /= Vec2;
 	Vec2 /= val;
 	EXPECT_EQ(Vec2.size(), 3);
-	EXPECT_EQ(Vec2[0], 2.5);
-	EXPECT_EQ(Vec2[1], 5.0);
-	EXPECT_EQ(Vec2[2], 7.5);
+	EXPECT_NUMERIC_EQ(Vec2[0], asNumber(2.5));
+	EXPECT_NUMERIC_EQ(Vec2[1], asNumber(5.0));
+	EXPECT_NUMERIC_EQ(Vec2[2], asNumber(7.5));
 
 }
 
