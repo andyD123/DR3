@@ -274,7 +274,7 @@ TEST(TestFuncions, TestExp)
 {
 
 	std::vector<Numeric> three(3, asNumber(4.0));
-	std::vector<Numeric> mix{ 1.0,2.0,3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0),asNumber(2.),asNumber(3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(2.2));
 
@@ -287,12 +287,12 @@ TEST(TestFuncions, TestExp)
 	auto res = exp(Vec1);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_DOUBLE_EQ(res[0], exp(mix[0]));
-	EXPECT_DOUBLE_EQ(res[1], exp(mix[1]));
-	EXPECT_DOUBLE_EQ(res[2], exp(mix[2]));
+	EXPECT_NUMERIC_EQ(asNumber( res[0] ), asNumber( exp(mix[0]) )  );
+	EXPECT_NUMERIC_EQ(asNumber( res[1] ), asNumber( exp(mix[1]) )  );
+	EXPECT_NUMERIC_EQ(asNumber (res[2] ), asNumber( exp(mix[2]) )  );
 
 	auto res2 = exp(vecScalar);
-	EXPECT_DOUBLE_EQ(res2.getScalarValue(), exp(vecScalar.getScalarValue()));
+	EXPECT_NUMERIC_EQ(res2.getScalarValue(), exp(vecScalar.getScalarValue()));
 }
 
 
@@ -377,21 +377,20 @@ TEST(TestFuncions, cdfnorminv)
 {
 	
 	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1./ 3.0) };
-	//VecXX Vec2(mix);
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
-	
 
 	auto res = cdfnorminv<VecXX::INS>(Vec1);
 	EXPECT_EQ(res.size(), 3);
-
-	EXPECT_DOUBLE_EQ(res[0], cdfnorminv(mix[0]));
-	EXPECT_DOUBLE_EQ(res[1], cdfnorminv(mix[1]));
-	EXPECT_DOUBLE_EQ(res[2], cdfnorminv(mix[2]));
+	EXPECT_NUMERIC_EQ(asNumber(res[0]), asNumber(cdfnorminv(mix[0])));
+	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(cdfnorminv(mix[1])));
+	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(cdfnorminv(mix[2])));
 
 	auto res2 = cdfnorminv(vecScalar);
-	EXPECT_DOUBLE_EQ(res2.getScalarValue(), cdfnorminv(vecScalar.getScalarValue()));
+	EXPECT_NUMERIC_EQ(res2.getScalarValue(), asNumber( cdfnorminv(vecScalar.getScalarValue()) ));
+
+
 }
 
 TEST(TestFuncions, cdfnorm)
