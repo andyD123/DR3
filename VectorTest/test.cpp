@@ -896,63 +896,90 @@ TEST(TestFuncions, testIff)
 	std::vector<Numeric> mix{ asNumber(1.0), asNumber(2.0), asNumber(3.0) };
 	VecXX Vec2(mix);
 
-	std::vector<Numeric>  one{ 1.0,  1.0, 1.0 };
-	std::vector<Numeric>  other{ 8.0,  7.0, 6.0 };
+	std::vector<Numeric>  one{ asNumber(1.0),asNumber(1.0),asNumber(1.0) };// 1.0, 1.0, 1.0
 
-	VecXX scalar = 999.;
-	VecXX scalar2 = 222.;
+	std::vector<Numeric>  other{ asNumber(8.0),asNumber(7.0),asNumber(6.0) }; // other{ 8.0,  7.0, 6.0 };
+
+	VecXX scalar = asNumber(999.);
+	VecXX scalar2 = asNumber(222.);
 
 	VecXX Vec1(one);
 	VecXX otherFalse(other);
 
-	auto boolCond = Vec2 > (Vec1 + 1.0);
+	auto boolCond = Vec2 > (Vec1 + asNumber(1.0) );
 
 	auto res = select(boolCond, Vec1, -Vec1);
 
 	EXPECT_EQ(res.size(), 3);
-	EXPECT_EQ(res[0], -1.0);
-	EXPECT_EQ(res[1], -1.0);
-	EXPECT_EQ(res[2], 1.0);
+	//EXPECT_EQ(res[0], -1.0);
+	//EXPECT_EQ(res[1], -1.0);
+	//EXPECT_EQ(res[2], 1.0);
+
+	EXPECT_NUMERIC_EQ(res[0], asNumber(-1.0));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(-1.0));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(1.0) );
 
 
 
 	res = select(boolCond, Vec1, otherFalse);
 
 	EXPECT_EQ(res.size(), 3);
-	EXPECT_EQ(res[0], 8.0);
-	EXPECT_EQ(res[1], 7.0);
-	EXPECT_EQ(res[2], 1.0);
+	//EXPECT_EQ(res[0], 8.0);
+	//EXPECT_EQ(res[1], 7.0);
+	//EXPECT_EQ(res[2], 1.0);
+
+	EXPECT_NUMERIC_EQ(res[0], asNumber(8.0));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(7.0));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(1.0));
 
 
 	res = select(boolCond, scalar, scalar2);
 
 	EXPECT_EQ(res.size(), 3);
-	EXPECT_EQ(res[0], 222.0);
-	EXPECT_EQ(res[1], 222.0);
-	EXPECT_EQ(res[2], 999.0);
+//	EXPECT_EQ(res[0], 222.0);
+//	EXPECT_EQ(res[1], 222.0);
+//	EXPECT_EQ(res[2], 999.0);
+
+	EXPECT_NUMERIC_EQ(res[0], asNumber(222.0));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(222.0));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(999.0));
+
+
 
 
 	res = select(boolCond, asNumber( 999.0), asNumber(222.0));
 
 	EXPECT_EQ(res.size(), 3);
-	EXPECT_EQ(res[0], 222.0);
-	EXPECT_EQ(res[1], 222.0);
-	EXPECT_EQ(res[2], 999.0);
+	//EXPECT_EQ(res[0], 222.0);
+	//EXPECT_EQ(res[1], 222.0);
+	//EXPECT_EQ(res[2], 999.0);
+
+	EXPECT_NUMERIC_EQ(res[0], asNumber(222.0));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(222.0));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(999.0));
 
 	res = select(boolCond, Vec2, asNumber(333.1));
 
 	EXPECT_EQ(res.size(), 3);
-	EXPECT_EQ(res[0], 333.1);
-	EXPECT_EQ(res[1], 333.1);
-	EXPECT_EQ(res[2], 3.0);
+	//EXPECT_EQ(res[0], 333.1);
+	//EXPECT_EQ(res[1], 333.1);
+	//EXPECT_EQ(res[2], 3.0);
+
+	EXPECT_NUMERIC_EQ(res[0], asNumber(333.1));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(333.1));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(3.0));
 
 
 	res = select(boolCond, asNumber(333.1), Vec2);
 
 	EXPECT_EQ(res.size(), 3);
-	EXPECT_EQ(res[0], 1.0);
-	EXPECT_EQ(res[1], 2.0);
-	EXPECT_EQ(res[2], 333.1);
+	//EXPECT_EQ(res[0], 1.0);
+	//EXPECT_EQ(res[1], 2.0);
+	//EXPECT_EQ(res[2], asNumber(333.1));
+
+	EXPECT_NUMERIC_EQ(res[0], asNumber(1.));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(2.));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(333.1));
 
 
 
@@ -962,23 +989,30 @@ TEST(TestFuncions, testIff)
 	res = iff(boolCond, Vec1, -Vec1);
 	//res = iff(Vec2 > Vec1 + 1.0, Vec1, -Vec1);
 	EXPECT_EQ(res.size(), 3);
-	EXPECT_EQ(res[0], -1.0);
-	EXPECT_EQ(res[1], -1.0);
-	EXPECT_EQ(res[2], 1.0);
+	//EXPECT_EQ(res[0], -1.0);
+	//EXPECT_EQ(res[1], -1.0);
+	//EXPECT_EQ(res[2], 1.0);
+
+	EXPECT_NUMERIC_EQ(res[0], asNumber(-1.));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(-1.));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(1.0));
 		
 
 
 	//res = iff(boolCond, Vec1, -Vec1);
 	res = iff(Vec2 > (Vec1 + asNumber(1.0)), Vec1, -Vec1);
 	EXPECT_EQ(res.size(), 3);
-	EXPECT_EQ(res[0], -1.0);
-	EXPECT_EQ(res[1], -1.0);
-	EXPECT_EQ(res[2], 1.0);
+	//EXPECT_EQ(res[0], -1.0);
+	//EXPECT_EQ(res[1], -1.0);
+	//EXPECT_EQ(res[2], 1.0);
+
+	EXPECT_NUMERIC_EQ(res[0], asNumber(-1.));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(-1.));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(1.0));
 
 
 }
 	
-/**/
 
 Numeric getNull(Numeric)
 {
