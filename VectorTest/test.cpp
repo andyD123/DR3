@@ -401,13 +401,23 @@ TEST(TestFuncions, cdfnorm)
 
 	auto res = cdfnorm(Vec1);
 	EXPECT_EQ(res.size(), 3);
-
+/*
 	EXPECT_DOUBLE_EQ(res[0], cdfnorm(mix[0]));
 	EXPECT_DOUBLE_EQ(res[1], cdfnorm(mix[1]));
 	EXPECT_DOUBLE_EQ(res[2], cdfnorm(mix[2]));
 
 	auto res2 = cdfnorm(vecScalar);
 	EXPECT_DOUBLE_EQ(res2.getScalarValue(), cdfnorm(vecScalar.getScalarValue()));
+
+	*/
+
+	EXPECT_NUMERIC_EQ(asNumber(res[0]), asNumber(cdfnorm(mix[0])));
+	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(cdfnorm(mix[1])));
+	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(cdfnorm(mix[2])));
+
+	auto res2 = cdfnorm(vecScalar);
+	EXPECT_NUMERIC_EQ(res2.getScalarValue(), asNumber(cdfnorm(vecScalar.getScalarValue())));
+
 }
 
 
