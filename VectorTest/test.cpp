@@ -832,9 +832,9 @@ TEST(TestFuncions, testLamdaOneD)
 	EXPECT_EQ(res.size(), 3);
 
 
-	EXPECT_EQ(res[0], Vec2[0] * Vec2[0]);
-	EXPECT_EQ(res[1], Vec2[1] * Vec2[1]);
-	EXPECT_EQ(res[2], Vec2[2] * Vec2[2]);
+	EXPECT_EQ(res[0], asNumber( Vec2[0] * Vec2[0]) );
+	EXPECT_EQ(res[1], asNumber( Vec2[1] * Vec2[1]) );
+	EXPECT_EQ(res[2], asNumber( Vec2[2] * Vec2[2]) );
 
 
 }
@@ -846,7 +846,8 @@ TEST(TestFuncions, testLamdaTwoD)
 	std::vector<Numeric> mix{ asNumber(1.0), asNumber(2.0), asNumber(3.0) };
 	VecXX Vec2(mix);
 
-	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
+	//std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
+	std::vector<Numeric> one{ asNumber(1.0), asNumber(1.0), asNumber(1.0) };
 
 	VecXX Vec1(one);
 
@@ -854,100 +855,86 @@ TEST(TestFuncions, testLamdaTwoD)
 
 	auto res = ApplyLambda2(Vec1, Vec2, myFunc);
 	EXPECT_EQ(res.size(), 3);
-
-
-	EXPECT_EQ(res[0], 3.0);
-	EXPECT_EQ(res[1], 7.0);
-	EXPECT_EQ(res[2], 13.0);
+	EXPECT_EQ(res[0], asNumber(3.0) );
+	EXPECT_EQ(res[1], asNumber(7.0) );
+	EXPECT_EQ(res[2], asNumber(13.0));
 
 
 }
 
-/*
+
 TEST(TestFuncions, testBoolLamdaTwoD)
 {
-	std::vector<Numeric> mix{ 1.0,  2.0, 0.1 };
-	VecXX Vec2(mix);
+	std::vector<Numeric> mix{ asNumber(1.0), asNumber(2.0), asNumber(0.1) };
 
-	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
+	VecXX Vec2(mix);
+	std::vector<Numeric> one{ asNumber(1.0), asNumber(1.0), asNumber(1.0) };
 
 	VecXX Vec1(one);
 	auto myFunc = [](const auto& X, const auto& Y) {return ((X * X - Y * Y + X * Y) <  X * X); };
 
-//	auto wrap = CustomBinaryBool(myFunc);
+
 	auto res = ApplyBoolLambda2(Vec1, Vec2, myFunc);
-
-	
-	EXPECT_EQ(res.size(), 3);
-
 	auto res0 = res[0];
 	auto res1 = res[1];
 	auto res2 = res[2];
 
+		
+	EXPECT_EQ(res.size(), 3);
 	EXPECT_FALSE(res0);
 	EXPECT_TRUE(res1);
 	EXPECT_FALSE(res2);
 
 	//reverse arguments
 	res = ApplyBoolLambda2(Vec2, Vec1, myFunc);
-
-
-	EXPECT_EQ(res.size(), 3);
-
 	res0 = res[0];
 	res1 = res[1];
 	res2 = res[2];
 
+	EXPECT_EQ(res.size(), 3);
 	EXPECT_FALSE(res0);
 	EXPECT_FALSE(res1);
 	EXPECT_TRUE(res2);
-
-
-
-	///  //////////////////////////////
+	
 
 	auto vcl_lte = (Vec1 <= Vec2);
-
-	EXPECT_EQ(vcl_lte.size(), 3);
 	res0 = vcl_lte[0];
 	res1 = vcl_lte[1];
 	res2 = vcl_lte[2];
 
+	EXPECT_EQ(vcl_lte.size(), 3);
 	EXPECT_TRUE(res0);
 	EXPECT_TRUE(res1);
 	EXPECT_FALSE(res2);
 
 	vcl_lte = (Vec2 <= Vec1);
-
-	EXPECT_EQ(vcl_lte.size(), 3);
 	res0 = vcl_lte[0];
 	res1 = vcl_lte[1];
 	res2 = vcl_lte[2];
 
+	EXPECT_EQ(vcl_lte.size(), 3);
 	EXPECT_TRUE(res0);
 	EXPECT_FALSE(res1);
 	EXPECT_TRUE(res2);
 
 
 	auto vcl_eq = (Vec1 == Vec2);
-
-	EXPECT_EQ(vcl_lte.size(), 3);
 	res0 = vcl_eq[0];
 	res1 = vcl_eq[1];
 	res2 = vcl_eq[2];
 
+	EXPECT_EQ(vcl_lte.size(), 3);
 	EXPECT_TRUE(res0);
 	EXPECT_FALSE(res1);
 	EXPECT_FALSE(res2);
 
 
 	vcl_eq = (Vec2 == Vec1);
-
-	EXPECT_EQ(vcl_lte.size(), 3);
 	res0 = vcl_eq[0];
 	res1 = vcl_eq[1];
 	res2 = vcl_eq[2];
 
+	EXPECT_EQ(vcl_lte.size(), 3);
 	EXPECT_TRUE(res0);
 	EXPECT_FALSE(res1);
 	EXPECT_FALSE(res2);
@@ -955,73 +942,56 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 
 	VecXX scalar1(asNumber(100.));
 	VecXX scalar2(asNumber(100.));
-
 	
 
 	auto vc2a = (scalar2 == scalar1);
-
-
-
-	EXPECT_TRUE(vc2a.isScalar()); // wrong always false, do we allow scala bool vectors
-
-	//vc2a.
+	EXPECT_TRUE(vc2a.isScalar()); 
 
 	auto vc3 = (Vec2 <= asNumber(0.2));
-
-	EXPECT_EQ(vc3.size(), 3);
-
 	res0 = vc3[0];
 	res1 = vc3[1];
 	res2 = vc3[2];
 
+	EXPECT_EQ(vc3.size(), 3);
 	EXPECT_FALSE(res0);
 	EXPECT_FALSE(res1);
 	EXPECT_TRUE(res2);
 
-
 	auto vc4 = (Vec2 >= asNumber(0.2));
-
-	EXPECT_EQ(vc3.size(), 3);
-
 	res0 = vc4[0];
 	res1 = vc4[1];
 	res2 = vc4[2];
 
+	EXPECT_EQ(vc3.size(), 3);
 	EXPECT_TRUE(res0);
 	EXPECT_TRUE(res1);
 	EXPECT_FALSE(res2);
 
-	/////////////////////////////////
-
+	
 	res = ApplyBoolLambda2(scalar1, Vec1, myFunc);
-	EXPECT_EQ(res.size(), 3);
-
 	res0 = res[0];
 	res1 = res[1];
 	res2 = res[2];
 
-
+	EXPECT_EQ(res.size(), 3);
 	EXPECT_FALSE(res0);
 	EXPECT_FALSE(res1);
 	EXPECT_FALSE(res2);
 
 
 	res = ApplyBoolLambda2( Vec1, scalar1, myFunc);
-	EXPECT_EQ(res.size(), 3);
-
 	res0 = res[0];
 	res1 = res[1];
 	res2 = res[2];
 
+	EXPECT_EQ(res.size(), 3);
 	EXPECT_TRUE(res0);
 	EXPECT_TRUE(res1);
 	EXPECT_TRUE(res2);
-		
-
-
+	
 }
 
-*/
+
 
 TEST(TestFuncions, testIff)
 {
@@ -1030,7 +1000,6 @@ TEST(TestFuncions, testIff)
 	VecXX Vec2(mix);
 
 	std::vector<Numeric>  one{ asNumber(1.0),asNumber(1.0),asNumber(1.0) };// 1.0, 1.0, 1.0
-
 	std::vector<Numeric>  other{ asNumber(8.0),asNumber(7.0),asNumber(6.0) }; // other{ 8.0,  7.0, 6.0 };
 
 	VecXX scalar = asNumber(999.);
@@ -1044,10 +1013,6 @@ TEST(TestFuncions, testIff)
 	auto res = select(boolCond, Vec1, -Vec1);
 
 	EXPECT_EQ(res.size(), 3);
-	//EXPECT_EQ(res[0], -1.0);
-	//EXPECT_EQ(res[1], -1.0);
-	//EXPECT_EQ(res[2], 1.0);
-
 	EXPECT_NUMERIC_EQ(res[0], asNumber(-1.0));
 	EXPECT_NUMERIC_EQ(res[1], asNumber(-1.0));
 	EXPECT_NUMERIC_EQ(res[2], asNumber(1.0) );
