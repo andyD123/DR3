@@ -565,7 +565,7 @@ TEST(TestFuncions, max)
 	VecXX vecScalar(1.0 / 2.2);
 */
 
-	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1.0/ 2.0), asNumber(1.0/ 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -575,19 +575,30 @@ TEST(TestFuncions, max)
 	auto res = max(Vec1, Vec2);
 	EXPECT_EQ(res.size(), 3);
 
+/*
 	EXPECT_EQ(res[0], Vec2[0]);
 	EXPECT_EQ(res[1], Vec2[1]);
 	EXPECT_EQ(res[2], Vec2[2]);
+*/
+	EXPECT_NUMERIC_EQ(asNumber(res[0]), asNumber(Vec2[0]));
+	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(Vec2[1]));
+	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(Vec2[2]));
 
-	auto res3 = max(vecScalar, -100.0);
-	EXPECT_EQ(res3.getScalarValue(), 1.0 / 2.2);
+
+
+	auto res3 = max(vecScalar, asNumber( -100.0) );
+	EXPECT_NUMERIC_EQ(res3.getScalarValue(),  asNumber( 1.0 / 2.2) );
 
 	auto res2 = max(Vec1, Vec3);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res2[0], Vec1[0]);
-	EXPECT_EQ(res2[1], Vec1[1]);
-	EXPECT_EQ(res2[2], Vec1[2]);
+	//EXPECT_EQ(res2[0], Vec1[0]);
+	//EXPECT_EQ(res2[1], Vec1[1]);
+	//EXPECT_EQ(res2[2], Vec1[2]);
+
+	EXPECT_NUMERIC_EQ(asNumber(res2[0]), asNumber(Vec1[0]));
+	EXPECT_NUMERIC_EQ(asNumber(res2[1]), asNumber(Vec1[1]));
+	EXPECT_NUMERIC_EQ(asNumber(res2[2]), asNumber(Vec1[2]));
 
 
 
@@ -595,7 +606,6 @@ TEST(TestFuncions, max)
 	//VecxD testVals2 = testVals * 10.0;
 
 	//auto res4 = max(testVals, testVals2);
-
 
 
 }
