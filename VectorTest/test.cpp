@@ -635,18 +635,26 @@ TEST(TestFuncions, pow)
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.0);
 */
-	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
+
+
+	std::vector<Numeric> mix{ asNumber(1.0/4.0), asNumber(1.0/2.0), asNumber(1.0/3.0) };
 	VecXX Vec1(mix);
-	VecXX vecScalar(asNumber(1.0 / 2.2));
+	VecXX vecScalar(asNumber(1.0/2.2));
 
-	auto res = pow(Vec1, 0.5);
+	auto res = pow(Vec1, asNumber(0.5) );
 	EXPECT_EQ(res.size(), 3);
-
+/*
 	EXPECT_DOUBLE_EQ(res[0], sqrt(mix[0]));
 	EXPECT_DOUBLE_EQ(res[1], sqrt(mix[1]));
 	EXPECT_DOUBLE_EQ(res[2], sqrt(mix[2]));
+*/
 
-	std::vector<Numeric> mix1{ 1.0, 2.0, 3.0 };
+	EXPECT_NUMERIC_EQ(res[0], asNumber(sqrt(mix[0])));
+	EXPECT_NUMERIC_EQ(res[1], asNumber(sqrt(mix[1])));
+	EXPECT_NUMERIC_EQ(res[2], asNumber(sqrt(mix[2])));
+
+	//std::vector<Numeric> mix1{ 1.0, 2.0, 3.0 };
+	std::vector<Numeric> mix1{ asNumber(1.0 ), asNumber( 2.0), asNumber(3.0) };
 	VecXX powers(mix1);
 
 
@@ -654,9 +662,9 @@ TEST(TestFuncions, pow)
 
 	EXPECT_EQ(res1.size(), 3);
 
-	EXPECT_EQ(res1[0], Vec1[0]);
-	EXPECT_EQ(res1[1], Vec1[1] * Vec1[1]);
-	//	EXPECT_EQ(res1[2], Vec1[2] * Vec1[2]* Vec1[2]);
+	EXPECT_NUMERIC_EQ(res1[0], asNumber( Vec1[0]));
+	EXPECT_NUMERIC_EQ(res1[1], asNumber(Vec1[1] * Vec1[1]));
+	EXPECT_NUMERIC_EQ(res1[2], asNumber (Vec1[2] * Vec1[2]* Vec1[2]));
 
 
 }
@@ -727,31 +735,48 @@ TEST(TestFuncions, min)
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
 */
-	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1.0 / 2.0), asNumber(1.0 / 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
 
 
-	VecXX Vec2 = Vec1 + 1.0;
-	VecXX Vec3 = Vec1 + 1.0;
+	VecXX Vec2 = Vec1 + asNumber(1.0);
+	VecXX Vec3 = Vec1 + asNumber(2.0);
 
 	auto res = min(Vec1, Vec2);
 	EXPECT_EQ(res.size(), 3);
 
+/*
 	EXPECT_EQ(res[0], Vec1[0]);
 	EXPECT_EQ(res[1], Vec1[1]);
 	EXPECT_EQ(res[2], Vec1[2]);
+*/
+	EXPECT_NUMERIC_EQ(asNumber(res[0]), asNumber(Vec1[0]));
+	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(Vec1[1]));
+	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(Vec1[2]));
 
-	auto res3 = min(vecScalar, -100.0);
-	EXPECT_EQ(res3.getScalarValue(), -100.0);
+	res = min(Vec2, Vec1);
+	EXPECT_NUMERIC_EQ(asNumber(res[0]), asNumber(Vec1[0]));
+	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(Vec1[1]));
+	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(Vec1[2]));
 
-	auto res2 = max(Vec3, Vec1);
+
+	auto res3 = min(vecScalar, asNumber (-100.0));
+	EXPECT_EQ(res3.getScalarValue(), asNumber(-100.0));
+
+	auto res2 = min(Vec3, Vec1);
 	EXPECT_EQ(res.size(), 3);
-
+	/*
 	EXPECT_EQ(res2[0], Vec2[0]);
 	EXPECT_EQ(res2[1], Vec2[1]);
 	EXPECT_EQ(res2[2], Vec2[2]);
+	*/
+	EXPECT_NUMERIC_EQ(asNumber(res2[0]), asNumber(Vec1[0]));
+	EXPECT_NUMERIC_EQ(asNumber(res2[1]), asNumber(Vec1[1]));
+	EXPECT_NUMERIC_EQ(asNumber(res2[2]), asNumber(Vec1[2]));
+
+
 }
 
 
@@ -761,30 +786,30 @@ TEST(TestFuncions, multAdd)
 	std::vector<Numeric> mix{ asNumber(1.0 ), asNumber(2.0), asNumber(3.0) };
 	VecXX Vec2(mix);
 
-	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
+	std::vector<Numeric> one{ asNumber(1.0), asNumber(1.0), asNumber(1.0) };
 
 	VecXX Vec1(one);
 
-	VecXX Vec3 = Vec1 + 1.0;
+	VecXX Vec3 = Vec1 + asNumber(1.0);
 
 	auto res = FMA(Vec2, Vec1, Vec3);
 	EXPECT_EQ(res.size(), 3);
 
-	EXPECT_EQ(res[0], Vec1[0] * Vec2[0] + Vec3[0]);
-	EXPECT_EQ(res[1], Vec1[1] * Vec2[1] + Vec3[1]);
-	EXPECT_EQ(res[2], Vec1[2] * Vec2[2] + Vec3[2]);
+	EXPECT_NUMERIC_EQ(res[0], Vec1[0] * Vec2[0] + Vec3[0]);
+	EXPECT_NUMERIC_EQ(res[1], Vec1[1] * Vec2[1] + Vec3[1]);
+	EXPECT_NUMERIC_EQ(res[2], Vec1[2] * Vec2[2] + Vec3[2]);
 
-	auto res1 = FMA(Vec1, Vec2, 1.0);
-	EXPECT_EQ(res1[0], Vec1[0] * Vec2[0] + 1.0);
-	EXPECT_EQ(res1[1], Vec1[1] * Vec2[1] + 1.0);
-	EXPECT_EQ(res1[2], Vec1[2] * Vec2[2] + 1.0);
+	auto res1 = FMA(Vec1, Vec2, asNumber(1.0));
+	EXPECT_NUMERIC_EQ(res1[0], Vec1[0] * Vec2[0] + asNumber(1.0));
+	EXPECT_NUMERIC_EQ(res1[1], Vec1[1] * Vec2[1] + asNumber(1.0));
+	EXPECT_NUMERIC_EQ(res1[2], Vec1[2] * Vec2[2] + asNumber(1.0));
 
-	auto res2 = FMA(Vec2, 1.0, 3.0);
+	auto res2 = FMA(Vec2, asNumber(1.0), 3.0);
 	EXPECT_EQ(res2.size(), 3);
 
-	EXPECT_EQ(res2[0], Vec2[0] * 1.0 + 3.0);
-	EXPECT_EQ(res2[1], Vec2[1] * 1.0 + 3.0);
-	EXPECT_EQ(res2[2], Vec2[2] * 1.0 + 3.0);
+	EXPECT_NUMERIC_EQ(res2[0], Vec2[0] * asNumber(1.0) + asNumber(3.0));
+	EXPECT_NUMERIC_EQ(res2[1], Vec2[1] * asNumber(1.0) + asNumber(3.0));
+	EXPECT_NUMERIC_EQ(res2[2], Vec2[2] * asNumber(1.0) + asNumber(3.0));
 
 
 }
@@ -796,7 +821,8 @@ TEST(TestFuncions, testLamdaOneD)
 	std::vector<Numeric> mix{ asNumber(1.0), asNumber(2.0), asNumber(3.0) };
 	VecXX Vec2(mix);
 
-	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
+	//std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
+	std::vector<Numeric> one{ asNumber(1.0), asNumber(1.0), asNumber(1.0) };
 
 	VecXX Vec1(one);
 
