@@ -41,6 +41,52 @@ template<typename INS_VEC>
 static INS_VEC cdfnorm(const INS_VEC& z)  
 {
 
+	auto asNumber = [](auto x){ return static_cast<typename InstructionTraits<INS_VEC>::FloatType>(x); };
+	auto asInsVec = [](typename InstructionTraits<INS_VEC>::FloatType x) {  return  INS_VEC(x); };
+
+	/**/
+	//   https://mathworld.wolfram.com/Erfc.html
+	INS_VEC b1 = asInsVec(0.31938153);
+	INS_VEC b2 = asInsVec(-0.356563782);
+	INS_VEC b3 = asInsVec(1.781477937);
+	INS_VEC b4 = asInsVec(-1.821255978);
+	INS_VEC b5 = asInsVec(1.330274429);
+	INS_VEC p = asInsVec(0.2316419);	
+	INS_VEC c2 = asInsVec(0.3989423);
+
+
+	//INS_VEC x = select(z > (const INS_VEC)(asNumber(6.0)), (INS_VEC)(asNumber(1.0)), z); // this guards against overflow
+	//InstructionTraits<INS_VEC>::MemBoolType 
+	//INS_VEC overSix = (z > asInsVec(6.0) );
+	//INS_VEC x = select(z > asInsVec(6.0), asInsVec(1.0), z); // this guards against overflow//
+	const auto  cond1 = (z > asInsVec(6.0));
+	//INS_VEC x = select((z > asInsVec(6.0)), asInsVec(1.0), z);
+	INS_VEC x = select(cond1, asInsVec(1.0), z);
+	x = x;
+	
+	INS_VEC y = select( (z < asInsVec(-6.0)),asInsVec(0.0), z);
+	y = y;
+	INS_VEC a = abs(z);
+	INS_VEC t = asInsVec(1.0) / (asInsVec(1.0) + a*p);
+	INS_VEC b = c2*exp((-z)*(z / asInsVec(2.0)));
+	INS_VEC n = ((((b5*t + b4)*t + b3)*t + b2)*t + b1)*t;
+	n = asInsVec(1.0) - b*n;
+	n = select( (z < asInsVec(0.0) ), asInsVec(1.0) - n,n);
+	return n;
+
+	//return c2;
+}
+
+
+
+
+/*
+
+
+template<typename INS_VEC>
+static INS_VEC cdfnorm(const INS_VEC& z)
+{
+
 	//   https://mathworld.wolfram.com/Erfc.html
 	INS_VEC b1 = 0.31938153;
 	INS_VEC b2 = -0.356563782;
@@ -63,7 +109,7 @@ static INS_VEC cdfnorm(const INS_VEC& z)
 }
 
 
-
+*/
 
 
 

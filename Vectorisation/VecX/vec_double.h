@@ -74,6 +74,12 @@ static double cdfnorm(double x)
 	return std::erfc(-x/std::sqrt(2.0))/2.0;
 }
 
+static float cdfnorm(float x)
+{
+	return std::erfc(-x / std::sqrt(2.0f)) / 2.0f;
+}
+
+
 
 
 static double cdfnormD(double x)
@@ -83,6 +89,16 @@ static double cdfnormD(double x)
 	constexpr  double invRootPi = 0.564189583547756;
 	constexpr double invRootTwo = 0.707106781186548;
 	return invRootTwo *invRootPi*(exp(-0.5*x*x));
+}
+
+
+static float cdfnormD(float x)
+{
+
+	//   https://mathworld.wolfram.com/Erfc.html
+	constexpr  float invRootPi = 0.564189583547756f;
+	constexpr float invRootTwo = 0.707106781186548f;
+	return invRootTwo * invRootPi * (exp(-0.5f * x * x));
 }
 
 

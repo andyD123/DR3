@@ -71,7 +71,10 @@ TEST(TestUnroll, RegisterElement_Save)
 
 	RegisterElement<typename VecXX::INS, 0> test_zero;
 	 
-	Numeric  alignas(64) saveValues[] = { 101.1,102.1,103.1,104.1,105.1,106.1,107.1,108.1,109.1,110.1,111.1,112.1,113.1,114.1,115.1,116.1 };
+	Numeric  alignas(64) saveValues[] = { asNumber(101.1),
+		asNumber(102.1),asNumber(103.1),asNumber(104.1),asNumber(105.1),asNumber(106.1),asNumber(107.1),
+		asNumber(108.1),asNumber(109.1),asNumber(110.1),asNumber(111.1),asNumber(112.1),asNumber(113.1),
+		asNumber(114.1),asNumber(115.1),asNumber(116.1) };
 
 	test_zero.value.load(saveValues);
 	test_zero.store(input);
@@ -85,9 +88,17 @@ TEST(TestUnroll, RegisterElement_Save)
 
 	RegisterElement<typename VecXX::INS, 3> test_three;
 	Numeric  alignas(64) saveValuesAgain[] =
+
+	{ asNumber(1101.1),
+	asNumber(1102.1),asNumber(1103.1),asNumber(1104.1),asNumber(1105.1),asNumber(1106.1),asNumber(1107.1),
+	asNumber(1108.1),asNumber(1109.1),asNumber(1110.1),asNumber(1111.1),asNumber(1112.1),asNumber(1113.1),
+	asNumber(1114.1),asNumber(1115.1),asNumber(1116.1) };
+
+
+
 	//{ 1101.1,1102.1,1103.1,1104.1 };
 
-	{ 1101.1, 1102.1,1103.1, 1104.1, 1105.1, 1106.1, 1107.1, 108.1, 1109.1, 1110.1, 1111.1, 1112.1, 1113.1, 1114.1, 1115.1, 1116.1 };
+	//{ 1101.1, 1102.1,1103.1, 1104.1, 1105.1, 1106.1, 1107.1, 108.1, 1109.1, 1110.1, 1111.1, 1112.1, 1113.1, 1114.1, 1115.1, 1116.1 };
 
 	test_three.value.load(saveValuesAgain);
 	test_three.store(input);

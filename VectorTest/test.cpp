@@ -91,7 +91,7 @@ TEST(TestCaseName, TestAddVec)
 	EXPECT_EQ(added2[1], 44.0);
 	EXPECT_EQ(added2[2], 45.0);
 
-	double val = 42.0;
+	Numeric val = 42.0;
 	auto added3 = Vec1 + val;
 	EXPECT_EQ(added3.size(), 3);
 	EXPECT_EQ(added3[0], 43.0);
@@ -144,7 +144,7 @@ TEST(TestCaseName, TestSubVec)
 	EXPECT_EQ(result2[1], -40.0);
 	EXPECT_EQ(result2[2], -39.0);
 
-	double val = 42.0;
+	Numeric val = asNumber(42.0);
 	auto result3 = Vec1 - val;
 	EXPECT_EQ(result3.size(), 3);
 	EXPECT_EQ(result3[0], -41.0);
@@ -196,7 +196,7 @@ TEST(TestCaseName, TestMultVec)
 	EXPECT_EQ(added2[1], 84.0);
 	EXPECT_EQ(added2[2], 126.0);
 
-	double val = 42.0;
+	Numeric val = asNumber(42.0);
 	auto added3 = Vec1 * val;
 	EXPECT_EQ(added3.size(), 3);
 	EXPECT_EQ(added3[0], 42.0);
@@ -248,7 +248,7 @@ TEST(TestCaseName, TestDivVec)
 	EXPECT_EQ(added2[1], 0.2);
 	EXPECT_EQ(added2[2], 4.0 / 30.0);
 
-	double val = 4.0;
+	Numeric val = 4.0;
 	auto added3 = Vec2 / val;
 	EXPECT_EQ(added3.size(), 3);
 	EXPECT_EQ(added3[0], 2.5);
@@ -400,7 +400,7 @@ TEST(TestFuncions, cdfnorminv)
 
 TEST(TestFuncions, cdfnorm)
 {
-	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1./ 2.0), asNumber(1./ 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -425,7 +425,7 @@ TEST(TestFuncions, cdfnormD)
 	VecXX vecScalar(1.0 / 2.2);
 	*/
 
-	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -450,7 +450,7 @@ TEST(TestFuncions, unitaryMinus)
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
 */
-	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -473,7 +473,7 @@ TEST(TestFuncions, ceil)
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
 */
-	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -498,7 +498,7 @@ TEST(TestFuncions, sqrt)
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
 */
-	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -523,7 +523,7 @@ TEST(TestFuncions, pow)
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.0);
 */
-	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -560,7 +560,7 @@ TEST(TestFuncions, max)
 	VecXX vecScalar(1.0 / 2.2);
 */
 
-	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -605,7 +605,7 @@ TEST(TestFuncions, min)
 	VecXX Vec1(mix);
 	VecXX vecScalar(1.0 / 2.2);
 */
-	std::vector<Numeric> mix{ 1.0 / 4.0, 1. / 2.0, 1. / 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1. / 2.0), asNumber(1. / 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
@@ -635,7 +635,8 @@ TEST(TestFuncions, min)
 
 TEST(TestFuncions, multAdd)
 {
-	std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
+	//std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0 ), asNumber(2.0), asNumber(3.0) };
 	VecXX Vec2(mix);
 
 	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
@@ -669,7 +670,8 @@ TEST(TestFuncions, multAdd)
 
 TEST(TestFuncions, testLamdaOneD)
 {
-	std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
+	//std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0), asNumber(2.0), asNumber(3.0) };
 	VecXX Vec2(mix);
 
 	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
@@ -692,7 +694,8 @@ TEST(TestFuncions, testLamdaOneD)
 
 TEST(TestFuncions, testLamdaTwoD)
 {
-	std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
+	//std::vector<Numeric> mix{ 1.0,  2.0, 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0), asNumber(2.0), asNumber(3.0) };
 	VecXX Vec2(mix);
 
 	std::vector<Numeric> one{ 1.0,  1.0, 1.0 };
@@ -712,7 +715,7 @@ TEST(TestFuncions, testLamdaTwoD)
 
 }
 
-
+/*
 TEST(TestFuncions, testBoolLamdaTwoD)
 {
 	std::vector<Numeric> mix{ 1.0,  2.0, 0.1 };
@@ -870,11 +873,12 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 
 }
 
-
+*/
 
 TEST(TestFuncions, testIff)
 {
-	std::vector<Numeric>  mix{ 1.0,  2.0, 3.0 };
+	//std::vector<Numeric>  mix{ 1.0,  2.0, 3.0 };
+	std::vector<Numeric> mix{ asNumber(1.0), asNumber(2.0), asNumber(3.0) };
 	VecXX Vec2(mix);
 
 	std::vector<Numeric>  one{ 1.0,  1.0, 1.0 };
@@ -913,14 +917,14 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[2], 999.0);
 
 
-	res = select(boolCond, 999.0, 222.0);
+	res = select(boolCond, asNumber( 999.0), asNumber(222.0));
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 222.0);
 	EXPECT_EQ(res[1], 222.0);
 	EXPECT_EQ(res[2], 999.0);
 
-	res = select(boolCond, Vec2, 333.1);
+	res = select(boolCond, Vec2, asNumber(333.1));
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 333.1);
@@ -928,7 +932,7 @@ TEST(TestFuncions, testIff)
 	EXPECT_EQ(res[2], 3.0);
 
 
-	res = select(boolCond,  333.1, Vec2);
+	res = select(boolCond, asNumber(333.1), Vec2);
 
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], 1.0);
@@ -950,7 +954,7 @@ TEST(TestFuncions, testIff)
 
 
 	//res = iff(boolCond, Vec1, -Vec1);
-	res = iff(Vec2 > (Vec1 + 1.0), Vec1, -Vec1);
+	res = iff(Vec2 > (Vec1 + asNumber(1.0)), Vec1, -Vec1);
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_EQ(res[0], -1.0);
 	EXPECT_EQ(res[1], -1.0);
@@ -961,7 +965,7 @@ TEST(TestFuncions, testIff)
 	
 /**/
 
-double getNull(double)
+Numeric getNull(Numeric)
 {
 	return 0.0;
 }
@@ -978,7 +982,7 @@ TEST(TestFuncions, accum1)
 	VecXX Vec(oneOone);
 
 	auto sum = [](auto lhs, auto rhs) {return rhs + lhs; };
-	double sumRes = ApplyAccumulate(Vec, sum,0.0);
+	Numeric sumRes = ApplyAccumulate(Vec, sum,0.0);
 
 
 
