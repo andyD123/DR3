@@ -1053,7 +1053,7 @@ TEST(TestDR3, test_filterTransformView)
 void test_Transform_V(int SZ)
 {
 
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0) * x; };
 	VecXX scalar = asNumber(3.33);
 	VecVW res = transformV(doubleIt, scalar);
 	auto val = res.getScalarValue();

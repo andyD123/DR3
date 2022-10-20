@@ -32,8 +32,11 @@ Vec<INS_VEC> splitConditionalCalculate(const Vec<INS_VEC>& val, BOOL_TEST_OP& te
 	{
 		
 		auto  vwTupple = ApplyBinaryFilter(testFunc, val);
-		ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
-		ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
+		//ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
+		//ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
+
+		ApplyUnitaryOperation( std::get<0>(vwTupple), trueLambda);
+		ApplyUnitaryOperation( std::get<1>(vwTupple), falseLambda);
 		return  merge(vwTupple);
 	}
 	else
@@ -110,12 +113,12 @@ Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, const Ve
 	
 	if (condition.isScalar())
 	{
-		auto condValue = condition.getScalarValue();
-		auto trueVal = trueVals.isScalar() ? trueVals.getScalarValue() : trueVals[0];
-		auto falseVal = falseVals.isScalar() ? falseVals.getScalarValue() : falseVals[0];
-		auto ret = condValue ? trueVal : falseVal;
-
-		return Vec<INS_VEC>(ret);
+		typename InstructionTraits<INS_VEC>::RegBoolType CND = condition.getScalarValue();
+		INS_VEC TRU = trueVals.isScalar() ? trueVals.getScalarValue() : trueVals[0];
+		INS_VEC FLS = falseVals.isScalar() ? falseVals.getScalarValue() : falseVals[0];
+		INS_VEC RES = select(CND, TRU, FLS);
+		auto scalr = RES[0];
+		return Vec<INS_VEC>(scalr);
 	}
 
 
@@ -147,6 +150,15 @@ Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, const Ve
 template< typename INS_VEC>
 Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, typename InstructionTraits<INS_VEC>::FloatType trueVal, const Vec<INS_VEC>& falseVals)
 {
+	if (condition.isScalar())
+	{
+		INS_VEC TRU = trueVal;
+		INS_VEC FLS = falseVals.isScalar() ? falseVals.getScalarValue() : falseVals[0];// falseVals[0];
+		typename InstructionTraits<INS_VEC>::RegBoolType CND = condition.getScalarValue();
+		INS_VEC RES = select(CND, TRU, FLS);
+		auto scalr = RES[0];
+		return Vec<INS_VEC>(scalr);
+	}
 
 	if (falseVals.isScalar())
 	{
@@ -170,6 +182,16 @@ template< typename INS_VEC>
 Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, const Vec<INS_VEC>& trueVals, typename InstructionTraits<INS_VEC>::FloatType falseVal )
 {
 
+	if (condition.isScalar())
+	{
+		INS_VEC TRU = trueVals[0];
+		INS_VEC FLS = falseVal;
+		typename InstructionTraits<INS_VEC>::RegBoolType CND = condition.getScalarValue();
+		INS_VEC RES = select(CND, TRU, FLS);
+		auto scalr = RES[0];
+		return Vec<INS_VEC>(scalr);
+	}
+
 	if (trueVals.isScalar())
 	{
 		return ApplySelectionOperation(condition, trueVals.getScalarValue(), falseVal);
@@ -189,6 +211,17 @@ Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, const Ve
 template< typename INS_VEC>
 Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType falseVal)
 {
+
+	if (condition.isScalar())
+	{
+		INS_VEC TRU = trueVal;
+		INS_VEC FLS = falseVal;
+		typename InstructionTraits<INS_VEC>::RegBoolType CND = condition.getScalarValue();
+		INS_VEC RES = select(CND, TRU, FLS);
+		auto scalr = RES[0];
+		return Vec<INS_VEC>(scalr);
+	}
+	
 
 	Vec<INS_VEC> result(static_cast<int>(condition.size()) );
 	auto pRes = result.start();
@@ -212,11 +245,12 @@ Vec<INS_VEC> ApplySelectionOperationC(BOOL_OPER& COND, const Vec<INS_VEC>& testD
 	check_pair(lhs, testData);
 
 
-	if (isScalar(testData) &&isScalar(rhs) && isScalar(lhs)  )
+	if ( testData.isScalar() )// &&isScalar(rhs) && isScalar(lhs)  )
 	{
+
 		INS_VEC RHS = testData.getScalarValue();
-		INS_VEC TRU = lhs.getScalarValue();
-		INS_VEC FLS = rhs.getScalarValue();
+		INS_VEC TRU = lhs.isScalar() ? lhs.getScalarValue() : lhs[0];
+		INS_VEC FLS = rhs.isScalar() ? rhs.getScalarValue() : rhs[0];
 		INS_VEC RES = select(COND(RHS), TRU, FLS);
 		return Vec<INS_VEC>(RES[0]);
 	}
@@ -240,14 +274,28 @@ trueVal otherwise falseVal
 //rename as select
 */
 template< typename INS_VEC, typename BOOL_OPER>
-Vec<INS_VEC> ApplySelectionOperationC(BOOL_OPER& COND, const Vec<INS_VEC>& testData, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType falseVal)
+Vec<INS_VEC> ApplySelectionOperationC(BOOL_OPER& COND, const Vec<INS_VEC>& testData, typename InstructionTraits<INS_VEC>::FloatType trVal, typename InstructionTraits<INS_VEC>::FloatType flsVal)
 {
+
 	check_vector(testData);
+	if (testData.isScalar())
+	{
+		INS_VEC testDataVal = testData.getScalarValue();
+		INS_VEC trueVal =trVal;
+		INS_VEC falseVal = flsVal;
+		typename InstructionTraits<INS_VEC>::RegBoolType vcond = COND(testDataVal);
+		INS_VEC RES = select(vcond, trueVal, falseVal);
+		auto scalr = RES[0];
+		return Vec<INS_VEC>(scalr);
+
+	}
+	
+
 	Vec<INS_VEC> result(testData.size());
 	auto pRes = result.start();
 	auto pX = testData.start();
 	int sz = testData.paddedSize();
-	Unroll_Select< INS_VEC, BOOL_OPER>::apply_4(sz, pX, trueVal, falseVal, pRes, COND);
+	Unroll_Select< INS_VEC, BOOL_OPER>::apply_4(sz, pX, trVal, flsVal, pRes, COND);
 	return result;
 }
 
@@ -262,6 +310,19 @@ template< typename INS_VEC, typename BOOL_OPER, typename TRUE_OPER, typename FAL
 Vec<INS_VEC> ApplySelectionOperationFunc(BOOL_OPER& COND, const Vec<INS_VEC>& testData, TRUE_OPER& trueOper, FALSE_OPER& falseOper)
 {
 	check_vector(testData);
+	if ( testData.isScalar() )
+	{
+		INS_VEC testDataVal = testData.getScalarValue();
+		INS_VEC trueVal = trueOper(testDataVal);
+		INS_VEC falseVal = falseOper(testDataVal);
+		typename InstructionTraits<INS_VEC>::RegBoolType vcond = COND(testDataVal);
+		INS_VEC RES =select(vcond, trueVal, falseVal);
+		auto scalr = RES[0];
+		return Vec<INS_VEC>(scalr);
+	}
+
+	//NEED TO HANDLE SCALAR CASE HERE NO OVER LOADS
+
 	Vec<INS_VEC> result(testData.size());
 	auto pRes = result.start();
 	auto pX = testData.start();

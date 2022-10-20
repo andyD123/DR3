@@ -301,9 +301,23 @@ applies the OP to the view updating input in situ.
 template< typename INS_VEC, typename OP>
 void ApplyUnitaryOperation(VecView<INS_VEC>& rhs, OP& oper)
 {
-	auto pRhs = rhs.start();
-	int sz = rhs.fillSize();
-	Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRhs, oper);
+
+	if (rhs.isScalar())
+	{
+		auto val = rhs.getScalarValue();
+		auto scalarRes = oper(INS_VEC(val))[0];
+		VecView<INS_VEC> result;
+		result = scalarRes;
+		rhs = result;
+	}
+	else
+	{
+
+		auto pRhs = rhs.start();
+		//int sz = rhs.fillSize();
+		int sz = rhs.paddedSize();
+		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRhs, oper);
+	}
 }
 
 /*
@@ -312,13 +326,24 @@ applies the OP and creates a new view.
 template< typename INS_VEC, typename OP>
 VecView<INS_VEC> ApplyUnitaryOperation(const VecView<INS_VEC>& rhs, OP& oper)
 {
-	check_vector_for_filter(rhs);
-	VecView<INS_VEC> result(rhs);
-	auto pRes = result.start();
-	auto pRhs = rhs.start();
-	int sz = rhs.fillSize();
-	Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
-	return result;
+	if (rhs.isScalar())
+	{
+		auto val = rhs.getScalarValue();
+		auto scalarRes = oper(INS_VEC(val))[0];
+		VecView<INS_VEC> result( scalarRes);
+		return result;
+	}
+	else
+	{
+		check_vector_for_filter(rhs);
+		VecView<INS_VEC> result(rhs);
+		auto pRes = result.start();
+		auto pRhs = rhs.start();
+		//int sz = rhs.fillSize();
+		int sz = rhs.paddedSize();
+		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
+		return result;
+	}
 }
 
 

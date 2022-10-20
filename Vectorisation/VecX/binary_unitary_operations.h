@@ -702,9 +702,11 @@ Vec<INS_VEC> ApplyBinaryOperation1(const Vec<INS_VEC>& lhs, typename Instruction
 
 template< typename INS_VEC, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType
-ApplyBinaryOperation1(const typename InstructionTraits<INS_VEC>::FloatType& rhs1, const typename InstructionTraits<INS_VEC>::FloatType& rhs2, OP& oper)
+ApplyBinaryOperation1(const typename InstructionTraits<INS_VEC>::FloatType& lhs, const typename InstructionTraits<INS_VEC>::FloatType& rhs, OP& oper)
 {
-	INS_VEC res = oper(rhs1, rhs2);
+	INS_VEC RHS(rhs);
+	INS_VEC LHS(lhs);
+	INS_VEC res = oper(lhs, rhs);
 	return res[0];
 }
 

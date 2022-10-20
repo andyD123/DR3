@@ -17,6 +17,12 @@
 #include "target_name_space.h"
 
 
+//#ifdef _MSC_VER
+
+#define _VC_PERF_REG_
+
+//#undef _VC_PERF_REG_
+
 //////////  transform //////////////
 
 //Unitary lambdas
@@ -25,7 +31,7 @@ template<typename LAMBDA, typename INS_VEC>
 Vec<INS_VEC>  transform(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
 {
 
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return  ApplyTransformUR_X(inputVec, lambda);
 #else
 	return ApplyUnitaryOperation(inputVec, lambda);
@@ -82,7 +88,7 @@ template<typename LAMBDA, typename INS_VEC>
 Vec<INS_VEC>  transform(LAMBDA& lambda, const Vec<INS_VEC>& inputVecLHS, const Vec<INS_VEC>& inputVecRHS)
 {
 
-#if defined (_MSC_VER)
+#if defined (_VC_PERF_REG_)
 	return ApplyBinaryTransformUR_X(inputVecLHS, inputVecRHS, lambda);
 #else
 	return ApplyBinaryOperation(inputVecLHS, inputVecRHS, lambda);
@@ -93,7 +99,7 @@ Vec<INS_VEC>  transform(LAMBDA& lambda, const Vec<INS_VEC>& inputVecLHS, const V
 template<typename LAMBDA, typename INS_VEC>
 Vec<INS_VEC>  transform(LAMBDA& lambda, typename InstructionTraits<INS_VEC>::FloatType LHS, const Vec<INS_VEC>& inputVecRHS)
 {
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return ApplyBinaryTransformUR_X(LHS, inputVecRHS, lambda);
 #else
 	return ApplyBinaryOperation(LHS, inputVecRHS, lambda);
@@ -104,7 +110,7 @@ Vec<INS_VEC>  transform(LAMBDA& lambda, typename InstructionTraits<INS_VEC>::Flo
 template<typename LAMBDA, typename INS_VEC>
 Vec<INS_VEC>  transform(LAMBDA& lambda, const Vec<INS_VEC>& inputVecLHS, typename InstructionTraits<INS_VEC>::FloatType RHS)
 {
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return ApplyBinaryTransformUR_X(inputVecLHS, RHS, lambda);
 #else
 	return ApplyBinaryOperation(inputVecLHS, RHS, lambda);
@@ -202,7 +208,7 @@ Vec<INS_VEC> select(BOOL_OPER& COND, const Vec<INS_VEC>& testData, const Vec<INS
 template< typename INS_VEC, typename BOOL_OPER>
 Vec<INS_VEC> select(BOOL_OPER& COND, const Vec<INS_VEC>& testData, typename InstructionTraits<INS_VEC>::FloatType trueVal, typename InstructionTraits<INS_VEC>::FloatType falseVal)
 {
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return  ApplySelectTransformUR_XC(testData, COND, trueVal, falseVal);
 #else
 	return ApplySelectionOperationC<INS_VEC, BOOL_OPER >(COND, testData, trueVal, falseVal);
@@ -214,7 +220,7 @@ template< typename INS_VEC, typename BOOL_OPER, typename TRUE_OPER, typename FAL
 Vec<INS_VEC> selectTransform(BOOL_OPER& COND, const Vec<INS_VEC>& testData, TRUE_OPER& trueOper, FALSE_OPER& falseOper)
 {
 
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return ApplySelectionOperationFuncUR_X<INS_VEC, BOOL_OPER, TRUE_OPER, FALSE_OPER >(COND, testData, trueOper, falseOper);
 #else
 	return ApplySelectionOperationFunc<INS_VEC, BOOL_OPER, TRUE_OPER, FALSE_OPER >(COND, testData, trueOper, falseOper);
@@ -230,7 +236,7 @@ Vec<INS_VEC> selectTransform(BOOL_OPER& COND, const Vec<INS_VEC>& testData, TRUE
 template< typename INS_VEC, typename  BOOL_TEST_OP, typename  TRUE_LAMBDA, typename  FALSE_LAMBDA>
 Vec<INS_VEC> filterTransform(BOOL_TEST_OP& testFunc, const Vec<INS_VEC>& val, TRUE_LAMBDA& trueLambda, FALSE_LAMBDA& falseLambda)
 {
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return splitConditionalCalculate_X(val, testFunc, trueLambda, falseLambda);
 #else
 	return splitConditionalCalculate(val, testFunc, trueLambda, falseLambda);
@@ -268,10 +274,11 @@ template<typename LAMBDA, typename INS_VEC>
 void transformM(LAMBDA& lambda, VecView<INS_VEC>& inputVec)
 {
 
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	ApplyTransformUR_X(inputVec, lambda);
 #else
-	ApplyUnitaryOperation(lambda, inputVec);
+	//ApplyUnitaryOperation(lambda, inputVec);
+	ApplyUnitaryOperation(inputVec,lambda);
 #endif
 
 }
@@ -283,10 +290,11 @@ input VecView object with the lambda. Has unrolled version for VC++  performance
 template<typename LAMBDA, typename INS_VEC>
 VecView<INS_VEC> transform(LAMBDA& lambda, const VecView<INS_VEC>& inputVec)
 {
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return ApplyTransformUR_X(inputVec, lambda);
 #else
-	return ApplyUnitaryOperation(lambda, inputVec);
+	//return ApplyUnitaryOperation(lambda, inputVec);
+	return ApplyUnitaryOperation( inputVec, lambda);
 #endif
 
 }
@@ -418,7 +426,7 @@ typename InstructionTraits<INS_VEC>::FloatType reduce(const Vec<INS_VEC>& rhs1, 
 {
 	ignore(initVal);
 	ignore(singularInit);	
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return ApplyAccumulate2UR_X(rhs1, oper);
 
 
@@ -465,15 +473,16 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(OPT& operTransfor
 template< typename INS_VEC, typename OP, typename OPT>
 typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Vec<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
-
-#ifdef _MSC_VER
+	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
+/*
+#ifdef _VC_PERF_REG_
 	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
 	ignore(initVal);
 	ignore(singularInit);
 #else
 	return ApplyTransformAccumulateUR(rhs1, operTransform, operAcc, initVal, singularInit);
 #endif
-
+	*/
 }
 
 
@@ -483,7 +492,7 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(const VecView<INS
 {
 	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
 	/*
-#ifdef _MSC_VER
+#ifdef _VC_PERF_REG_
 	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
 	ignore(initVal);
 	ignore(singularInit);
@@ -504,7 +513,7 @@ template< typename INS_VEC, typename OP, typename OPT>
 typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Vec<INS_VEC>& lhs1, const Vec<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
 
-#if defined( _MSC_VER)
+#if defined( _VC_PERF_REG_)
 	return ApplyTransformAccumulate2UR_XBin(lhs1, rhs1, operTransform, operAcc);
 	ignore(initVal);
 	ignore(singularInit);
@@ -520,7 +529,7 @@ template< typename INS_VEC, typename OP, typename OPT>
 typename InstructionTraits<INS_VEC>::FloatType transformReduce(const VecView<INS_VEC>& lhs1, const VecView<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
 
-//#if defined( _MSC_VER)
+//#if defined( _VC_PERF_REG_)
 	return ApplyTransformAccumulate2UR_XBin(lhs1, rhs1, operTransform, operAcc);
 	ignore(initVal);
 	ignore(singularInit);
