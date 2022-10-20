@@ -1,8 +1,5 @@
 #include "pch.h"
 
-//#include "../Vectorisation/VecX/instruction_traits.h"
-
-
 #include "../Vectorisation/VecX/vec.h"
 #include "../Vectorisation/VecX/operations.h"
 #include "../Vectorisation/VecX/vec_bool_d.h"
@@ -19,21 +16,8 @@
 #include "testNamespace.h"
 #include "dr3TestUtil.h"
 
-
 #include <numeric>
 
-/*
-
-//using namespace DRC::VecDb;
-//using namespace DRC::VecD2D;
-//using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
-
-//using namespace DRC::VecF16F;
-using namespace DRC::VecF8F;
-
-using Numeric = InstructionTraits<VecXX::INS>::FloatType;
-*/
 
 void testSelectFilterB(int SZ, int Pos)
 {
@@ -59,7 +43,6 @@ void testSelectFilterB(int SZ, int Pos)
 	//repeat with data in a view
 	{	auto viewOfData = ApplyFilter(trueCond, data);
 		auto filterView = ApplyFilterB(boolVecAboveTenAndHalf, viewOfData);
-
 		EXPECT_EQ(filterView.size(), Pos);
 
 		for (int i = 0; i < filterView.size(); ++i)
@@ -93,7 +76,6 @@ void testSelectFilter(int SZ, int Pos)
 	VecXX data(v);
 
 	auto abovePos = [=](auto x) { return  x < VecXX::scalar(Pos); };
-
 	auto filterView = ApplyFilter(abovePos, data);
 
 	EXPECT_EQ(filterView.size(), Pos);
@@ -213,7 +195,6 @@ void testBinaryFilter(int SZ, int Pos)
 		EXPECT_NUMERIC_EQ(asNumber(falseView[i]), asNumber(i+Pos));
 	}
 
-
 	auto trueCond = [](auto x) { return VecXX::reg(1.0) == VecXX::reg(1.0); };
 
 	//repeat with data in a view
@@ -267,13 +248,11 @@ void testUnitaryOpVecViewRef(int SZ)
 	auto SQR = [](auto x) { return  x * x; };
 
 	auto trueCond = [](auto x) { return VecXX::reg(1.0) == VecXX::reg(1.0); };
-
 	auto viewOfData = ApplyFilter(trueCond, data);
 
     ApplyUnitaryOperation(viewOfData,SQR);
 
 	auto resultView = viewOfData; 
-
 	EXPECT_EQ(resultView.size(), SZ);
 
 	for (int i = 0; i < resultView.size(); ++i)
@@ -305,8 +284,6 @@ void testUnitaryOpVec(int SZ)
 	VecXX data(v);
 
 	auto SQR = [](auto x) { return  x * x; };
-
-
 	auto resultView = ApplyUnitaryOperationV(data,SQR);
 
 	EXPECT_EQ(resultView.size(), SZ);
@@ -344,18 +321,11 @@ void testBinaryOpVecViewRef(int SZ)
 	for (auto& x : r) { x = asNumber(SZ-i); ++i; }
 	VecXX data_Rhs(r);
 
-
 	auto ADD = [](auto x,auto y) { return  x + y; };
-
 	auto trueCond = [](auto x) { return VecXX::reg(1.0) == VecXX::reg(1.0); };
-
 	auto viewOf_Lhs = ApplyFilter(trueCond, data_Lhs);
-
 	auto viewOf_Rhs = ApplyFilter(trueCond, data_Rhs);
-
 	auto resultView = 	ApplyBinaryOperation(ADD, viewOf_Lhs, viewOf_Rhs);
-
-
 
 	EXPECT_EQ(resultView.size(), SZ);
 
@@ -364,7 +334,6 @@ void testBinaryOpVecViewRef(int SZ)
 		double ii = i;
 		EXPECT_NUMERIC_EQ(asNumber(resultView[i]), asNumber(SZ) );
 	}
-
 
 }
 
@@ -379,11 +348,6 @@ TEST(TestFilterSelect, ApplyBinaryOperationToView)
 }
 
 
-
-// TO DO TEST COMPLEC COMPOUND OPERATIONS
-
-
-// TO DO TEST JOINS Logical and  functional
 
 TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 {
@@ -404,8 +368,7 @@ TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 	auto isEvenLessThanThirty = lessThanThirty && isEven;
 
 	auto res = ApplyFilter(isEvenLessThanThirty, data);
-	//auto res = ApplyFilter(lessThanThirty, data);
-
+	
 	std::vector<Numeric> inspect = data;
 	std::vector<Numeric> re_insp  = res;
 
@@ -415,12 +378,9 @@ TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 		EXPECT_TRUE( x - 2.0*floor(x/2.) ==0.0 );
 	}
 
-	//EXPECT_TRUE(res.size() == 15);
-
+	
 	auto isThirtyOrMore = !lessThanThirty;
-
 	auto resNegate = ApplyFilter(isThirtyOrMore, data);
-
 	re_insp = resNegate;
 
 	for (auto x : resNegate)
@@ -430,13 +390,8 @@ TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 
 	EXPECT_TRUE(resNegate.size() == 10);
 
-
-
-
 	auto isEvenOrLessThanThirty = lessThanThirty || isEven;
-
 	auto resOr = ApplyFilter(isEvenOrLessThanThirty, data);
-
 	re_insp = resOr;
 
 	for (auto x : resOr)
@@ -445,9 +400,7 @@ TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 	}
 	re_insp = res;
 
-	//EXPECT_TRUE(resOr.size() == 35);
-
-
+	
 }
 
 
@@ -456,7 +409,6 @@ TEST(TestFilterSelect, ApplyJoinedFilterToVec)
 TEST(TestFilterSelect, ApplyJoinedFilterToView)
 {
 	const int SZ = 40;
-
 	const Numeric NUMBER = SZ * 0.5;
 	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
@@ -471,9 +423,7 @@ TEST(TestFilterSelect, ApplyJoinedFilterToView)
 	using namespace JOIN;
 	auto lessThanThirty = [](const auto& X) { return X < static_cast<decltype(X)>(30); };
 	auto isEven = [](auto X) { return (floor(X) / asNumber( 2.0) - floor(floor(X) / asNumber(2.0))) < asNumber(0.0001); };
-
 	auto isEvenLessThanThirty = lessThanThirty && isEven;
-
 	auto res = ApplyFilter(isEvenLessThanThirty, data);
 
 	for (auto x : res)
@@ -485,7 +435,6 @@ TEST(TestFilterSelect, ApplyJoinedFilterToView)
 	EXPECT_TRUE(res.size() == 15);
 
 	auto isThirtyOrMore = !lessThanThirty;
-
 	auto resNegate = ApplyFilter(isThirtyOrMore, data);
 
 	for (auto x : resNegate)
@@ -495,11 +444,7 @@ TEST(TestFilterSelect, ApplyJoinedFilterToView)
 
 	EXPECT_TRUE(resNegate.size() == 10);
 
-
-
-
 	auto isEvenOrLessThanThirty = lessThanThirty || isEven;
-
 	auto resOr = ApplyFilter(isEvenOrLessThanThirty, data);
 
 	for (auto x : resOr)
@@ -508,8 +453,6 @@ TEST(TestFilterSelect, ApplyJoinedFilterToView)
 	}
 
 	EXPECT_TRUE(resOr.size() == 35);
-
-
 }
 
 
@@ -519,7 +462,6 @@ TEST(TestFilterSelect, ApplyJoinedFilterToView)
 TEST(TestFilterSelect, ApplyComplexJoinedFilterToVec)
 {
 	const int SZ = 40;
-
 	const Numeric NUMBER = SZ * 0.5;
 	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
@@ -532,16 +474,10 @@ TEST(TestFilterSelect, ApplyComplexJoinedFilterToVec)
 	auto isEven = [](auto X) { return (floor(X) / asNumber(2.0) - floor(floor(X) / asNumber(2.0))) < asNumber(0.0001); };
 
 	auto isEvenLessThanThirty = lessThanThirty && isEven;
-
-
 	auto isGreaterThanTen = [](auto X) { return X > static_cast<decltype(X)>(10); };
-
 	auto isGreaterThanTwenty = [](auto X) { return X > static_cast<decltype(X)>(20); };
-
 	auto isGreaterThanThirty = [](auto X) { return X > static_cast<decltype(X)>(30); };
-
 	auto isLessThanthree = [](auto X) { return X < static_cast<decltype(X)>(3); };
-
 
    auto complex = ((!isGreaterThanThirty) && isGreaterThanTwenty && isEven) || isLessThanthree; 
    //even numbers  22 -30    and 0,1,2,3
@@ -564,13 +500,8 @@ TEST(TestFilterSelect, ApplyComplexJoinedFilterToVec)
 
    EXPECT_TRUE(res.size() == 8);
 
-
-
    auto trueCond = [](auto x) { return VecXX::reg(1.0) == VecXX::reg(1.0); };
-
    auto dataView = ApplyFilter(trueCond, data);
-
-
    auto resView = ApplyFilter(complex, dataView);
 
    for (auto x : resView)
@@ -605,21 +536,15 @@ TEST(TestFilterSelect, ApplyComplexJoinedLambdasToVec)
 	VecXX data(v);
 
 	auto SQR = [](auto x) { return (x * x); };
-
 	auto AddTen = [](auto x) { return (x + VecXX::INS(10.0)); };
-
 	auto negateIfOverTen = [](auto x) { return iff(x > VecXX::INS(10.), -x, x); };
-
 
 	using namespace JOIN;
 	
 	//CAT joins the lambdas and evaluates  left to right in the sequence feeding 
 	//the result of the operation into the input of the next lambda
 	auto complex2 = AddTen | negateIfOverTen | SQR;
-
 	auto res = ApplyUnitaryOperationV(data,complex2);
-
-
 
 	i = 0;
 	for (auto resItem : res)
@@ -648,7 +573,6 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 	using namespace PIPE;
 
 	const int SZ = 40;
-
 	const Numeric NUMBER = SZ * 0.5;
 	std::vector<Numeric>  v(SZ, 0.0);
 	int i = 0;
@@ -656,12 +580,8 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 	VecXX data(v);
 
 	auto SQR = [](auto x) { return (x * x); };
-
 	auto AddTen = [](auto x) { return (x + VecXX::scalar(10.0)); };
-
 	auto negateIfOverTen = [](auto x) { return iff(x > VecXX::scalar(10), -x, x); };
-
-	//auto isEven = [](auto X) { return (floor(X) / 2.0 - floor(floor(X) / 2.0)) < 0.0001; };
 	auto isEven = [](auto X) { return (floor(X) / asNumber(2.0) - floor(floor(X) / asNumber(2.0))) < asNumber(0.0001); };
 
 	using namespace JOIN;
@@ -670,7 +590,6 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 	//the result of the operation intyo the input of the next lambda
 	//auto complex2 = SQR | negateIfOverTen | AddTen;
 	//auto res = ApplyUnitaryOperation(complex2, data);
-
 
 
 	auto complex3 =  (data| isEven)> SQR > negateIfOverTen > AddTen ;
@@ -687,8 +606,6 @@ TEST(TestFilterSelect, PipeComplexJoinedLambdasToVec)
 		auto calcResult = x +10.0;
 
 		EXPECT_NUMERIC_EQ(asNumber(resItem), asNumber(calcResult));
-
-
 	}
 
 	// Pipes are go left to right 

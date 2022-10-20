@@ -1,8 +1,5 @@
 #include "pch.h"
 
-//#include "../Vectorisation/VecX/instruction_traits.h"
-
-
 #include "../Vectorisation/VecX/vec.h"
 #include "../Vectorisation/VecX/operations.h"
 #include "../Vectorisation/VecX/vec_bool_d.h"
@@ -18,19 +15,7 @@
 #include "../Vectorisation/VecX/dr3.h"
 #include "dr3TestUtil.h"
 
-
-
-
-
 #include <numeric>
-
-//using namespace DRC::VecDb;
-//using namespace DRC::VecD2D;
-//using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
-//using namespace DRC::VecF16F;
-//using namespace DRC::VecF8F;
-
 #include "testNamespace.h"
 
 
@@ -79,10 +64,8 @@ TEST(TestFilterTransform, testTransformEachPoint)
 
 
 	testFilterTransform(34);
-
 	testFilterTransform(65);
 	testFilterTransform(63);
 	testFilterTransform(64);
-
 
 }

@@ -72,24 +72,17 @@ void evalAccumulate(int startLen, int endLen)
 
 	for (int  SZ = startLen; SZ <= endLen; SZ++)
 	{
-
 		std::vector<Numeric> v;
 		VecXX test = getVec(SZ,v);
-
 		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
-
 
 		Numeric resSTL = std::accumulate(v.begin(), v.end(), asNumber(0.0));
 		Numeric resAcc = ApplyAccumulate2(test, Sum, Sum, asNumber(0.0));
-
 		Numeric resAcc2 = ApplyAccumulate(test, Sum, asNumber(0.0));
-
 		Numeric resAcc3 = ApplyAccumulate2(test, Sum, asNumber(0.0));
 
 		EXPECT_NEAR(resSTL, resAcc,  testEpsilon);
-
 		EXPECT_NEAR(resSTL, resAcc2, testEpsilon);
-
 		EXPECT_NEAR(resSTL, resAcc3, testEpsilon);
 	}
 
@@ -125,12 +118,8 @@ void evalAccumulateUR(int startLen, int endLen)
 		VecXX test(v);
 	
 		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
-
-
 		Numeric resSTL = std::accumulate(v.begin(), v.end(), asNumber(0.0));
-		//UR unrolled
 		Numeric resAcc = ApplyAccumulate(test, Sum, asNumber(0.0));
-
 		Numeric resAcc1 =  ApplyAccumulate2UR(test, Sum, asNumber(0.0));
 
 		EXPECT_NEAR(resSTL, resAcc, testEpsilon);
@@ -153,13 +142,8 @@ void evalAccumulateUR_X(int startLen, int endLen)
 		VecXX test(v);
 
 		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
-
-
 		Numeric resSTL = std::accumulate(v.begin(), v.end(), asNumber(0.0));
-		//UR unrolled
-
 		Numeric resAcc = ApplyAccumulate(test, Sum, asNumber(0.0));
-
 		Numeric resAcc1 = ApplyAccumulate2UR_X(test, Sum);
 
 		EXPECT_NEAR(resSTL, resAcc, testEpsilon);
@@ -206,22 +190,13 @@ void evalTransformAccumulate(int startLen, int endLen)
 
 	for (int SZ = startLen; SZ <= endLen; SZ++)
 	{
-
-		//std::vector<Numeric>  v;
-		//VecXX test = getVec(SZ, v);
-
 		
 		std::vector<Numeric>  v(SZ, asNumber(6.66));
 		for (int i = 0; i < SZ; i++) { v[i] -= asNumber(500.0) - i; }
 		VecXX test(v);
-		
-
-
 
 		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
-
 		auto SQR = [](auto lhs ) { return lhs *lhs; };
-
 
 		Numeric S = 0.;
 		for (Numeric x : v)
@@ -230,11 +205,8 @@ void evalTransformAccumulate(int startLen, int endLen)
 		}
 		
 		Numeric resAcc = ApplyTransformAccumulate(test,  SQR, SQR, Sum ,Sum, asNumber( 0.0));
-
 		Numeric resAcc2 = ApplyTransformAccumulate(test, SQR, Sum, asNumber(0.0));
-
 		Numeric resAcc3 = ApplyTransformAccumulateUR(test, SQR, Sum, asNumber(0.0));
-
 
 		EXPECT_NEAR(S, resAcc, testEpsilon);
 		EXPECT_NEAR(S, resAcc2, testEpsilon);
@@ -244,7 +216,8 @@ void evalTransformAccumulate(int startLen, int endLen)
 }
 
 
-TEST(TestAccumulator, simpleTransformAccumulate) {
+TEST(TestAccumulator, simpleTransformAccumulate)
+{
 	EXPECT_EQ(1, 1);
 	EXPECT_TRUE(true);
 
@@ -253,9 +226,6 @@ TEST(TestAccumulator, simpleTransformAccumulate) {
 
 	//eval over multiple lengths
 	evalTransformAccumulate(957, 1043);
-
-
-
 }
 
 
@@ -268,14 +238,11 @@ void evalTransformAccumulate2UR_X(int startLen, int endLen)
 
 	for (int SZ = startLen; SZ <= endLen; SZ++)
 	{
-		//std::vector<Numeric>  v;
-		//VecXX test = getVec(SZ, v);
 		std::vector<Numeric>  v(SZ, asNumber(6.66));
 		for (int i = 0; i < SZ; i++) { v[i] -= asNumber(500.0) - i; }
 		VecXX test(v);
 
 		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
-
 		auto SQR = [](auto lhs) { return lhs * lhs; };
 
 		Numeric S = 0.;
@@ -285,11 +252,8 @@ void evalTransformAccumulate2UR_X(int startLen, int endLen)
 		}
 
 		Numeric resAcc = ApplyTransformAccumulate(test, SQR, SQR, Sum, Sum, asNumber(0.0));
-
 		Numeric resAcc2 = ApplyTransformAccumulate(test, SQR, Sum, asNumber(0.0));
-
 		Numeric resAcc3 = ApplyTransformAccumulate2UR_X(test, SQR, Sum);
-
 
 		EXPECT_NEAR(S, resAcc, testEpsilon);
 		EXPECT_NEAR(S, resAcc2, testEpsilon);
@@ -331,7 +295,6 @@ void evalTransformAccumulateMax(int startLen, int endLen)
 
 		auto MAX = [](auto lhs, auto rhs) {  return max(VecXX::INS( lhs), VecXX::INS( rhs)); };
 		auto MAX_dbl = [](Numeric lhs, Numeric rhs) {  return std::max(lhs,rhs); };
-
 		auto SQR = [](auto lhs) { return lhs * lhs; };
 
 		Numeric S = v[0] * v[0];
@@ -341,11 +304,8 @@ void evalTransformAccumulateMax(int startLen, int endLen)
 		}
 
 		Numeric resAcc = ApplyTransformAccumulate(test, SQR, SQR, MAX, MAX_dbl, test[0]);
-
 		Numeric resAcc2 = ApplyTransformAccumulate(test, SQR, MAX, test[0]);
-
 		Numeric resAcc3 = ApplyTransformAccumulateUR(test, SQR, MAX, test[0]);
-
 
 		EXPECT_NEAR(S, resAcc, testEpsilon);
 		EXPECT_NEAR(S, resAcc2, testEpsilon);
@@ -368,7 +328,6 @@ void evalTransformAccumulateMax_X(int startLen, int endLen)
 
 		auto MAX = [](auto lhs, auto rhs) {  return max(VecXX::INS(lhs), VecXX::INS(rhs)); };
 		auto MAX_dbl = [](Numeric lhs, Numeric rhs) {  return std::max(lhs, rhs); };
-
 		auto SQR = [](auto lhs) { return lhs * lhs; };
 
 		Numeric S = v[0] * v[0];
@@ -378,11 +337,8 @@ void evalTransformAccumulateMax_X(int startLen, int endLen)
 		}
 
 		Numeric resAcc = ApplyTransformAccumulate(test, SQR, SQR, MAX, MAX_dbl, test[0]);
-
 		Numeric resAcc2 = ApplyTransformAccumulate(test, SQR, MAX, test[0]);
-
 		Numeric resAcc3 = ApplyTransformAccumulate2UR_X(test, SQR, MAX);
-
 
 		EXPECT_NEAR(S, resAcc, testEpsilon);
 		EXPECT_NEAR(S, resAcc2, testEpsilon);
@@ -433,11 +389,8 @@ void evalTransformAccumulateInnerProduct_X(int startLen, int endLen)
 		for (int i = 0; i < SZ; i++) { v[i] -= asNumber(500.0) - i; w[i] = v[i] + asNumber(1.0); }
 		VecXX test(v);
 		VecXX test2(w);
-
-
 		auto MULT = [](auto lhs, auto rhs) {  return lhs * rhs; };
 		auto SUM = [](auto lhs, auto rhs) {  return lhs + rhs; };
-
 		auto S = std::inner_product(v.begin(), v.end(), w.begin(), asNumber(0.0));
 		Numeric resAcc3 = ApplyTransformAccumulate2UR_XBin(test, test2, MULT, SUM);
 
@@ -450,8 +403,6 @@ void evalTransformAccumulateInnerProduct_X(int startLen, int endLen)
 
 TEST(TestAccumulator, simpleTransformAccumulate_BinaryFunc_X)
 {
-
-
 	//eval over very small lengths  OK
 	evalTransformAccumulateInnerProduct_X(3, 23);
 

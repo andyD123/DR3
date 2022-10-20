@@ -22,32 +22,16 @@
 
 #include <numeric>
 
-//using namespace DRC::VecDb;
-//using namespace DRC::VecF4F; //not used
-
-//using namespace DRC::VecDb;
-//using namespace DRC::VecD2D;
-//using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
-//using namespace DRC::VecF16F;
-//using namespace DRC::VecF8F;
-
-
-
-TEST(TestViews, ApplyUnitaryOperation) {
-
-
+TEST(TestViews, ApplyUnitaryOperation)
+{
 	for (int SZ = 3; SZ < 123; SZ++)
 	{
-
 		std::vector<Numeric>  v(SZ, asNumber(6.66));
 		int i = 0;
 		for (auto& x : v) { x -= asNumber(500.0 + i); ++i; }
 		VecXX test(v);
 
-
 		auto mySquareItLambda = [](const auto& x) {return x * x;  };
-
 		auto testSquare = ApplyUnitaryOperation(test, mySquareItLambda);
 
 		for (int i = 0; i < test.size(); ++i)
@@ -62,20 +46,17 @@ TEST(TestViews, ApplyUnitaryOperation) {
 
 
 
-TEST(TestViews, ApplyUnitaryOperationXXX) {
-
+TEST(TestViews, ApplyUnitaryOperationXXX)
+{
 
 	for (int SZ = 3; SZ < 123; SZ++)
 	{
-
 		std::vector<Numeric>  v(SZ, asNumber(6.66));
 		int i = 0;
 		for (auto& x : v) { x -= asNumber(500.0 + i);; ++i; }
 		VecXX test(v);
 
-
 		auto mySquareItLambda = [](const auto& x) {return x * x;  };
-
 		auto testSquare = ApplyUnitaryOperationV(test, mySquareItLambda);
 
 		for (int i = 0; i < test.size(); ++i)
@@ -84,30 +65,23 @@ TEST(TestViews, ApplyUnitaryOperationXXX) {
 		}
 	}
 
-
 }
 
 
 
 
-TEST(TestViews, ApplyBinaryOperation) {
-
+TEST(TestViews, ApplyBinaryOperation)
+{
 
 	for (int SZ = 3; SZ < 123; SZ++)
 	{
-
-
 		std::vector<Numeric>  v(SZ, asNumber(6.66));
 		int i = 0;
 		for (auto& x : v) { x -= asNumber(500.0 + i);; ++i; }
 		VecXX test(v);
 		auto test2 = test * 3.0;
-
-
 		auto myDifItLambda = [](const auto& x, const auto& y) {return x-y;  };
-
 		auto testDiff= ApplyBinaryOperation1(test,test2, myDifItLambda);
-
 
 		EXPECT_NUMERIC_EQ(testDiff[0], test[0] - test2[0]);
 		EXPECT_NUMERIC_EQ(testDiff[SZ-1], test[SZ - 1] - test2[SZ - 1]);
@@ -127,14 +101,12 @@ TEST(TestViews, ApplyBinaryOperation) {
 TEST(TestViews, applyFilter1000)
 {
 
-
 	int SZ = 1000;
 
 	std::vector<Numeric>  v(SZ, asNumber(6.66));
 	int i = 0;
 	for (auto& x : v) { x -= asNumber(500.0 + i);; ++i; }
 	VecXX test(v);
-
 	auto initVals = test;
 	auto condTest = [](auto x) {return x <= 200.0; };
 
@@ -169,9 +141,7 @@ TEST(TestViews, applyFilter1000)
 TEST(TestViews, applyFilter3) 
 {
 
-
 	int SZ = 3;
-
 	std::vector<Numeric>  v(SZ, asNumber(6.66));
 	int i = 0;
 	for (auto& x : v) { x -= asNumber(500.0 + i);; ++i; }
@@ -180,15 +150,11 @@ TEST(TestViews, applyFilter3)
 	auto initVals = test;
 	auto condTest = [](auto x) {return x <= 200.0; };
 
-
-
 	initVals += 3000.0;
 	auto condTestVals = initVals <= 200.0;
-
 	auto initSz = initVals.size();
 
 	VecVW vw = ApplyFilterB(condTestVals, initVals);
-
 
 	for (auto x : vw)
 	{
@@ -196,7 +162,6 @@ TEST(TestViews, applyFilter3)
 	}
 
 	auto NotCondTestVals = initVals > 200.0;//= !condTestVals;
-
 	auto vwNegate = ApplyFilterB(NotCondTestVals, initVals);
 
 	for (auto x : vwNegate)
@@ -205,7 +170,6 @@ TEST(TestViews, applyFilter3)
 	}
 
 	EXPECT_TRUE((vwNegate.last() + vw.last())== initSz);
-
 }
 
 
@@ -469,10 +433,6 @@ void testFilterVecZ(int SZ)
 
 	auto initVals = test;
 	auto condTest = [](auto x) {return x <= 200.0; };
-
-	//initVals += 3000.0;
-	//auto condTestVals = initVals <= 200.0;
-
 	VecVW vw = ApplyFilter(condTest, initVals);
 
 
@@ -517,12 +477,7 @@ void testFilterVecW(int SZ)
 
 	auto initVals = test;
 	auto condTest = [](auto x) {return x <= 200.0; };
-
-	//initVals += 3000.0;
-	//auto condTestVals = initVals <= 200.0;
-
 	VecVW vw = ApplyFilter(condTest, initVals);
-
 
 	for (auto x : vw)
 	{
@@ -569,11 +524,8 @@ void testFilterViewZ(int SZ)
 
 	auto evenTest = [](auto x) {return (floor((x - asNumber(0.00000001))) / asNumber(2.0)) == ( floor( (x- asNumber(0.00000001)) / asNumber(2.0))); };
 
-
 	VecVW evenView = ApplyFilter(evenTest, initVals);
-
 	VecVW vw = ApplyFilter(condTest, evenView);
-
 
 	for (auto x : vw)
 	{
@@ -615,9 +567,6 @@ void testCountedFilterZ(int SZ, int count)
 
 	auto initVals = test;
 	auto condTest = [](auto x) {return x <= 200.0; };
-
-
-
 	VecVW vw = ApplyCountedFilter(condTest, test, count);
 
 	for (auto x : vw)
@@ -670,8 +619,6 @@ TEST(TestViews, applyCountedFilterZRangeAllTrue)
 }
 
 
-
-//16F load issue
 void testCountedFilterViewZ(int SZ, int count)
 {
 
@@ -682,11 +629,9 @@ void testCountedFilterViewZ(int SZ, int count)
 
 	auto initVals = test;
 	auto condTest = [](auto x) {return x <= 200.0; };
-
 	auto evenTest = [](auto x) {return (floor((x - asNumber( 0.00000001))) / asNumber(2.0)) == (floor((x - asNumber(0.00000001)) / asNumber(2.0))); };
 
 	VecVW evenView = ApplyFilter(evenTest, initVals);
-
 	VecVW vw = ApplyCountedFilter(condTest, evenView, count);
 
 	for (auto x : vw)
@@ -721,12 +666,9 @@ void testCountedFilterViewZAllTrue(int SZ, int count)
 
 	auto initVals = test;
 	auto condTest = [](auto x) {return x > VecXX::INS(-1200.0); };
-
-
 	auto trueFilter = [](auto x) {return x==x; };
 
 	VecVW trueView = ApplyFilter(trueFilter, initVals);
-
 	VecVW vw = ApplyCountedFilter(condTest, trueView, count);
 
 	for (auto x : vw)
@@ -759,24 +701,15 @@ TEST(TestViews, ApplyOperationAndFilter)
 	VecXX data(v);
 
 	auto SQR = [](auto x) { return x * x; };
-
 	auto aboveFive = [](auto x) { return x > VecXX::scalar(5.0); };
-
 	auto lessThanFifteen = [](auto x) { return x < VecXX::scalar(15.0); };
 
 	using namespace JOIN;
 	auto betweenFiveAndFiffteen = aboveFive && lessThanFifteen;
-
 	auto res = ApplyOperationAndFilter(SQR, betweenFiveAndFiffteen, data);
 
 	auto& vec = res.first;
 	
-
-//	std::vector<int> idx = res.second.getIndex();
-//	std::vector<float> vals = vec;
-//	std::vector<float> valsVw = res.second;
-
-
 	for (int ii = 0; ii < SZ-1; ++ii)
 	{
 		double i = ii;
@@ -860,19 +793,15 @@ TEST(TestViews, ApplyOperationAndWrite)
 	auto lessThanFifteen = [](auto x) { return x < VecXX::scalar(15.0); };
 
 	using namespace JOIN;
-	//boolean joining
-
+	
 	auto betweenFiveAndFiffteen = aboveFive && lessThanFifteen;
 	auto view_WithElementsAboveFive = ApplyFilter(aboveFive, data);
 
 	std::vector<Numeric> valss = view_WithElementsAboveFive;
 	std::vector<int> index = view_WithElementsAboveFive.getIndex();
-
-
 	auto copyOfData = data;
 
     ApplyUnitaryOperationWrite(SQR, view_WithElementsAboveFive, copyOfData);
-
 	//squares allvalues above five and writes back to copy of source data;
 
 	int j = 0;
@@ -907,27 +836,20 @@ TEST(TestViews, JoiningLambdas)
 	auto timesTwo = [](auto x) {return x * VecXX::scalar(2.0); };
 
 	auto copyOfData = data;
-
 	auto res_sqr = ApplyUnitaryOperationV(data,SQR);
 	using namespace JOIN;
 	auto quartic = SQR | SQR;
 
 	auto res_quartic = ApplyUnitaryOperationV(data,quartic);
-
-
 	auto roundTrip = SQR_ROOT | SQR;
-
-
 	auto res_quartic_two = ApplyUnitaryOperationV(data,roundTrip);
-
 	auto doIt = addFive | timesTwo;  //2x+5  
-
 	auto res_qtest = ApplyUnitaryOperationV(data,doIt);
 
 	for (int i = 0; i < data.size(); ++i)
 	{
 		Numeric j = asNumber(i);
-		EXPECT_DOUBLE_EQ(res_qtest[i], (5. + j) * 2.0);// (2.0 * j) + 5.0 );
+		EXPECT_DOUBLE_EQ(res_qtest[i], (5. + j) * 2.0);
 	}
 
 }
@@ -944,9 +866,7 @@ TEST(TestViews, JoiningLambdas)
 
 TEST(TestViews, binaryFilterZVec)
 {
-
 	std::vector<Numeric>  v = { 1.0,2.0,1.0,3.0,5.0,1.0 };
-
 	VecXX test(v);
 
 	//auto initVals = test;
@@ -1052,10 +972,7 @@ TEST(TestViews, applyFilterSmall)
 	EXPECT_NUMERIC_EQ(vw[0], asNumber(2.0));
 	EXPECT_NUMERIC_EQ(vw[1], asNumber(3.0));
 	EXPECT_NUMERIC_EQ(vw[2], asNumber(5.0));
-
-
 	EXPECT_NUMERIC_EQ(vw.size(), 3);
-
 
 }
 
@@ -1074,15 +991,10 @@ TEST(TestViews, applyFilterSmallLambda)
 
 	VecVW vw = ApplyFilter(condTest, test );
 
-
 	EXPECT_NUMERIC_EQ(vw[0], asNumber(2.0));
 	EXPECT_NUMERIC_EQ(vw[1], asNumber(3.0));
 	EXPECT_NUMERIC_EQ(vw[2], asNumber(5.0));
-
-
 	EXPECT_NUMERIC_EQ(vw.size(), 3);
-
-
 }
 
 
@@ -1090,9 +1002,7 @@ TEST(TestViews, applyFilterSmallLambda)
 TEST(TestViews, writeView)
 {
 	// write values back to source position
-
 	std::vector<Numeric>  v = { 1.0,2.0,1.0,3.0,5.0,1.0 };
-
 	VecXX test(v);
 
 	auto initVals = test;
@@ -1100,19 +1010,14 @@ TEST(TestViews, writeView)
 
 	VecVW vw = ApplyFilter(condTest, test);
 
-
 	EXPECT_NUMERIC_EQ(vw[0], asNumber(2.0));
 	EXPECT_NUMERIC_EQ(vw[1], asNumber(3.0));
 	EXPECT_NUMERIC_EQ(vw[2], asNumber(5.0));
-
-
 	EXPECT_NUMERIC_EQ(vw.size(), 3);
 
 	VecXX myVec(test); //keep target sdame size as input view
 	myVec *= 0.0;
-
 	vw.write(myVec);
-
 
 	EXPECT_NUMERIC_EQ(vw[0], asNumber(2.0));
 	EXPECT_NUMERIC_EQ(vw[1], asNumber(3.0));
@@ -1124,24 +1029,19 @@ TEST(TestViews, writeView)
 TEST(TestViews, writeThroView)
 {
 	// write values back to source position
-
 	std::vector<Numeric>  v = { 1.0,2.0,1.0,3.0,5.0,1.0 };
 
 	VecXX test(v);
 
 	auto initVals = test;
 	auto condTest = [](auto x) {return x >= 2.0; };
-
 	auto condTest2 = [](auto x) {return x >= 5.0; };
 
 	VecVW vw = ApplyFilter(condTest, test);
 
-
 	EXPECT_NUMERIC_EQ(vw[0], asNumber(2.0));
 	EXPECT_NUMERIC_EQ(vw[1], asNumber(3.0));
 	EXPECT_NUMERIC_EQ(vw[2], asNumber(5.0));
-
-
 	EXPECT_NUMERIC_EQ(vw.size(), 3);
 
 
@@ -1152,32 +1052,23 @@ TEST(TestViews, writeThroView)
 	myVec *= 0.0;
 
 	vw2.write(myVec);
-
-
-	//EXPECT_NUMERIC_EQ(myVec[1], 2.0);
-	//EXPECT_NUMERIC_EQ(myVec[3], 3.0);
 	EXPECT_NUMERIC_EQ(myVec[4], asNumber(5.0));
 
 }
 
 
 
-
 TEST(TestViews, writeView2)
 {
 	// write values back to source position
-
 	std::vector<Numeric>  v = { 1.0,2.0,1.0,3.0,5.0,1.0 };
 
 	VecXX test(v);
-
 	auto initVals = test;
 	auto condTest = [](auto x) {return x >= 2.0; };
 
 	VecVW vw = ApplyFilter(condTest, test);
-
 	auto squareIt = [](auto x) {return x * x; };
-
 
 	 ApplyUnitaryOperation(vw,squareIt );
 	 for (auto x : vw)
@@ -1196,9 +1087,6 @@ TEST(TestViews, writeView2)
 	 {
 		 std::cout << x << std::endl;
 	 }
-
-	
-
 
 }
 

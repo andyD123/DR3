@@ -13,16 +13,8 @@
 #include "../Vectorisation/VecX/vec_view.h"
 
 #include "../Vectorisation/VecX/target_name_space.h"
-
-
 #include "../Vectorisation/VecX/dr3.h"
-
-
-
 #include "testNamespace.h"
-
-
-
 
 #include <numeric>
 #include <algorithm>
@@ -43,11 +35,8 @@ void testTransform_1(int SZ)
 
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
-
 	VecXX testVec(input);
 
-	
-	
 
 	for (int j = 0; j < SZ; ++j)
 	{
@@ -84,27 +73,15 @@ TEST(TestDR3, testTransform_1)
 {
 
 	testTransform_1(5);
-
-
-	//for (int SZ = 3; SZ < 5; SZ++)
-	//{
-	//	testTransform_1(SZ);
-	//}
-
-
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
 		testTransform_1(SZ);
 	}
 
-
 	testTransform_1(34);
 	testTransform_1(65);
 	testTransform_1(63);
 	testTransform_1(64);
-
-	/*	*/
-
 }
 
 
@@ -119,11 +96,8 @@ void testTransform_XX(int SZ)
 	EXPECT_TRUE(res.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(6.66), val);
 
-
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
-
 	VecXX testVec(input);
 
 	for (int j = 0; j < SZ; ++j)
@@ -157,12 +131,10 @@ TEST(TestDR3, testTransformXX)
 		testTransform_XX(SZ);
 	}
 
-
 	testTransform_XX(34);
 	testTransform_XX(65);
 	testTransform_XX(63);
 	testTransform_XX(64);
-
 
 }
 
@@ -172,7 +144,6 @@ TEST(TestDR3, testTransformXX)
 void testTransform_2(int SZ)
 {
 
-
 	auto doubleIt = [](auto x) { return 2.0 * x; };
 	VecXX scalar = asNumber(3.33);
 	VecXX resScalar;
@@ -180,7 +151,6 @@ void testTransform_2(int SZ)
 	auto val = resScalar.getScalarValue();
 	EXPECT_TRUE(resScalar.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(6.66), val);
-
 
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
@@ -219,12 +189,10 @@ TEST(TestDR3, testTransform_2)
 		testTransform_2(SZ);
 	}
 
-
 	testTransform_2(34);
 	testTransform_2(65);
 	testTransform_2(63);
 	testTransform_2(64);
-
 
 }
 
@@ -238,8 +206,6 @@ void testTransform_3(int SZ)
 	auto val = res.getScalarValue();
 	EXPECT_TRUE(res.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(6.66), val);
-
-
 
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
@@ -296,8 +262,6 @@ void testTransform_M(int SZ)
 	EXPECT_TRUE(res.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(6.66), val);
 
-
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
 
@@ -353,8 +317,6 @@ void testTransform_M1(int SZ)
 	EXPECT_TRUE(res.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(6.66), val);
 
-
-
 	std::vector<Numeric> input(SZ, asNumber( 0.0) );
 	std::iota(begin(input), end(input), asNumber(0.0));
 
@@ -403,17 +365,13 @@ TEST(TestDR3, test_transform1M)
 void testBinaryTransform(int SZ)
 {
 
-
 	auto sumIt = [](auto x,auto y) { return y+ x; };
 	VecXX scalar = asNumber(3.33);
-	// = scalar;
 	const VecXX scalarPlusTwo = 2.0 + scalar;
 	const VecXX resScalar  =transform(sumIt, scalar, scalarPlusTwo);
 	auto val = resScalar.getScalarValue();
 	EXPECT_TRUE(resScalar.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(8.66), val);
-
-
 
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
@@ -424,8 +382,6 @@ void testBinaryTransform(int SZ)
 	for (int j = 0; j < SZ; ++j)
 	{
 		auto onlyJAddlambda = [=](auto x,auto y) { return select((asNumber(j) > (x - asNumber(0.001)) && (asNumber(j) < x + asNumber(0.001))), x+y, -(x+y)); };
-		//auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((j > (y - 0.0001) && (j < y + 0.00001)), x + y, -(x + y)); };
-
 		VecXX res  = transform(onlyJAddlambda, testVec, testVecPlusTwo);
 
 		for (int k = 0; k < SZ; k++)
@@ -447,8 +403,6 @@ void testBinaryTransform(int SZ)
 	{
 		auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((asNumber(j) > (y - asNumber(0.001)) && (asNumber(j) < y + asNumber(0.001))), x + y, -(x + y)); };
 		auto onlyJAddlambda = [=](auto x, auto y)	   { return select((asNumber(j) > (x - asNumber(0.001)) && (asNumber(j) < x + asNumber(0.001))), x + y, -(x + y)); };
-
-
 		const VecXX scalarPlusTwo = 2.0;
 
 		VecXX res = transform(onlyJAddlambda, testVec, scalarPlusTwo);
@@ -509,8 +463,6 @@ void testBinaryTransform(int SZ)
 				EXPECT_NUMERIC_EQ(res4[k], asNumber (-1.0 * (k + 2.0)));
 			}
 		}
-
-
 	}
 
 
@@ -533,11 +485,8 @@ TEST(TestDR3, test_transform_binary)
 
 void testBinaryTransform1(int SZ)
 {
-
-
 	auto sumIt = [](auto x, auto y) { return y + x; };
 	VecXX scalar = asNumber(3.33);
-	// = scalar;
 	const VecXX scalarPlusTwo = 2.0 + scalar;
 	const VecXX resScalar = transform1(sumIt, scalar, scalarPlusTwo);
 	auto val = resScalar.getScalarValue();
@@ -555,8 +504,6 @@ void testBinaryTransform1(int SZ)
 	for (int j = 0; j < SZ; ++j)
 	{
 		auto onlyJAddlambda = [=](auto x, auto y) { return select((asNumber(j) > (x - asNumber(0.001)) && (asNumber(j) < x + asNumber(0.001))), x + y, -(x + y)); };
-		//auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((j > (y - 0.0001) && (j < y + 0.00001)), x + y, -(x + y)); };
-
 		VecXX res = transform1(onlyJAddlambda, testVec, testVecPlusTwo);
 
 		for (int k = 0; k < SZ; k++)
@@ -578,9 +525,7 @@ void testBinaryTransform1(int SZ)
 	{
 		auto onlyJAddlambda = [=](auto x, auto y) { return select((asNumber(j) > (x - asNumber(0.001)) && (asNumber(j) < x + asNumber(0.001))), x + y, -(x + y)); };
 		auto onlyJAddlambda_dash = [=](auto x, auto y) { return select((asNumber(j) > (y - asNumber(0.001)) && (asNumber(j) < y + asNumber(0.001))), x + y, -(x + y)); };
-
 		const VecXX scalarPlusTwo = 2.0;
-
 		VecXX res = transform1(onlyJAddlambda, testVec, scalarPlusTwo);
 
 		for (int k = 0; k < SZ; k++)
@@ -639,10 +584,7 @@ void testBinaryTransform1(int SZ)
 				EXPECT_NUMERIC_EQ(res4[k], asNumber (-1.0 * (k + 2.0)));
 			}
 		}
-
-
 	}
-
 
 }
 
@@ -665,7 +607,6 @@ TEST(TestDR3, test_transform_binary1)
 void testBinaryTransformM(int SZ)
 {
 
-
 	auto sumIt = [](auto x, auto y) { return y + x; };
 	VecXX scalar = asNumber(3.33);
 	const VecXX two = asNumber(2.0);
@@ -676,11 +617,8 @@ void testBinaryTransformM(int SZ)
 	EXPECT_TRUE(resScalar.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(5.33), val);
 
-
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
-
 
 	for (int j = 0; j < SZ; ++j)
 	{
@@ -690,10 +628,8 @@ void testBinaryTransformM(int SZ)
 		VecXX res;
 		VecXX testVec(input);
 		const VecXX testVecPlusTwo = testVec + 2.0;
-
 		transformM(onlyJAddlambda, testVec, testVecPlusTwo);
 		res = testVec;
-
 		
 		for (int k = 0; k < SZ; k++)
 		{
@@ -711,7 +647,6 @@ void testBinaryTransformM(int SZ)
 		VecXX res1;
 		VecXX testVec1(input);
 		const VecXX testTwo =  2.0;
-
 		transformM(onlyJAddlambda, testVec1, testTwo);
 		res1 = testVec1;
 
@@ -730,10 +665,8 @@ void testBinaryTransformM(int SZ)
 
 		VecXX res2;
 		VecXX testVec2(input);
-
 		transformM(onlyJAddlambda, testVec2, 2.0);
 		res2 = testVec2;
-
 
 		for (int k = 0; k < SZ; k++)
 		{
@@ -747,14 +680,10 @@ void testBinaryTransformM(int SZ)
 			}
 		}
 
-
-	
 		VecXX res3;
 		VecXX testVec3(input);
-
 		transformM(onlyJAddlambda_dash,  2.0, testVec3);
 		res3 = testVec3;
-
 		std::vector<Numeric> stl = res;
 
 		for (int k = 0; k < SZ; k++)
@@ -826,15 +755,12 @@ void testSelect(int SZ)
 	EXPECT_NUMERIC_EQ(asNumber(-1.), val);
 
 
-
 	for (int j = 0; j < SZ; ++j)
 	{
-
 		std::vector<Numeric> input(SZ, asNumber(0.0));
 		std::iota(begin(input), end(input), asNumber(0.0));
 
 		auto equalsJay = [&](auto x) { return (asNumber(j) > (x - asNumber(0.001))) && (asNumber(j) < (x + asNumber(0.001))); };
-
 		const VecXX trueValues(input);
 		const VecXX falseValues = -trueValues;
 		const VecXX testValues(input);
@@ -897,9 +823,7 @@ void testSelect(int SZ)
 			{
 				EXPECT_NUMERIC_EQ(resSelLambda[k], CUBE(asNumber(k)));
 			}
-		}
-
-		
+		}	
 	}
 	
 }
@@ -947,16 +871,12 @@ void test_FilterTransform(int SZ)
 	EXPECT_TRUE(resSelScalarLambdaFlse.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber (-1.), val);
 
-
-
 	for (int j = 0; j < SZ; ++j)
 	{
 
 		std::vector<Numeric> input(SZ, asNumber(0.0));
 		std::iota(begin(input), end(input), asNumber(0.0));
-
 		auto equalsJay = [&](auto x) { return (asNumber(j) > (x - asNumber(0.001) )) && (asNumber(j) < (x + asNumber(0.001))); };
-
 		const VecXX testValues(input);
 
 		auto SQR = [](auto x) { return x * x; };
@@ -997,20 +917,15 @@ TEST(TestDR3, test_filterTransform)
 
 void testTransform_V(int SZ)
 {
-	
 	auto doubleIt = [](auto x) { return 2.0 * x; };
 	VecXX scalar = asNumber(3.33);
 	VecVW res = transformV(doubleIt, scalar);
 	auto val = res.getScalarValue();
 	EXPECT_TRUE(res.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(6.66), val);
-
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
-
 	VecXX testVec(input);
-
 
 	for (Numeric j = 0; j < SZ; ++j)
 	{
@@ -1044,12 +959,9 @@ TEST(TestDR3, testTransform_view)
 		testTransform_V(SZ);
 	}
 
-
 	testTransform_V(34);
 	testTransform_V(63);
 	testTransform_V(64);
-
-
 }
 
 
@@ -1059,7 +971,6 @@ void test_FilterTransform_View(int SZ)
 {
 	auto copyVecToView = [](auto x) {return x; };
 	Numeric j = asNumber(666.);
-
 	auto equalsJay = [&](auto x) { return (asNumber(j) > (x - asNumber(0.001))) && (asNumber(j) < (x + asNumber(0.001))); };
 	const VecXX trueValue = 1.;
 	const VecXX falseValue = -1.;
@@ -1089,13 +1000,10 @@ void test_FilterTransform_View(int SZ)
 		std::vector<Numeric> input(SZ, asNumber(0.0));
 		std::iota(begin(input), end(input), asNumber(0.0));
 		auto equalsJay = [&](auto x) { return (asNumber(j) > (x - asNumber(0.001))) && (asNumber(j) < (x + asNumber(0.001))); };
-
 		const VecXX testValues(input);
 		VecVW testVw = transformV(copyVecToView, testValues);
-
 		std::vector<Numeric> stdVec = testVw;
 		auto idz = testVw.getIndex();
-
 		auto SQR = [](auto x) { return x * x; };
 		auto CUBE = [](auto x) { return x * x * x; };
 
@@ -1123,24 +1031,6 @@ void test_FilterTransform_View(int SZ)
 TEST(TestDR3, test_filterTransformView)
 {
 
-	//test_FilterTransform_View(3); //ok
-	//test_FilterTransform_View(4); //ok
-	//test_FilterTransform_View(5); //ok
-	//test_FilterTransform_View(6); //ok
-	//test_FilterTransform_View(7); //ok
-	//test_FilterTransform_View(8); //ok
-	//test_FilterTransform_View(9); // ok
-   // test_FilterTransform_View(10); // XXXX
-	//test_FilterTransform_View(11); // XXXX
-	//test_FilterTransform_View(12); // XXXX
-
-	/*
-	for (int SZ = 9; SZ < 11; SZ++)
-	{
-		test_FilterTransform_View(SZ);
-	}
-	*/
-
 	test_FilterTransform_View(16);
 	test_FilterTransform_View(34);
 	test_FilterTransform_View(63);
@@ -1163,14 +1053,12 @@ TEST(TestDR3, test_filterTransformView)
 void test_Transform_V(int SZ)
 {
 
-
 	auto doubleIt = [](auto x) { return 2.0 * x; };
 	VecXX scalar = asNumber(3.33);
 	VecVW res = transformV(doubleIt, scalar);
 	auto val = res.getScalarValue();
 	EXPECT_TRUE(res.isScalar());
 	EXPECT_NUMERIC_EQ(asNumber(6.66), val);
-
 
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
@@ -1179,16 +1067,10 @@ void test_Transform_V(int SZ)
 	auto copyLambda = [&](auto x) {return x; };
 	VecVW inputView = transformV(copyLambda, testVec);	
 
-
-
-
 	for (Numeric j = 0; j < SZ; ++j)
 	{
 		auto onlyJlambda = [=](auto x) { return select((asNumber(j) > (x - VecXX::INS(asNumber(0.01))) && (asNumber(j) < x + VecXX::INS(asNumber(0.01)))), x, -x); };
-
-
 		auto res  =transform(onlyJlambda, inputView);
-		
 
 		for (int k = 0; k < SZ; k++)
 		{
@@ -1203,7 +1085,6 @@ void test_Transform_V(int SZ)
 		}
 	}
 
-
 }
 
 
@@ -1213,8 +1094,6 @@ TEST(TestDR3, testTransformA_view)
 {
 
 	test_Transform_V(3);
-
-
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
 		test_Transform_V(SZ);
@@ -1243,27 +1122,19 @@ void testTransformM_V(int SZ)
 
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
-
 	VecXX testVec(input);
-
 	auto copyLambda = [&](auto x) {return x; };
 	VecVW inputView = transformV(copyLambda, testVec);
 
-
 	for (Numeric j = 0; j < SZ; ++j)
 	{
-
 		auto onlyJlambda = [=](auto x) { return select((j == x), x, x* x); };
-
-	
 		auto copyMod = inputView;
 
 		transformM(onlyJlambda, copyMod);
 		auto res = copyMod;
-
 		auto index2 = res.getIndex();
 		std::vector<Numeric>  st2 = res;
-
 
 		for (int k = 0; k < SZ; k++)
 		{
@@ -1277,7 +1148,6 @@ void testTransformM_V(int SZ)
 			}
 		}
 	}
-
 
 }
 
@@ -1297,33 +1167,22 @@ TEST(TestDR3, testTransformM_view)
 	testTransformM_V(34);
 	testTransformM_V(63);
 	testTransformM_V(64);
-	
 
 }
-
-
-
-
-
 
 
 //transform and modify a view 
 void testTransformWrite_Vw(int SZ)
 {
-
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber( 0.0));
 
 	VecXX testVec(input);
-
 	auto copyLambda = [&](auto x) {return x; };
 	VecVW inputView = transformV(copyLambda, testVec);
 
-
 	for (Numeric  j = 0; j < SZ; ++j)
 	{
-
 		auto onlyJlambda = [=](auto x) { return j == x; }; 
 		auto SQR = [](auto x) {return x * x; };
 		auto fltrVwOnlyJ = filter(onlyJlambda, inputView);
@@ -1354,7 +1213,6 @@ TEST(TestDR3, testTransformWrite_view)
 	testTransformWrite_Vw(3);
 	testTransformWrite_Vw(4);
 
-
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
 		testTransformWrite_Vw(SZ);
@@ -1365,35 +1223,20 @@ TEST(TestDR3, testTransformWrite_view)
 	testTransformWrite_Vw(64);
 	testTransformWrite_Vw(65);
 
-
 }
-
-
-
-// TO DO filters
-
-// excluding filter by vec of booles 
-//
-
 
 
 void testFilterVw(int SZ)
 {
 
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
 
 	VecXX testVec(input);
-
 	auto copyLambda = [&](auto x) {return x; };
 	VecVW inputView = transformV(copyLambda, testVec);
-
 	auto allowAll = [](auto x) {return x==x; };
-
-
 	auto resAll = filter(allowAll, inputView);
-	
 	
 	for (int i =0; i < resAll.size();++i)
 	{
@@ -1401,21 +1244,16 @@ void testFilterVw(int SZ)
 	}
 	
 	auto allowNone = [](auto x) {return x != x; };
-	
 	auto resNone = filter(allowNone, inputView);
 
 	EXPECT_EQ(0, resNone.size());
 
-
-
 	for (Numeric j = 0; j < SZ; ++j)
 	{
-
 		auto onlyJlambda = [=](auto x) { return j == x; };
 		auto res = filter(onlyJlambda, inputView);
 
 		EXPECT_NUMERIC_EQ(res[0], j);
-
 	}
 }
 
@@ -1427,8 +1265,6 @@ TEST(TestDR3, testFilter_view)
 
 	testFilterVw(3);
 	testFilterVw(4);
-
-
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
 		testFilterVw(SZ);
@@ -1446,20 +1282,13 @@ TEST(TestDR3, testFilter_view)
 void testFilterVecXX(int SZ)
 {
 
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
 
 	VecXX testVec(input);
-
 	auto copyLambda = [&](auto x) {return x; };
-	//VecVW inputView = transformV(copyLambda, testVec);
-
 	auto allowAll = [](auto x) {return x == x; };
-
-
 	auto resAll = filter(allowAll, testVec);
-
 
 	for (int i = 0; i < resAll.size(); ++i)
 	{
@@ -1467,21 +1296,14 @@ void testFilterVecXX(int SZ)
 	}
 
 	auto allowNone = [](auto x) {return x != x; };
-
 	auto resNone = filter(allowNone, testVec);
 
 	EXPECT_EQ(0, resNone.size());
-
-
-
 	for (Numeric j = 0; j < SZ; ++j)
 	{
-
 		auto onlyJlambda = [=](auto x) { return j == x; };
 		auto res = filter(onlyJlambda, testVec);
-
 		EXPECT_NUMERIC_EQ(res[0], j);
-
 	}
 }
 
@@ -1490,10 +1312,8 @@ void testFilterVecXX(int SZ)
 
 TEST(TestDR3, testFilter_vec)
 {
-
 	testFilterVecXX(3);
 	testFilterVecXX(4);
-
 
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
@@ -1521,22 +1341,16 @@ TEST(TestDR3, testFilter_vec)
 void testCountedFilterVw(int SZ)
 {
 
-
 	std::vector<Numeric> input(SZ, asNumber( 0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
 
 	VecXX testVec(input);
-
 	auto copyLambda = [&](auto x) {return x; };
 	VecVW inputView = transformV(copyLambda, testVec);
-
 	auto allowAll = [](auto x) {return x == x; };
-
-
 	auto resAll = countedFilter(allowAll, inputView,SZ+100);
 	auto resAll1 = countedFilter(allowAll, inputView, SZ );
 	auto resAll2 = countedFilter(allowAll, inputView, SZ-1);
-
 
 	for (int i = 0; i < resAll.size(); ++i)
 	{
@@ -1554,19 +1368,12 @@ void testCountedFilterVw(int SZ)
 		EXPECT_NUMERIC_EQ(resAll2[i], inputView[i]);
 	}
 
-
-
 	auto allowNone = [](auto x) {return x != x; };
-
 	auto resNone = countedFilter(allowNone, inputView,SZ);
-
 	EXPECT_EQ(0, resNone.size());
-
-
 
 	for (int j = 0; j < SZ; ++j)
 	{
-
 		auto res = countedFilter(allowAll, inputView,j);
 		EXPECT_EQ(res.size(), j);
 
@@ -1583,7 +1390,6 @@ TEST(TestDR3, testCountedFilter_view)
 
 	testCountedFilterVw(3);
 	testCountedFilterVw(4);
-
 
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
@@ -1604,22 +1410,14 @@ TEST(TestDR3, testCountedFilter_view)
 void testCountedFilterVecXX(int SZ)
 {
 
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
-
 	VecXX testVec(input);
 
-	//auto copyLambda = [&](auto x) {return x; };
-	//VecVW inputView = transformV(copyLambda, testVec);
-
 	auto allowAll = [](auto x) {return x == x; };
-
-
 	auto resAll = countedFilter(allowAll, testVec, SZ + 100);
 	auto resAll1 = countedFilter(allowAll, testVec, SZ);
 	auto resAll2 = countedFilter(allowAll, testVec, SZ - 1);
-
 
 	for (int i = 0; i < resAll.size(); ++i)
 	{
@@ -1638,26 +1436,19 @@ void testCountedFilterVecXX(int SZ)
 	}
 
 
-
 	auto allowNone = [](auto x) {return x != x; };
-
 	auto resNone = countedFilter(allowNone, testVec, SZ);
 
 	EXPECT_EQ(0, resNone.size());
 
-
-
 	for (int j = 0; j < SZ; ++j)
 	{
-
 		auto res = countedFilter(allowAll, testVec, j);
 		EXPECT_EQ(res.size(), j);
-
 		for (int i = 0; i < res.size(); ++i)
 		{
 			EXPECT_NUMERIC_EQ(res[i], asNumber( i));
 		}
-
 	}
 }
 
@@ -1666,7 +1457,6 @@ TEST(TestDR3, testCountedFilter_vec)
 
 	testCountedFilterVecXX(3);
 	testCountedFilterVecXX(4);
-
 
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
@@ -1682,21 +1472,13 @@ TEST(TestDR3, testCountedFilter_vec)
 
 
 
-//binary filter to do ??
-
-
 void testBimaryFilterVecXX(int SZ)
 {
-
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0) );
-
 	VecXX testVec(input);
 
-	
 	auto allowAll = [](auto x) {return x == x; };
-
 	auto  tpl = binaryFilter(allowAll, testVec);
 	
 	auto trueVw = std::get<0>(tpl);
@@ -1755,11 +1537,8 @@ void testBimaryFilterVecXX(int SZ)
 
 TEST(TestDR3, testBinaryFilter_vec)
 {
-
 	testBimaryFilterVecXX(3);
 	testBimaryFilterVecXX(4);
-
-
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
 		testBimaryFilterVecXX(SZ);
@@ -1780,19 +1559,13 @@ TEST(TestDR3, testBinaryFilter_vec)
 void testBinaryFilterVecView(int SZ)
 {
 
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
-
 	VecXX testVec(input);
 
 	auto copyLambda = [&](auto x) {return x; };
 	VecVW inputView = transformV(copyLambda, testVec);
-
 	auto allowAll = [](auto x) {return x == x; };
-
-
-
 	auto  tpl = binaryFilter(allowAll, inputView);
 
 	auto trueVw = std::get<0>(tpl);
@@ -1820,13 +1593,10 @@ void testBinaryFilterVecView(int SZ)
 
 	EXPECT_EQ(trueVw.size(), 0);
 	EXPECT_EQ(falseVw.size(), SZ);
-
-
 	for (Numeric j = 0; j < SZ; ++j)
 	{
 		auto allowj = [&](auto x) {return x == j; };
 		auto res = binaryFilter(allowj, inputView);
-
 		auto trueVw = std::get<0>(res);
 		auto falseVw = std::get<1>(res);
 		EXPECT_EQ(trueVw.size(), 1);
@@ -1855,7 +1625,6 @@ TEST(TestDR3, testBinaryFilter_Vw)
 	testBinaryFilterVecView(3);
 	testBinaryFilterVecView(4);
 
-
 	for (int SZ = 3; SZ < 33; SZ++)
 	{
 		testBinaryFilterVecView(SZ);
@@ -1874,20 +1643,15 @@ TEST(TestDR3, testBinaryFilter_Vw)
 void testSparseTransform_Vec(int SZ)
 {
 
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
 
 	VecXX testVec(input);
 	VecXX resultVec(input);
 	auto resultVec1 = resultVec;
-
-
 	auto allowAll = [](auto x) {return x == x; };
 	auto allowANone = [](auto x) {return x != x; };
-
 	auto SQR = [](auto x) { return x * x; };
-
 
 	sparseTransform(testVec, resultVec, SQR, allowAll);
 
@@ -1911,11 +1675,8 @@ void testSparseTransform_Vec(int SZ)
 	for (Numeric j = 0; j < SZ; ++j)
 	{
 		auto updateAt_j = [&](auto x) {return x == j; };
-
 		auto updateVec = testVec;
-
 		sparseTransform(testVec, updateVec, SQR, updateAt_j);
-
 
 		for (int i = 0; i < testVec.size() ; ++i)
 		{
@@ -1985,12 +1746,6 @@ void testReduce_Vec(int SZ)
 
 	auto resMIN = reduce(negTestVec, MIN);
 	EXPECT_NUMERIC_EQ(resMIN, asNumber (-1.0 * (SZ-1) + SZ / 2));
-
-
-
-
-
-
 }
 
 TEST(TestDR3, testReduce_VecXX)
@@ -2042,11 +1797,6 @@ void testReduce1_Vec(int SZ)
 
 	auto resMIN = reduce1(negTestVec, MIN);
 	EXPECT_NUMERIC_EQ(resMIN, asNumber (-1.0 * (SZ - 1) + SZ / 2));
-
-
-
-
-
 
 }
 
@@ -2131,19 +1881,11 @@ TEST(TestDR3, testReduce_Views)
 }
 
 
-
-
-//////////////////////////////////////////////
-
-/////////////////////  test reductions //////////////////
-
 void testTransformReduceUnitary_Vec(int SZ)
 {
 
-
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
-
 	std::random_device rd;
 	std::mt19937 g(rd());
 	std::shuffle(begin(input), end(input), g);
@@ -2154,11 +1896,7 @@ void testTransformReduceUnitary_Vec(int SZ)
 	auto SUM = [](auto x, auto y) { return x + y; };
 	auto MAX = [](auto x, auto y) { return iff((x > y), x, y); };
 	auto MIN = [](auto x, auto y) { return iff((x < y), x, y); };
-
 	auto CPY = [](auto x) { return x; };
-
-	
-
 
 	auto resSUM = transformReduce(testVec, CPY,SUM);
 	auto expectedSum = asNumber((SZ - 1) * SZ / 2.0);
@@ -2170,37 +1908,14 @@ void testTransformReduceUnitary_Vec(int SZ)
 	auto resMIN = transformReduce(negTestVec, CPY,MIN);
 	EXPECT_NUMERIC_EQ(resMIN, asNumber (-1.0 * (SZ - 1) + SZ / 2));
 
-
 	auto NEGATE = [](auto x) { return -x; };
-
-
-
-
 	auto resSUMNeg = transformReduce(testVec, NEGATE, SUM);
 	expectedSum = asNumber(-(SZ - 1) * SZ / 2.0);
 	EXPECT_DOUBLE_EQ(resSUMNeg, expectedSum);
 
 	auto resMAXNeg = transformReduce(testVec, NEGATE, MAX);
 	EXPECT_DOUBLE_EQ(resMAXNeg, 0);
-
-	auto resMINNeg = transformReduce(negTestVec, NEGATE, MIN);
-	//EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
-
-	/*
-	auto SQR = [](auto x) { return x*x; };
-
-	auto resSUMNeg = transformReduce(testVec, SQR, SUM);
-	expectedSum = -(SZ - 1) * SZ / 2.0;
-	EXPECT_DOUBLE_EQ(resSUMNeg, expectedSum);
-
-	auto resMAXNeg = transformReduce(testVec, SQR, MAX);
-	EXPECT_DOUBLE_EQ(resMAXNeg, 0);
-
-	auto resMINNeg = transformReduce(negTestVec, SQR, MIN);
-	//EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
-
-	*/
-
+	
 }
 
 TEST(TestDR3, testTransformReduceUnitary_VecXX)
@@ -2260,10 +1975,6 @@ void testTransformReduceUnitary_Vw(int SZ)
 
 
 	auto NEGATE = [](auto x) { return -x; };
-
-
-
-
 	auto resSUMNeg = transformReduce(testVw, NEGATE, SUM);
 	expectedSum = asNumber(-(SZ - 1) * SZ / 2.0);
 	EXPECT_NUMERIC_EQ(resSUMNeg, expectedSum);
@@ -2272,22 +1983,6 @@ void testTransformReduceUnitary_Vw(int SZ)
 	EXPECT_NUMERIC_EQ(resMAXNeg, asNumber(0));
 
 	auto resMINNeg = transformReduce(negTestVw, NEGATE, MIN);
-	//EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
-
-	/*
-	auto SQR = [](auto x) { return x*x; };
-
-	auto resSUMNeg = transformReduce(testVec, SQR, SUM);
-	expectedSum = -(SZ - 1) * SZ / 2.0;
-	EXPECT_DOUBLE_EQ(resSUMNeg, expectedSum);
-
-	auto resMAXNeg = transformReduce(testVec, SQR, MAX);
-	EXPECT_DOUBLE_EQ(resMAXNeg, 0);
-
-	auto resMINNeg = transformReduce(negTestVec, SQR, MIN);
-	//EXPECT_DOUBLE_EQ(resMIN, -1.0 * (SZ - 1) + SZ / 2);
-
-	*/
 
 }
 
@@ -2308,8 +2003,6 @@ TEST(TestDR3, testTransformReduceUnitary_View)
 	testTransformReduceUnitary_Vw(64);
 	testTransformReduceUnitary_Vw(65);
 }
-
-/////////////////////////////////
 
 
 void testTransformReduceBinary_Vw(int SZ)
@@ -2382,16 +2075,9 @@ void testTransformReduceBinary_Vec(int SZ)
 	VecXX testVec(input);
 
 	auto testVecPlusTwo = testVec + asNumber(2.0);
-
 	auto SUM = [](auto x, auto y) { return x + y; };
 	auto MULT = [](auto x, auto y) { return x * y; };
-
 	auto CPY = [](auto x) { return x; };
-
-
-	//auto testVw = transformV(CPY, testVec);
-	//auto testPlusTwoVw = transformV(CPY, testVecPlusTwo);
-
 	auto inputPlusTwo = input;
 	for (auto& x : inputPlusTwo)
 	{
@@ -2425,42 +2111,27 @@ TEST(TestDR3, testTransformReduceBinary_Vec)
 
 
 
-//broken on AVX512 
-
-///*
-
 void testFilterBoolVecXX(int SZ)
 {
 	std::vector<Numeric> input(SZ, asNumber(0.0));
 	std::iota(begin(input), end(input), asNumber(0.0));
 
 	const VecXX testVec(input);
-
 	auto copyLambda = [&](auto x) {return x; };
-	
-
 	auto allowAll = [](auto x) {return x == x; };
 
 	VecBL vBoolAllTrue = testVec == testVec;
 	VecBL vBoolAllFalse = testVec != testVec;
-
-
-	 auto resAll = filterB(vBoolAllTrue, testVec);
-
+	auto resAll = filterB(vBoolAllTrue, testVec);
 
 	for (int i = 0; i < resAll.size(); ++i)
 	{
 		EXPECT_NUMERIC_EQ(resAll[i], testVec[i]);
 	}
 
-
 	auto allowNone = [](auto x) {return x != x; };
-
 	auto resNone = filterB(vBoolAllFalse, testVec);
-
 	EXPECT_EQ(0, resNone.size());
-
-
 
 	for (Numeric j = 0; j < SZ; ++j)
 	{
@@ -2468,10 +2139,7 @@ void testFilterBoolVecXX(int SZ)
 		testVecB.setAt(static_cast<int>(j), true);
 		auto res = filterB(testVecB, testVec);
 		EXPECT_NUMERIC_EQ(res[0], j);
-
 	}
-		 /**/
-
 }
 
 
@@ -2497,7 +2165,6 @@ TEST(TestDR3, testFilterBool_vec)
 
 
 
-///*
 
 void testFilterBool_vw(int SZ)
 {
@@ -2505,18 +2172,13 @@ void testFilterBool_vw(int SZ)
 	std::iota(begin(input), end(input), asNumber(0.0));
 
 	const VecXX testVec(input);
-
 	auto copyLambda = [&](auto x) {return x; };
 	VecVW inputView = transformV(copyLambda, testVec);
-
 	auto allowAll = [](auto x) {return x == x; };
-
 	VecBL vBoolAllTrue = testVec == testVec;
 	VecBL vBoolAllFalse = testVec != testVec;
 
-
 	auto resAll = filterB(vBoolAllTrue, inputView);
-
 
 	for (int i = 0; i < resAll.size(); ++i)
 	{
@@ -2524,12 +2186,8 @@ void testFilterBool_vw(int SZ)
 	}
 
 	auto allowNone = [](auto x) {return x != x; };
-
 	auto resNone = filterB(vBoolAllFalse, inputView);
-
 	EXPECT_EQ(0, resNone.size());
-
-
 
 	for (Numeric j = 0; j < SZ; ++j)
 	{
@@ -2537,9 +2195,7 @@ void testFilterBool_vw(int SZ)
 		testVecB.setAt(static_cast<int>(j), true);
 		auto res = filterB(testVecB, inputView);
 		EXPECT_NUMERIC_EQ(res[0], j);
-
 	}
-
 }
 
 
@@ -2563,7 +2219,5 @@ TEST(TestDR3, testFilterBool_vw)
 
 }
 
-
-//*/
 
 

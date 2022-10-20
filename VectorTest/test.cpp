@@ -9,9 +9,6 @@
 #include "../Vectorisation/VecX/vec_d.h"
 #include "../Vectorisation/VecX/vec_bool.h"
 #include "../Vectorisation/VecX/apply_operation.h"
-
-
-
 #include "../Vectorisation/VecX/target_name_space.h"
 #include "../Vectorisation/VecX/dr3.h"
 #include "testNamespace.h"
@@ -351,7 +348,6 @@ TEST(TestFuncions, cdfnorm)
 
 	auto res = cdfnorm(Vec1);
 	EXPECT_EQ(res.size(), 3);
-
 	EXPECT_NUMERIC_EQ(asNumber(res[0]), asNumber(cdfnorm(mix[0])));
 	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(cdfnorm(mix[1])));
 	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(cdfnorm(mix[2])));
@@ -371,7 +367,6 @@ TEST(TestFuncions, cdfnormD)
 
 	auto res = cdfnormD(Vec1);
 	EXPECT_EQ(res.size(), 3);
-
 	EXPECT_NUMERIC_EQ(res[0], cdfnormD(mix[0]));
 	EXPECT_NUMERIC_EQ(res[1], cdfnormD(mix[1]));
 	EXPECT_NUMERIC_EQ(res[2], cdfnormD(mix[2]));
@@ -391,7 +386,6 @@ TEST(TestFuncions, unitaryMinus)
 
 	auto res = -Vec1;
 	EXPECT_EQ(res.size(), 3);
-
 	EXPECT_NUMERIC_EQ(asNumber(res[0]), asNumber(-(mix[0])));
 	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(-(mix[1])));
 	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(-(mix[2])));
@@ -413,7 +407,6 @@ TEST(TestFuncions, ceil)
 	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(ceil(mix[1])));
 	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(ceil(mix[2])));
 
-
 	auto res2 = ceil(vecScalar);
 	EXPECT_NUMERIC_EQ(res2.getScalarValue(), ceil(vecScalar.getScalarValue()));
 }
@@ -426,13 +419,11 @@ TEST(TestFuncions, sqrt)
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
 
-
 	auto res = sqrt(Vec1);
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_NUMERIC_EQ(asNumber(res[0]), asNumber(sqrt(mix[0])));
 	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(sqrt(mix[1])));
 	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(sqrt(mix[2])));
-
 
 	auto res2 = sqrt(vecScalar);
 	EXPECT_EQ(res2.getScalarValue(), sqrt(vecScalar.getScalarValue()));
@@ -448,7 +439,6 @@ TEST(TestFuncions, pow)
 
 	auto res = pow(Vec1, asNumber(0.5) );
 	EXPECT_EQ(res.size(), 3);
-
 	EXPECT_NUMERIC_EQ(res[0], asNumber(sqrt(mix[0])));
 	EXPECT_NUMERIC_EQ(res[1], asNumber(sqrt(mix[1])));
 	EXPECT_NUMERIC_EQ(res[2], asNumber(sqrt(mix[2])));
@@ -456,15 +446,11 @@ TEST(TestFuncions, pow)
 	std::vector<Numeric> mix1{ asNumber(1.0 ), asNumber( 2.0), asNumber(3.0) };
 	VecXX powers(mix1);
 
-
 	auto res1 = pow(Vec1, powers);
-
 	EXPECT_EQ(res1.size(), 3);
-
 	EXPECT_NUMERIC_EQ(res1[0], asNumber( Vec1[0]));
 	EXPECT_NUMERIC_EQ(res1[1], asNumber(Vec1[1] * Vec1[1]));
 	EXPECT_NUMERIC_EQ(res1[2], asNumber (Vec1[2] * Vec1[2]* Vec1[2]));
-
 
 }
 
@@ -476,7 +462,6 @@ TEST(TestFuncions, max)
 	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1.0/ 2.0), asNumber(1.0/ 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));
-
 	VecXX Vec2 = Vec1 + 1.0;
 	VecXX Vec3 = Vec1 - 1.0;
 
@@ -487,15 +472,11 @@ TEST(TestFuncions, max)
 	EXPECT_NUMERIC_EQ(asNumber(res[1]), asNumber(Vec2[1]));
 	EXPECT_NUMERIC_EQ(asNumber(res[2]), asNumber(Vec2[2]));
 
-
-
 	auto res3 = max(vecScalar, asNumber( -100.0) );
 	EXPECT_NUMERIC_EQ(res3.getScalarValue(),  asNumber( 1.0 / 2.2) );
 
 	auto res2 = max(Vec1, Vec3);
 	EXPECT_EQ(res.size(), 3);
-
-
 	EXPECT_NUMERIC_EQ(asNumber(res2[0]), asNumber(Vec1[0]));
 	EXPECT_NUMERIC_EQ(asNumber(res2[1]), asNumber(Vec1[1]));
 	EXPECT_NUMERIC_EQ(asNumber(res2[2]), asNumber(Vec1[2]));
@@ -580,7 +561,6 @@ TEST(TestFuncions, testLamdaOneD)
 	std::vector<Numeric> one{ asNumber(1.0), asNumber(1.0), asNumber(1.0) };
 
 	VecXX Vec1(one);
-
 	auto myFunc = [](auto X) {return (X * X); };
 
 	auto res = ApplyLambda(Vec2, myFunc);
@@ -608,7 +588,6 @@ TEST(TestFuncions, testLamdaTwoD)
 	EXPECT_EQ(res[1], asNumber(7.0) );
 	EXPECT_EQ(res[2], asNumber(13.0));
 
-
 }
 
 
@@ -622,12 +601,10 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 	VecXX Vec1(one);
 	auto myFunc = [](const auto& X, const auto& Y) {return ((X * X - Y * Y + X * Y) <  X * X); };
 
-
 	auto res = ApplyBoolLambda2(Vec1, Vec2, myFunc);
 	auto res0 = res[0];
 	auto res1 = res[1];
 	auto res2 = res[2];
-
 		
 	EXPECT_EQ(res.size(), 3);
 	EXPECT_FALSE(res0);
@@ -688,11 +665,9 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 	EXPECT_FALSE(res1);
 	EXPECT_FALSE(res2);
 
-
 	VecXX scalar1(asNumber(100.));
 	VecXX scalar2(asNumber(100.));
 	
-
 	auto vc2a = (scalar2 == scalar1);
 	EXPECT_TRUE(vc2a.isScalar()); 
 
@@ -726,7 +701,6 @@ TEST(TestFuncions, testBoolLamdaTwoD)
 	EXPECT_FALSE(res0);
 	EXPECT_FALSE(res1);
 	EXPECT_FALSE(res2);
-
 
 	res = ApplyBoolLambda2( Vec1, scalar1, myFunc);
 	res0 = res[0];
@@ -833,8 +807,6 @@ TEST(TestFuncions, accum1)
 
 	auto sum = [](auto lhs, auto rhs) {return rhs + lhs; };
 	Numeric sumRes = ApplyAccumulate(Vec, sum,0.0);
-
-
 
 	auto KhanAddV = [c = getNull(VecXX::INS(0.0)), sum = getNull(VecXX::INS(0.0))](auto lhs, auto rhs) mutable
 	{

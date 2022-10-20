@@ -1,7 +1,5 @@
 #include "pch.h"
 
-
-
 #include "../Vectorisation/VecX/vec.h"
 #include "../Vectorisation/VecX/operations.h"
 #include "../Vectorisation/VecX/vec_bool_d.h"
@@ -118,16 +116,15 @@ TEST(TestCaseAlloc, monkyBusinessBuffer) {
 	auto b = a;
 	auto c = b;
 
-//	auto x = (a * a + b * b * -d + c * c) * a;
-//	auto y = (-a * a + b * b * -d + c * c) * b;
+
 	a *= -1.0;
-	auto w = log(-a);// *b);// +c;
+	auto w = log(-a);
 	std::vector<double> cach(w.size());
 	for (size_t i = 0; i < w.size(); i++)
 	{
 		cach[i] = w[i];
 	}
-	auto aa = -b;// *a);// +b * b * -d + c * c)* b;
+	auto aa = -b;
 
 	//operation above should not change
 	for (size_t i = 0; i < w.size(); i++)
