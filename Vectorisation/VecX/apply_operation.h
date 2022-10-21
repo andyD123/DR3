@@ -41,7 +41,7 @@ template<typename INS_VEC>
 static INS_VEC cdfnorm(const INS_VEC& z)  
 {
 
-	auto asNumber = [](auto x){ return static_cast<typename InstructionTraits<INS_VEC>::FloatType>(x); };
+	//auto asNumber = [](auto x){ return static_cast<typename InstructionTraits<INS_VEC>::FloatType>(x); };
 	auto asInsVec = [](typename InstructionTraits<INS_VEC>::FloatType x) {  return  INS_VEC(x); };
 
 	/**/

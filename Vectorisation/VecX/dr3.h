@@ -19,9 +19,9 @@
 
 //#ifdef _MSC_VER
 
-#define _VC_PERF_REG_
+//#define _VC_PERF_REG_
 
-//#undef _VC_PERF_REG_
+#undef _VC_PERF_REG_
 
 //////////  transform //////////////
 
@@ -473,6 +473,8 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(OPT& operTransfor
 template< typename INS_VEC, typename OP, typename OPT>
 typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Vec<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
+	ignore(initVal);
+	ignore(singularInit);
 	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
 /*
 #ifdef _VC_PERF_REG_

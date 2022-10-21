@@ -312,9 +312,7 @@ void ApplyUnitaryOperation(VecView<INS_VEC>& rhs, OP& oper)
 	}
 	else
 	{
-
 		auto pRhs = rhs.start();
-		//int sz = rhs.fillSize();
 		int sz = rhs.paddedSize();
 		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRhs, oper);
 	}
@@ -339,7 +337,6 @@ VecView<INS_VEC> ApplyUnitaryOperation(const VecView<INS_VEC>& rhs, OP& oper)
 		VecView<INS_VEC> result(rhs);
 		auto pRes = result.start();
 		auto pRhs = rhs.start();
-		//int sz = rhs.fillSize();
 		int sz = rhs.paddedSize();
 		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
 		return result;
@@ -426,7 +423,6 @@ std::pair< Vec<INS_VEC>, VecView<INS_VEC> > ApplyOperationAndFilter(OP& oper, FI
 	Vec<INS_VEC> result(in.size());
 	auto pRes = result.start();
 	auto pRhs = in.start();
-	//int sz = static_cast<int>(in.size());
 	int sz = static_cast<int>(in.paddedSize());
 
 	auto psn = Unroll_Unitary<INS_VEC, OP>::apply_4_filter(sz, pRhs, pRes, oper, pVw, filt, pIdx);
@@ -455,7 +451,6 @@ std::tuple< Vec<INS_VEC>, VecView<INS_VEC>, VecView<INS_VEC> > ApplyOperationAnd
 	Vec<INS_VEC> result(static_cast<int>(in.size()));
 	auto pRes = result.start();
 	auto pRhs = in.start();
-	//int sz = static_cast<int>(in.size());
 	int sz = static_cast<int>(in.paddedSize());
 
 	int  psn1 = 0;

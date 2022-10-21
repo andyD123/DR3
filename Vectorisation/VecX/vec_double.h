@@ -69,12 +69,12 @@ static double cdfnorminv( double p )
 ////
 
 // https://en.cppreference.com/w/cpp/numeric/math/erfc
-static double cdfnorm(double x)
+[[maybe_unused]] static double cdfnorm(double x)
 {
 	return std::erfc(-x/std::sqrt(2.0))/2.0;
 }
 
-static float cdfnorm(float x)
+[[maybe_unused]] static float cdfnorm(float x)
 {
 	return std::erfc(-x / std::sqrt(2.0f)) / 2.0f;
 }
@@ -82,7 +82,7 @@ static float cdfnorm(float x)
 
 
 
-static double cdfnormD(double x)
+[[maybe_unused]] static double cdfnormD(double x)
 {
 
 //   https://mathworld.wolfram.com/Erfc.html
@@ -92,7 +92,7 @@ static double cdfnormD(double x)
 }
 
 
-static float cdfnormD(float x)
+[[maybe_unused]] static float cdfnormD(float x)
 {
 
 	//   https://mathworld.wolfram.com/Erfc.html

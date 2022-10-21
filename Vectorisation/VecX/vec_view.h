@@ -75,8 +75,8 @@ public:
 
 
 	explicit VecView(typename InstructionTraits<INS_VEC>::FloatType scalarVal) 
-		: m_scalarVal(scalarVal),m_isScalar(true),m_implSize(0),m_implSizeIdx(0),
-		m_pData(nullptr),m_pIndex(nullptr), m_size(0), m_fillSize(0), m_last(0)
+		: m_scalarVal(scalarVal),m_isScalar(true), m_pData(nullptr), 
+		m_size(0), m_implSize(0), m_implSizeIdx(0),  m_pIndex(nullptr), m_fillSize(0), m_last(0)
 	{
 	
 	}
