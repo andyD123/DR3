@@ -30,12 +30,12 @@ private:
 	bool m_isScalar = false;
 
 public:
-	explicit VecBool(bool scalar) :m_size(0), m_implSize(0), m_scalarVal(scalar), m_isScalar(true)
+	explicit VecBool(bool scalar) :m_size(0), m_implSize(0), m_scalarVal(scalar), m_isScalar(true), m_pData(nullptr)
 	{
 		
 	}
 
-	VecBool(int sz) :m_size(sz), m_implSize(sz)
+	VecBool(int sz) :m_size(sz), m_implSize(sz), m_scalarVal(0), m_isScalar(false)
 	{
 		alloc(m_implSize, m_pData);
 	}
