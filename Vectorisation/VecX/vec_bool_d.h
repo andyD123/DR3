@@ -43,6 +43,13 @@ public:
 		 return *this;
 	}
 
+	VecBoolD(bool d0) { m_data[0] = asDouble(d0);	m_data[1] = asDouble(d0); }
+
+	VecBoolD& operator = (bool rhs)
+	{
+		m_data[0] = asDouble(rhs);	m_data[1] = asDouble(rhs);
+		return *this;
+	}
 
 	VecBoolD& load_a ( const double* p)
 	{

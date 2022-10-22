@@ -22,15 +22,22 @@
 #include "vec_view.h"
 #include "vcl_latest.h"
 
+#include <type_traits>
+
 
 
 template<typename INS_VEC>
 static INS_VEC cdfnormD(INS_VEC x)
 {
 
+	auto asNumber = [](auto x)
+	{
+		return static_cast<typename InstructionTraits<INS_VEC>::FloatType>(x);
+	};
+
 	//   https://mathworld.wolfram.com/Erfc.html
-	constexpr typename  InstructionTraits<INS_VEC>::FloatType invRootPi = 0.564189583547756;
-	constexpr typename InstructionTraits<INS_VEC>::FloatType invRootTwo = 0.707106781186548;
+	constexpr typename  InstructionTraits<INS_VEC>::FloatType invRootPi = asNumber(0.564189583547756);
+	constexpr typename InstructionTraits<INS_VEC>::FloatType invRootTwo =asNumber( 0.707106781186548);
 	return invRootTwo * invRootPi*exp(-0.5*x*x);
 }
 
@@ -42,9 +49,17 @@ static INS_VEC cdfnorm(const INS_VEC& z)
 {
 
 	//auto asNumber = [](auto x){ return static_cast<typename InstructionTraits<INS_VEC>::FloatType>(x); };
-	auto asInsVec = [](typename InstructionTraits<INS_VEC>::FloatType x) {  return  INS_VEC(x); };
+	//auto asInsVec = [](typename InstructionTraits<INS_VEC>::FloatType x) {  return  INS_VEC(x); };
+	auto asNumber = [](auto x)
+	{
+		return static_cast<typename InstructionTraits<INS_VEC>::FloatType>(x);
+	};
 
-	/**/
+	auto asInsVec = [&](auto x){  return  INS_VEC(asNumber(x) ); };
+
+
+
+
 	//   https://mathworld.wolfram.com/Erfc.html
 	INS_VEC b1 = asInsVec(0.31938153);
 	INS_VEC b2 = asInsVec(-0.356563782);
@@ -123,16 +138,23 @@ VecD<INS_VEC> cdfnorm(const VecD<INS_VEC>& rhs)
 template<typename INS_VEC>
 Vec<INS_VEC> cdfnorminv(const Vec<INS_VEC>& X)
 {
+
+	auto asNumber = [](auto x)
+	{
+		return static_cast<typename InstructionTraits<INS_VEC>::FloatType>(x);
+	};
+
+
 	/// acklams inverse cdf normal
-	static double a[] = { 0.0,  -3.969683028665376e+01, 2.209460984245205e+02,-2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01,  2.506628277459239e+00 };
-	static double b[] = { 0.0, -5.447609879822406e+01,  1.615858368580409e+02, -1.556989798598866e+02,  6.680131188771972e+01, -1.328068155288572e+01 };
-	static double c[] = { 0.0,-7.784894002430293e-03,-3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00 };
-	static double d[] = { 0.0,  7.784695709041462e-03, 3.224671290700398e-01,  2.445134137142996e+00, 3.754408661907416e+00 };
+	static typename InstructionTraits<INS_VEC>::FloatType a[] = { asNumber(0.0), asNumber( -3.969683028665376e+01), asNumber(2.209460984245205e+02), asNumber(-2.759285104469687e+02), asNumber(1.383577518672690e+02), asNumber(-3.066479806614716e+01) ,  asNumber(2.506628277459239e+00)};
+	static typename InstructionTraits<INS_VEC>::FloatType b[] = { asNumber(0.0), asNumber(-5.447609879822406e+01),  asNumber(1.615858368580409e+02), asNumber(-1.556989798598866e+02), asNumber(6.680131188771972e+01), asNumber(-1.328068155288572e+01) };
+	static typename InstructionTraits<INS_VEC>::FloatType c[] = { asNumber(0.0), asNumber(-7.784894002430293e-03), asNumber(-3.223964580411365e-01), asNumber(-2.400758277161838e+00), asNumber(-2.549732539343734e+00), asNumber(4.374664141464968e+00), asNumber(2.938163982698783e+00) };
+	static typename InstructionTraits<INS_VEC>::FloatType d[] = { asNumber(0.0), asNumber(7.784695709041462e-03), asNumber(3.224671290700398e-01),  asNumber(2.445134137142996e+00), asNumber(3.754408661907416e+00) };
 
 	auto aclambdaMain = [=](auto p)
 	{
 		auto X = p;
-		auto q = p - 0.5;
+		auto q = p - asNumber(0.5);
 		auto r = q * q;
 		X = (((((a[1] * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * r + a[6]) * q /
 			(((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + 1);
@@ -143,15 +165,15 @@ Vec<INS_VEC> cdfnorminv(const Vec<INS_VEC>& X)
 
 	auto aclambdaLow = [=](auto initVal, auto p)
 	{
-		const auto p_low = 0.02425;
-		auto condLo = (0.0 < p) && (p < p_low);
+		const auto p_low = asNumber(0.02425);
+		auto condLo = (asNumber(0.0) < p) && (p < p_low);
 
 		if (!horizontal_or(condLo))
 			return initVal;
 
 		auto q = sqrt(-2.0 * log(p));
 		auto X = (((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) /
-			((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + 1.0);
+			((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + asNumber(1.0));
 
 		return select(condLo, X, initVal);
 
@@ -160,13 +182,13 @@ Vec<INS_VEC> cdfnorminv(const Vec<INS_VEC>& X)
 
 	auto aclambdaHi = [=](auto initVal, auto p)
 	{
-		const auto p_low = 0.02425;
+		const auto p_low = asNumber(0.02425);
 		const auto p_high = 1 - p_low;
 		auto condHi = (p_high < p) && (p < 1);
 		if (!horizontal_or(condHi))
 			return initVal;
 
-		auto q = sqrt(-2.0 * log(1 - p));
+		auto q = sqrt(asNumber(-2.0) * log(asNumber(1.) - p));
 		const auto X = -(((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) /
 			((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + 1.0);
 		return select(condHi, X, initVal);

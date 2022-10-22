@@ -62,7 +62,7 @@ int main()
 
  //    transformReduce();
 
- //     branching();
+      branching();
 //    filtersAndViews();
 
  //   complexExampleOfJoiningfiltersAndViews();
@@ -300,7 +300,7 @@ void applySparseLambdasToVector()
 
     auto conditionLambda = [](auto x) { return (x > VecXX::scalar(16.9)) && (x < VecXX::scalar(20.1)); };//boolean lambda 
 
-    //auto lambda = [](auto x) {return iff(x > VecXX::scalar(30.0), -x * x, x); };
+   //auto lambda = [](auto x) {return iff(x > VecXX::scalar(30.0), -x * x, x); };
     auto lambda = [](auto x) {x = 0; return 666; };
 
     sparseTransform(x, resultVec, lambda, conditionLambda); //clamping
@@ -396,17 +396,19 @@ void branching()
 
     std::vector<double> stlVec;
 
-   // auto branch = ApplySelection(ABiggerThanMinusA, vA, vB);
+   //    auto branch = ApplySelection(ABiggerThanMinusA, vA, vB);
+    auto branch = select(ABiggerThanMinusA, vA, vB);
  //   auto branchProb =  ApplySelectionOperation(ABiggerThanMinusA, vA, vB); //problem
- //   stlVec = branchProb; // inspect vector in debugger
-   // auto branchScalar = ApplySelection(ABiggerThanMinusA, VecXX::scalar(1.0), VecXX::scalar(-1.0));
+    auto branchProb = select(ABiggerThanMinusA, vA, vB); //problem
+    stlVec = branchProb; // inspect vector in debugger
+   auto branchScalar = select(ABiggerThanMinusA, VecXX::scalar(1.0), VecXX::scalar(-1.0));
    // 
    // auto branch = ApplySelectionOperationC(ABiggerThanMinusA, VecXX::scalar(1.0), VecXX::scalar(-1.0) );
 
     auto ABiggerThan= [](auto A ) { return A > VecXX::reg(20.1); };
 
-    auto branch = select(ABiggerThan,test, vA, vB);
-    stlVec = branch;
+   // auto branch = select(ABiggerThan,test, vA, vB);
+   // stlVec = branch;
 
     auto branchC = select(ABiggerThan, test, VecXX::scalar(1.1), VecXX::scalar(1000.1));
     stlVec = branchC;

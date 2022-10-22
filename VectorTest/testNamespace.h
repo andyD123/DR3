@@ -6,11 +6,11 @@
 #include "../Vectorisation/VecX/target_name_space.h"
 #include "../Vectorisation/VecX/instruction_traits.h"
 
-//using namespace DRC::VecDb;
+using namespace DRC::VecDb;
 
 //using namespace DRC::VecF4F;
 //using namespace DRC::VecD2D;
-using namespace DRC::VecD4D;
+//using namespace DRC::VecD4D;
 //using namespace DRC::VecF8F;
 
 //using namespace DRC::VecD8D;

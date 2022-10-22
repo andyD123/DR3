@@ -45,10 +45,10 @@ precision of results compare for float types is incorrect.
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-//using namespace DRC::VecD4D;	//avx2   double
+using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
 //using namespace DRC::VecD8D;  //avx512 double
-using namespace DRC::VecF16F; //avx512   float
+//using namespace DRC::VecF16F; //avx512   float
 
 
 using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
