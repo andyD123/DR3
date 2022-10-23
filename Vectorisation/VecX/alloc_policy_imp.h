@@ -215,6 +215,28 @@ class AllAllocators
 
 public:
 
+	static 	void removePolicy(int size_N)
+	{
+		auto itr = m_map_sizeToAllocPolicy.find(size_N);
+		if (m_map_sizeToAllocPolicy.end() != itr)
+		{
+			auto policyPtr = m_map_sizeToAllocPolicy[size_N];
+			delete policyPtr;
+			m_map_sizeToAllocPolicy.erase(itr);
+		}
+		
+	}
+
+	static 	void freeAll()
+	{
+		for (auto& item : m_map_sizeToAllocPolicy)
+		{
+			delete item.second;
+		}
+		m_map_sizeToAllocPolicy.clear();
+	}
+
+
 	static T* alloc(int size_N)
 	{
 		if (lastSize_N == size_N)
@@ -285,3 +307,15 @@ void freeT(size_t N, T* pOld)
 	return AllAllocators<T>::free(N, pOld);
 
 }
+
+
+template <typename T = double>
+class AllAllocatorsGuard
+{
+public:
+	~AllAllocatorsGuard()
+	{
+//		AllAllocators<T>::freeAll();
+	}
+
+};

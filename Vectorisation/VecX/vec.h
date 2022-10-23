@@ -108,14 +108,14 @@ public:
 		std::copy(cbegin(ctr),cend(ctr),m_pData);
 
 		m_isScalar = false;
-		m_scalarVal = 0.0;
+		m_scalarVal = InstructionTraits<INS_VEC>::nullValue;
 	}
 
 	explicit Vec(int sz):m_size(sz), m_implSize(sz)
 	{
 		alloc(m_implSize, m_pData);
 		m_isScalar = false;
-		m_scalarVal = 0.0;
+		m_scalarVal = InstructionTraits<INS_VEC>::nullValue;
 	}
 
 
@@ -124,7 +124,7 @@ public:
 	{
 		alloc(m_implSize, m_pData);
 		m_isScalar = false;
-		m_scalarVal = 0.0;
+		m_scalarVal = InstructionTraits<INS_VEC>::nullValue;
 
 		std::fill_n(start(), sz, val);
 
@@ -182,10 +182,10 @@ public:
 	Vec(Vec&& rhs) noexcept
 	{
 		m_implSize = 0;
-		m_implSize= rhs.m_implSize;
-		m_isScalar = false;
+		//m_implSize= rhs.m_implSize;
+		m_isScalar = true;// false;
 		m_scalarVal = InstructionTraits<INS_VEC>::nullValue;
-		m_size =rhs.size();
+		m_size = 0;// rhs.size();
 		m_pData = nullptr;
 		*this = std::move(rhs);
 	}

@@ -384,9 +384,11 @@ public:
 	std::vector<int> getIndex() const
 	{
 		std::vector<int> ret;
+		ret.reserve(m_fillSize);
 		for (int i = 0; i < size(); ++i)
 		{
-			ret.push_back(m_pIndex[i]);	
+			int val = m_pIndex[i];
+			ret.emplace_back(val);	
 		}
 		return ret;
 	}

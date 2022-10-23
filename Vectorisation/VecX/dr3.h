@@ -4,6 +4,7 @@
 #include "conditional_select_eval.h"
 #include "filter_pipe_and_join.h"
 #include "filter_select.h"
+#include "alloc_policy_imp.h"
 
 #include "operations.h"
 #include "apply_operation.h"
