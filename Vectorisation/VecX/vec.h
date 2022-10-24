@@ -182,10 +182,9 @@ public:
 	Vec(Vec&& rhs) noexcept
 	{
 		m_implSize = 0;
-		//m_implSize= rhs.m_implSize;
-		m_isScalar = true;// false;
+		m_isScalar = true;
 		m_scalarVal = InstructionTraits<INS_VEC>::nullValue;
-		m_size = 0;// rhs.size();
+		m_size = 0;
 		m_pData = nullptr;
 		*this = std::move(rhs);
 	}

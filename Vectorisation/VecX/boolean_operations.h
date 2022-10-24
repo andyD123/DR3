@@ -35,7 +35,6 @@ typename InstructionTraits<INS_VEC>::BoolType loadBool(typename InstructionTrait
 	else
 	{
 		using MEM_TYPE = typename InstructionTraits<INS_VEC>::MemBoolType;
-
 		using  REG_TYPE = typename InstructionTraits<INS_VEC>::RegBoolType;
 		MEM_TYPE data;
 		data.load_a(pdata);
@@ -68,11 +67,8 @@ void storeBool_a(typename InstructionTraits<INS_VEC>::BoolType& toStore, typenam
 template< typename INS_VEC>
 void storeBool2_a(typename InstructionTraits<INS_VEC>::RegBoolType& toStore, typename InstructionTraits<INS_VEC>::FloatType* pdata)
 {
-
 	auto cnvrt =boolConvert<INS_VEC>(toStore);
-
 	INS_VEC(cnvrt).store_a(pdata);
-
 }
 
 
@@ -154,9 +150,7 @@ struct  BinaryBoolOpElement
 template<typename INS_VEC, typename OP, int OFFSET>
 struct  BinaryBoolNumericOpElement
 {
-	//INS_VEC LHS;
-	//INS_VEC RHS;
-	//typename InstructionTraits<INS_VEC>::BoolType RES;
+
 	using Float = typename InstructionTraits<INS_VEC>::FloatType;
 	const int width = InstructionTraits< INS_VEC>::width;
 	const int relativeOffset = InstructionTraits< INS_VEC>::width * OFFSET;
@@ -170,16 +164,9 @@ struct  BinaryBoolNumericOpElement
 		LHS.load_a(pLhs + relativeOffset +i);
 		RHS.load_a(pRhs + relativeOffset +i);
 		RES = oper.apply(LHS, RHS);
-		//INS_VEC(RES).store_a(pRes + relativeOffset +i);
-		storeBool2_a<INS_VEC>(RES, pRes + relativeOffset + i);
-
-		//storeBool_a<INS_VEC > (RES, (pRes + relativeOffset + i) );
-
-		//RES.store((pRes + relativeOffset + i));
-		
+		storeBool2_a<INS_VEC>(RES, pRes + relativeOffset + i);	
 	}
 
-	//inline void apply(typename InstructionTraits<INS_VEC>::BoolType LHS, Float* pRhs, int i, Float* pRes, OP oper)
 	inline void apply(INS_VEC LHS, Float* pRhs, int i, Float* pRes, OP oper)
 	{
 		typename InstructionTraits<INS_VEC>::BoolType RES;
@@ -187,11 +174,9 @@ struct  BinaryBoolNumericOpElement
 
 		RHS.load_a(pRhs + relativeOffset + i);
 		RES = oper.apply(LHS, RHS);
-		//INS_VEC(RES).store_a(pRes + relativeOffset +i);
 		storeBool2_a<INS_VEC>(RES, pRes + relativeOffset + i);
 	}
 
-	//inline void apply(Float* pLhs, typename InstructionTraits<INS_VEC>::BoolType RHS, int i, Float* pRes,  OP oper)
 	inline void apply(Float* pLhs, INS_VEC RHS, int i, Float* pRes, OP oper)
 	{
 		typename InstructionTraits<INS_VEC>::BoolType RES;
@@ -199,7 +184,6 @@ struct  BinaryBoolNumericOpElement
 
 		LHS.load_a(pLhs + relativeOffset + i);
 		RES = oper.apply(LHS, RHS);
-		//INS_VEC(RES).store_a(pRes + relativeOffset + i);
 		storeBool2_a<INS_VEC>(RES, pRes + relativeOffset + i);
 	}
 
@@ -452,22 +436,18 @@ VecBool<INS_VEC> ApplyBooleanBinaryOperation(const Vec<INS_VEC>& lhs, typename I
 			{
 				LHS.load(pLhs + i);
 				RES = oper.apply(LHS, RHS);
-				//INS_VEC(RES).store(pRes + i);
 				storeBool2_a<INS_VEC>(RES, pRes + i);
 
 				LHS1.load(pLhs + i + width);
 				RES1 = oper.apply(LHS1, RHS);
-				//INS_VEC(boolConvert<INS_VEC> (RES1)  ).store(pRes + i + width);
 				storeBool2_a<INS_VEC>(RES1, pRes + i + width);
 
 				LHS2.load(pLhs + i + 2 * width);
 				RES2 = oper.apply(LHS2, RHS);
-				//INS_VEC(RES2).store(pRes + i + 2 * width);
 				storeBool2_a<INS_VEC>(RES2, pRes + i + 2* width);
 
 				LHS3.load(pLhs + i + 3 * width);
 				RES3 = oper.apply(LHS3, RHS);
-				//INS_VEC(RES3).store(pRes + i + 3 * width);
 				storeBool2_a<INS_VEC>(RES3, pRes + i + 3 * width);
 			}
 		}
@@ -475,7 +455,6 @@ VecBool<INS_VEC> ApplyBooleanBinaryOperation(const Vec<INS_VEC>& lhs, typename I
 		{
 			LHS.load(pLhs + i);
 			RES = oper.apply(LHS, RHS);
-			//INS_VEC(RES).store(pRes + i);
 			storeBool2_a<INS_VEC>(RES, pRes + i);
 		}
 	}

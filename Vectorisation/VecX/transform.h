@@ -4,8 +4,6 @@
 #include "binary_unitary_operations.h"
 #include "conditional_select_eval.h"
 
-//Vec  applyTransform(lambda, const inputVec&, int UR);//unroll
-//void  applyTransform(lambda inputVec&, int UR); //unroll
 
 //Unitary lambdas
 //unrolled version defaults to unroll x4
@@ -17,14 +15,12 @@ Vec<INS_VEC>  ApplyTransform(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
 
 //not unrolled x1
 template<typename LAMBDA, typename INS_VEC>
-Vec<INS_VEC>  ApplyTransform1(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)// , int UR)
+Vec<INS_VEC>  ApplyTransform1(LAMBDA& lambda, const Vec<INS_VEC>& inputVec)
 {
 	return ApplyUnitaryOperation1(inputVec, lambda);
 }
 
-
 //inplace transforms
-
 template<typename LAMBDA, typename INS_VEC>
 void ApplyTransformM(LAMBDA& lambda,  Vec<INS_VEC>& inputVec)
 {
@@ -33,15 +29,12 @@ void ApplyTransformM(LAMBDA& lambda,  Vec<INS_VEC>& inputVec)
 
 //not unrolled x1
 template<typename LAMBDA, typename INS_VEC>
-void  ApplyTransform1(LAMBDA& lambda, Vec<INS_VEC>& inputVec)// , int UR)
+void  ApplyTransform1(LAMBDA& lambda, Vec<INS_VEC>& inputVec)
 {
 	ApplyUnitaryOperation1(inputVec, lambda);
 }
 
 
-//binary lambdas
-
-//Unitary lambdas
 //unrolled version defaults to unroll x4
 template<typename LAMBDA, typename INS_VEC>
 Vec<INS_VEC>  ApplyTransform(LAMBDA& lambda, const Vec<INS_VEC>& inputVecLHS, const Vec<INS_VEC>& inputVecRHS)
@@ -101,9 +94,6 @@ void ApplyTransformM(LAMBDA& lambda, typename InstructionTraits<INS_VEC>::FloatT
 {
 	ApplyBinaryOperationMMM<INS_VEC, LAMBDA>(LHS, inputVecRHS , lambda);
 }
-
-
-////////////////////////////////////////////
 
 
 //    ApplySparseTransform  takes a boolean condition lambda to determine if the lambda should be used

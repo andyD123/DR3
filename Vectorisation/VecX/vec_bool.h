@@ -134,7 +134,7 @@ public:
 
 	void setAt(int j, bool val)
 	{
-		m_pData[j] = val; // need set get function for instruction set
+		m_pData[j] = val; 
 	}
 
 };

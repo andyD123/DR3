@@ -32,9 +32,6 @@ Vec<INS_VEC> splitConditionalCalculate(const Vec<INS_VEC>& val, BOOL_TEST_OP& te
 	{
 		
 		auto  vwTupple = ApplyBinaryFilter(testFunc, val);
-		//ApplyUnitaryOperation(trueLambda, std::get<0>(vwTupple));
-		//ApplyUnitaryOperation(falseLambda, std::get<1>(vwTupple));
-
 		ApplyUnitaryOperation( std::get<0>(vwTupple), trueLambda);
 		ApplyUnitaryOperation( std::get<1>(vwTupple), falseLambda);
 		return  merge(vwTupple);
@@ -86,22 +83,11 @@ VecView<INS_VEC> splitConditionalCalculate(const VecView<INS_VEC>& val, BOOL_TES
 {
 
 	check_vector(val);
+	auto vwTupple = ApplyBinaryFilter(testFunc, val);
+	ApplyUnitaryOperation(std::get<0>(vwTupple),trueLambda );
+	ApplyUnitaryOperation(std::get<1>(vwTupple),falseLambda);
+	return  merge(vwTupple);
 
-	//if (!val.isScalar())
-	//{
-		auto vwTupple = ApplyBinaryFilter(testFunc, val);
-		ApplyUnitaryOperation(std::get<0>(vwTupple),trueLambda );
-		ApplyUnitaryOperation(std::get<1>(vwTupple),falseLambda);
-		return  merge(vwTupple);
-
-/*
-	}
-	else
-	{
-		
-		//return selectTransform(testFunc, val, trueLambda, falseLambda);
-	}
-	*/
 }
 
 /*
@@ -153,7 +139,7 @@ Vec<INS_VEC> ApplySelectionOperation(const VecBool<INS_VEC>& condition, typename
 	if (condition.isScalar())
 	{
 		INS_VEC TRU = trueVal;
-		INS_VEC FLS = falseVals.isScalar() ? falseVals.getScalarValue() : falseVals[0];// falseVals[0];
+		INS_VEC FLS = falseVals.isScalar() ? falseVals.getScalarValue() : falseVals[0];
 		typename InstructionTraits<INS_VEC>::RegBoolType CND = condition.getScalarValue();
 		INS_VEC RES = select(CND, TRU, FLS);
 		auto scalr = RES[0];
@@ -321,7 +307,6 @@ Vec<INS_VEC> ApplySelectionOperationFunc(BOOL_OPER& COND, const Vec<INS_VEC>& te
 		return Vec<INS_VEC>(scalr);
 	}
 
-	//NEED TO HANDLE SCALAR CASE HERE NO OVER LOADS
 
 	Vec<INS_VEC> result(testData.size());
 	auto pRes = result.start();

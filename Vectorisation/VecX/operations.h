@@ -455,9 +455,6 @@ VecBool<INS_VEC> operator ^ (const Vec<INS_VEC>& lhs, const Vec<INS_VEC>& rhs)
 }
 
 
-
-
-
 template<typename INS_VEC>
 VecBool<INS_VEC> operator != (const Vec<INS_VEC>& lhs, typename InstructionTraits<INS_VEC>::FloatType rhs)
 {

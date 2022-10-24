@@ -201,7 +201,7 @@ public:
 		return *this;
 	}
 
-	//copy view but set values from the given vector
+	//copy view index but set values from the given vector
 	VecView(const VecView& rhs, const Vec< INS_VEC>& rhsVec)
 	{
 		m_last = rhs.m_last;
@@ -400,11 +400,6 @@ public:
 	}
 
 
-
-
-
-	// do using scatter instructions
-
 	void write(Vec<INS_VEC>& rhs) const
 	{
 
@@ -412,10 +407,6 @@ public:
 		int constexpr width = InstructionTraits< INS_VEC>::width;
 		int constexpr unrollFactor = 4;
 		using  IdxType = typename InstructionTraits< INS_VEC>::IdxType;
-
-
-
-
 		auto pIdx = &m_pIndex[0];
 		int i = 0;
 		int SZ = (m_last);
@@ -434,9 +425,7 @@ public:
 			IdxType idx2;
 			IdxType idx3;
 
-			uint32_t limit = 100000;
-
-
+			uint32_t limit = InstructionTraits< INS_VEC>::limit;
 
 			for (; i < SZ - (int)(width * unrollFactor); i += width * unrollFactor)
 			{

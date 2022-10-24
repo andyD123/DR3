@@ -35,8 +35,6 @@ template<>
 std::unordered_map<int, AllocPolicy<unsigned int>*>  AllAllocators<unsigned int>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<unsigned int>*>();
 
 
-
-
 void freePool(size_t N, double* pOld)
 {
 	return freeT(N, pOld);
@@ -81,8 +79,6 @@ int  getAllignedSize(size_t N, unsigned int* pOld)
 {
 	return getAllignedSizeT(N, pOld);
 }
-
-
 
 void freeAllAllocators(double)
 {

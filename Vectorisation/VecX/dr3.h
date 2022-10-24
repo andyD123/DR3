@@ -18,11 +18,11 @@
 #include "target_name_space.h"
 
 
-//#ifdef _MSC_VER
+#ifdef _MSC_VER
 	#define _VC_PERF_REG_
-//#else
-//	#undef _VC_PERF_REG_
-//#endif
+#else
+	#undef _VC_PERF_REG_
+#endif
 
 //////////  transform //////////////
 
@@ -75,7 +75,7 @@ void transformM(LAMBDA& lambda, Vec<INS_VEC>& inputVec)
 
 //not unrolled x1
 template<typename LAMBDA, typename INS_VEC>
-void  transform1(LAMBDA& lambda, Vec<INS_VEC>& inputVec)// , int UR)
+void  transform1(LAMBDA& lambda, Vec<INS_VEC>& inputVec)
 {
 	inputVec =ApplyUnitaryOperation1(inputVec, lambda);
 }
@@ -278,7 +278,6 @@ void transformM(LAMBDA& lambda, VecView<INS_VEC>& inputVec)
 #ifdef _VC_PERF_REG_
 	ApplyTransformUR_X(inputVec, lambda);
 #else
-	//ApplyUnitaryOperation(lambda, inputVec);
 	ApplyUnitaryOperation(inputVec,lambda);
 #endif
 
@@ -294,7 +293,6 @@ VecView<INS_VEC> transform(LAMBDA& lambda, const VecView<INS_VEC>& inputVec)
 #ifdef _VC_PERF_REG_
 	return ApplyTransformUR_X(inputVec, lambda);
 #else
-	//return ApplyUnitaryOperation(lambda, inputVec);
 	return ApplyUnitaryOperation( inputVec, lambda);
 #endif
 

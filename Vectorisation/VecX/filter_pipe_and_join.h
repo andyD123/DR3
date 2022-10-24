@@ -48,8 +48,6 @@ VecView<INS_VEC> operator |(Vec<INS_VEC>& rhs, OP& condition)
 }
 
 
-
-////////////////////
 // vector checks are applied inside ApplyUnitaryOperation
 template< typename INS_VEC, typename OP>
 VecView<INS_VEC> operator > (  VecView<INS_VEC> rhs, OP& oper)
@@ -160,7 +158,7 @@ namespace  JOIN
 		return CatOperation<RHS, LHS>(rhs,lhs);
 	}
 
-	/*
+	/*  Examples
 
 		Boolean expression template conjuction for boolean lambdas
 

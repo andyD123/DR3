@@ -135,8 +135,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR(const Vec<INS_
 	INS_VEC RHS4;
 	INS_VEC RES3;
 
-	//int sz = static_cast<int>( rhs1.paddedSize());
-
 	typename InstructionTraits<INS_VEC>::FloatType res = initVal;
 	RES = InstructionTraits<INS_VEC>::nullValue;
 
@@ -204,9 +202,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate(const Ve
 	INS_VEC RHS1;
 	INS_VEC RES;
 
-	//int sz = rhs1.paddedSize();
 	int sz = static_cast<int>(rhs1.size());
-
 
 	RES = InstructionTraits<INS_VEC>::nullValue;
 	int i = 0;
@@ -224,17 +220,12 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate(const Ve
 		result = ApplyBinaryOperation1<INS_VEC, OP>(RES[j], result, operAcc);
 	}
 
-
 	//odd end bit ?
 	for (; i < sz; ++i)
 	{
 		result = operAccScalar(result, operTransformScalar(pRhs1[i]));
-
 	}
-
-
 	return result;
-
 }
 
 
@@ -1559,9 +1550,8 @@ VEC_TYPE<INS_VEC>  ApplySelectTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, 
 		return VEC_TYPE<INS_VEC>(RES[0]);
 	}
 
-	//int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	VEC_TYPE<INS_VEC> ret(initTransformer(rhs1));////ret(sz);
+	VEC_TYPE<INS_VEC> ret(initTransformer(rhs1));
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1588,10 +1578,7 @@ VEC_TYPE<INS_VEC>  ApplySelectTransformUR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, 
 	INS_VEC FLS3;
 
 	int i = 0;
-
-	//int rhsSZ = sz - step;
 	int impSZ = rhs1.paddedSize();
-	//int rhsSZ = sz - step;
 	int rhsSZ = impSZ - step;
 
 
@@ -1640,95 +1627,6 @@ template< typename INS_VEC, typename OP, typename OPER_TRUE, typename OPER_FALSE
 Vec<INS_VEC>  ApplySelectTransformUR_X(const Vec<INS_VEC>& rhs1, OP& cond, OPER_TRUE& trueOper, OPER_FALSE& falseOper  )
 {
 	return ApplySelectTransformUR_X_Impl(rhs1, cond, trueOper, falseOper);
-/*
-
-	check_vector(rhs1);
-	if (isScalar(rhs1))
-	{
-		//apply same operation across whole register with same values in all lanes
-		//and return value from only one lane
-		INS_VEC RHS = rhs1.getScalarValue(); //set with scalar value
-		INS_VEC TRU = trueOper(RHS);
-		INS_VEC FLS = falseOper(RHS);
-		INS_VEC RES = select(cond(RHS), TRU, FLS);
-		return Vec<INS_VEC>(RES[0]);
-	}
-
-	int sz = rhs1.size();
-	auto pRhs1 = rhs1.start();
-	Vec<INS_VEC> ret(sz);
-	auto pRet = ret.start();
-
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 4 * width;
-
-	INS_VEC RHS;
-	INS_VEC RES;
-	INS_VEC TRU;
-	INS_VEC FLS;
-
-	INS_VEC RHS1;
-	INS_VEC RES1;
-	INS_VEC TRU1;
-	INS_VEC FLS1;
-
-	INS_VEC RHS2;
-	INS_VEC RES2;
-	INS_VEC TRU2;
-	INS_VEC FLS2;
-
-	INS_VEC RHS3;
-	INS_VEC RES3;
-	INS_VEC TRU3;
-	INS_VEC FLS3;
-
-	int i = 0;
-
-	//int rhsSZ = sz - step;
-	int impSZ = rhs1.paddedSize();
-	//int rhsSZ = sz - step;
-	int rhsSZ = impSZ - step;
-
-
-	for (; i < rhsSZ; i += step)
-	{
-		RHS.load_a(pRhs1 + i);
-		TRU = trueOper(RHS);
-		FLS = falseOper(RHS);
-		RES = select(cond(RHS), TRU, FLS);
-		RES.store_a(pRet + i);
-
-		RHS1.load_a(pRhs1 + i + width);
-		TRU1 = trueOper(RHS1);
-		FLS1 = falseOper(RHS1);
-		RES1 = select(cond(RHS1), TRU1, FLS1);
-		RES1.store_a(pRet + i + width);
-
-		RHS2.load_a(pRhs1 + i + width * 2);
-		TRU2 = trueOper(RHS2);
-		FLS2 = falseOper(RHS2);
-		RES2 = select(cond(RHS2), TRU2, FLS2);
-		RES2.store_a(pRet + i + width * 2);
-
-		RHS3.load_a(pRhs1 + i + width * 3);
-		TRU3 = trueOper(RHS3);
-		FLS3 = falseOper(RHS3);
-		RES3 = select(cond(RHS3), TRU3, FLS3);
-		RES3.store_a(pRet + i + width * 3);
-	}
-
-	for (; i <= impSZ - width; i += width)
-	{
-		RHS.load_a(pRhs1 + i);
-		TRU = trueOper(RHS);
-		FLS = falseOper(RHS);
-		RES = select(cond(RHS), TRU, FLS);
-		RES.store_a(pRet + i);
-	}
-
-	//Since vector is padded no odd end bits, just unused end bits 
-	return ret;
-	*/
 }
 
 
@@ -1743,7 +1641,6 @@ template< typename INS_VEC, typename BOOL_OPER, typename TRUE_OPER, typename FAL
 Vec<INS_VEC> ApplySelectionOperationFuncUR_X(BOOL_OPER& COND, const Vec<INS_VEC>& testData, TRUE_OPER& trueOper, FALSE_OPER& falseOper)
 {
 	return ApplySelectTransformUR_X(testData, COND, trueOper, falseOper);
-
 }
 
 
@@ -1760,9 +1657,8 @@ VEC_TYPE<INS_VEC>  ApplySelectTransformUR_XC_Impl(const VEC_TYPE<INS_VEC >& rhs1
 		return Vec<INS_VEC>(RES[0]);
 	}
 
-	//int sz = rhs1.size();
 	auto pRhs1 = rhs1.start();
-	VEC_TYPE<INS_VEC> ret(initTransformer(rhs1));// ret(sz);
+	VEC_TYPE<INS_VEC> ret(initTransformer(rhs1));
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
@@ -1783,10 +1679,7 @@ VEC_TYPE<INS_VEC>  ApplySelectTransformUR_XC_Impl(const VEC_TYPE<INS_VEC >& rhs1
 	INS_VEC RES3;
 
 	int i = 0;
-
-	//int rhsSZ = sz - step;
 	int impSZ = rhs1.paddedSize();
-	//int rhsSZ = sz - step;
 	int rhsSZ = impSZ - step;
 
 	for (; i < rhsSZ; i += step)

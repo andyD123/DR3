@@ -100,9 +100,6 @@ struct CustomBinaryBool
 	{
 		return myLambda(X, Y);
 	}
-
-
-
 	LAMBDA myLambda;
 };
 
@@ -219,7 +216,7 @@ template< typename INS_VEC, typename OP, typename BOOL_OP>
 void ApplySparseUnitaryOperationU(const Vec<INS_VEC>& lhs1, Vec<INS_VEC>& rhs1, OP& oper, BOOL_OP& selectionOp)
 {
 	check_pair(lhs1, rhs1);
-	//assert equality of size ?
+
 	if (lhs1.isScalar() && rhs1.isScalar())
 	{
 		INS_VEC rhsdat1(lhs1.getScalarValue());
@@ -227,7 +224,7 @@ void ApplySparseUnitaryOperationU(const Vec<INS_VEC>& lhs1, Vec<INS_VEC>& rhs1, 
 		INS_VEC result = oper(rhsdat1);
 		typename InstructionTraits<INS_VEC>::FloatType scalarResult = result[0]; //first element of register
 		Vec<INS_VEC> vecRes = scalarResult; //construct scalar vector from unitary op on lhs1
-		rhs1 = vecRes; //wrong i think const
+		rhs1 = vecRes; 
 		return;
 	}
 
@@ -772,10 +769,6 @@ void ApplyUnitaryOperation(const Vec<INS_VEC>& rhs, Vec<INS_VEC>& res ,OP& oper)
 	Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
 
 }
-
-
-
-
 
 
 template< typename INS_VEC, typename OP>
