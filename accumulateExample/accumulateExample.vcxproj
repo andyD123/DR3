@@ -389,7 +389,7 @@
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointModel>Fast</FloatingPointModel>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -506,6 +506,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="accumulate_example.cpp" />
+    <ClCompile Include="AVX512Dance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vectorisation\Vectorisation.vcxproj">
@@ -516,6 +517,9 @@
     <Library Include="..\Vectorisation\intel_Libs\libirc.lib" />
     <Library Include="..\Vectorisation\intel_Libs\svmlpatch.lib" />
     <Library Include="..\Vectorisation\intel_Libs\svml_disp.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AVX512Dance.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

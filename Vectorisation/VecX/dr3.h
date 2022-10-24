@@ -18,11 +18,11 @@
 #include "target_name_space.h"
 
 
-#ifdef _MSC_VER
+//#ifdef _MSC_VER
 	#define _VC_PERF_REG_
-#else
-	#undef _VC_PERF_REG_
-#endif
+//#else
+//	#undef _VC_PERF_REG_
+//#endif
 
 //////////  transform //////////////
 

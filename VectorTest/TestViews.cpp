@@ -1071,19 +1071,19 @@ TEST(TestViews, writeView2)
 	auto squareIt = [](auto x) {return x * x; };
 
 	 ApplyUnitaryOperation(vw,squareIt );
-	 for (auto x : vw)
+	 for (const auto& x : vw)
 	 {
 		 std::cout << x << std::endl;
 	 }
 
 	 VecXX copyOfTest(test);
-	 for (auto x : copyOfTest)
+	 for (const auto& x : copyOfTest)
 	 {
 		 std::cout << x << std::endl;
 	 }
 
 	 vw.write(copyOfTest);
-	 for (auto x : copyOfTest)
+	 for (const auto& x : copyOfTest)
 	 {
 		 std::cout << x << std::endl;
 	 }

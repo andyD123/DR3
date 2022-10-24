@@ -30,14 +30,14 @@ private:
 	bool m_isScalar = false;
 
 public:
-	explicit VecBool(bool scalar) :m_size(0), m_implSize(0), m_scalarVal(scalar), m_isScalar(true), m_pData(nullptr)
+	explicit VecBool(bool scalar) : m_pData(nullptr), m_size(0), m_implSize(0),  m_scalarVal(scalar),m_isScalar(true)
 	{
 		
 	}
 
 	VecBool(int sz) :m_size(sz), m_implSize(sz), m_scalarVal(0), m_isScalar(false)
 	{
-		alloc(m_implSize, m_pData);
+		allocPool(m_implSize, m_pData);
 	}
 
 
@@ -45,7 +45,7 @@ public:
 	{
 		if (m_pData != nullptr)
 		{
-			free(m_size, m_pData);
+			freePool(m_size, m_pData);
 		}
 	}
 
@@ -55,7 +55,7 @@ public:
 		m_scalarVal = rhs.m_scalarVal;
 		m_size = rhs.m_size;
 		m_implSize = m_size;
-		alloc(m_implSize, m_pData);
+		allocPool(m_implSize, m_pData);
 		std::copy(rhs.m_pData, rhs.m_pData + m_implSize, m_pData);
 	}
 

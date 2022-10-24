@@ -53,6 +53,8 @@ using namespace DRC::VecD4D;	//avx2   double
 
 using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
 
+AllAllocatorsGuard<FLOAT> allocGuard;
+
 const double billion = 1000000000.0;
 
 
@@ -92,14 +94,14 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 double getErr(const  std::vector<double>& t) 
 {
 	ignore(t);
-	return 1e-13;
+	return 2e-11;
 }
 
 
 float getErr(const  std::vector<float>& t)
 {
 	ignore(t);
-	return 1.0;// 3.6e-5;
+	return 1.0;
 }
 
 
@@ -378,7 +380,7 @@ int main()
 	
 	// use namespace DRC::VecD8D  run this and watch power consumption
 	// switches between AVX2 and AVX512  implementations
-	// AVX512 uses less energy iun this case
+	// AVX512 uses less energy in this case
 	// doAVXMax512Dance();
 
 	return 0;
@@ -1502,7 +1504,7 @@ void binarySelectionBetweenHeavyWeightFunction()
 		auto  valStl = run_res_for_loop.m_calc_results[elem.first];
 		auto  valDr3_filterTransform = dr3_raw_resultsFilter.m_calc_results[elem.first];
 
-		bool VecsOK = vectorsEqualD(valDr3_select, valStl,valDr3_filterTransform, valDr3_filterTransform, getErr(valDr3_select));
+		bool VecsOK = vectorsEqualD(valDr3_select, valStl, valDr3_filterTransform, valDr3_filterTransform,  getErr(valDr3_select));
 		auto strMatch = VecsOK ? "calcs match" : "cal difference";
 
 		std::cout << "for loop binarySelectionBetweenHeavyFunctions , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 filter_transform heavy weight  , size " << elem.first << " , " << stats_DR3_filter[elem.first].first << ", +- ," << stats_DR3_filter[elem.first].second << "\t \t DR3 binarySelection heavy Weight , size " << elem.first << " , " << stats_DR3[elem.first].first << " , +- , " << stats_DR3[elem.first].second << ", numerical check: " << strMatch << "\n";

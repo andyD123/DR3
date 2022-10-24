@@ -309,13 +309,24 @@ void freeT(size_t N, T* pOld)
 }
 
 
+template<>
+std::unordered_map<int, AllocPolicy<double>*>  AllAllocators<double>::m_map_sizeToAllocPolicy;
+
+template<>
+std::unordered_map<int, AllocPolicy<float>*>  AllAllocators<float>::m_map_sizeToAllocPolicy;
+
+template<>
+std::unordered_map<int, AllocPolicy<long>*>  AllAllocators<long>::m_map_sizeToAllocPolicy;
+
+
+
 template <typename T = double>
 class AllAllocatorsGuard
 {
 public:
 	~AllAllocatorsGuard()
 	{
-//		AllAllocators<T>::freeAll();
+		AllAllocators<T>::freeAll();
 	}
 
 };

@@ -41,6 +41,7 @@ VecXX  blackScholes_3(const VecXX& S, const VecXX& K, const VecXX& t, const VecX
 
 
 
+AllAllocatorsGuard<typename VecXX::SCALA_TYPE> allocGuard;
 
 
 
@@ -50,11 +51,11 @@ int main()
 
 
 
-   // basicVector();
+//    basicVector();
 
-   // applyLambdasToVector();
+//    applyLambdasToVector();
 
-  // applyBinaryLambdasToVector();
+//   applyBinaryLambdasToVector();
    
   //  applySparseLambdasToVector();
 

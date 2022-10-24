@@ -98,13 +98,18 @@
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
   <ItemGroup>
+    <ClInclude Include="dr3TestUtil.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="testNamespace.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DR3_tests.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="TestAccumulator.cpp" />
     <ClCompile Include="TestAllocator.cpp" />
     <ClCompile Include="TestFilterSelect.cpp" />
+    <ClCompile Include="TestFilterTransform.cpp" />
+    <ClCompile Include="testNamespace.cpp" />
     <ClCompile Include="TestViews.cpp" />
     <ClCompile Include="Test_binary_unitary_operations.cpp" />
     <ClCompile Include="Unroll_operators.cpp" />
@@ -123,7 +128,15 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ICC2022|x64'">
     <ClCompile>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(MSBuildThisFileDirectory)..\..\lib\native\v140\windesktop\msvcstl\static\rt-dyn\x64\Release\gtest_main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+    </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

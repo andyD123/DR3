@@ -51,8 +51,8 @@ public:
 
 	explicit VecView(size_t sz): m_scalarVal(InstructionTraits<INS_VEC>::nullValue), m_size(static_cast<int>(sz)), m_implSize(sz), m_implSizeIdx(sz)
 	{
-		alloc(m_implSize, m_pData);
-		alloc(m_implSizeIdx, m_pIndex);
+		allocPool(m_implSize, m_pData);
+		allocPool(m_implSizeIdx, m_pIndex);
 		m_isScalar = false;
 		m_scalarVal = 0.0;
 		m_fillSize = 0;
@@ -63,8 +63,8 @@ public:
 
 	explicit VecView(int sz, const VecView& rhs) : m_scalarVal(InstructionTraits<INS_VEC>::nullValue), m_size(static_cast<int>(sz)), m_implSize(sz), m_implSizeIdx(sz)
 	{
-		alloc(m_implSize, m_pData);
-		alloc(m_implSizeIdx, m_pIndex);
+		allocPool(m_implSize, m_pData);
+		allocPool(m_implSizeIdx, m_pIndex);
 		std::copy(rhs.m_pIndex, rhs.m_pIndex + m_implSizeIdx, m_pIndex);
 		m_isScalar = false;
 		m_scalarVal = 0.0;
@@ -88,8 +88,8 @@ public:
 		m_scalarVal = scalarVal;
 		if (m_pData != nullptr)
 		{
-			free(m_implSize, m_pData);
-			free(m_implSizeIdx, m_pIndex);
+			freePool(m_implSize, m_pData);
+			freePool(m_implSizeIdx, m_pIndex);
 		}
 		m_size = 0;
 		m_implSize = 0;
@@ -107,8 +107,8 @@ public:
 	{
 		if (m_pData != nullptr)
 		{
-			free(m_implSize, m_pData);
-			free(m_implSizeIdx, m_pIndex);
+			freePool(m_implSize, m_pData);
+			freePool(m_implSizeIdx, m_pIndex);
 		}
 	}
 
@@ -128,10 +128,10 @@ public:
 		{
 			m_size = rhs.m_size;
 			m_implSize = m_size;
-			alloc(m_implSize, m_pData);
+			allocPool(m_implSize, m_pData);
 			std::copy(rhs.m_pData, rhs.m_pData + m_implSize, m_pData);
 			m_implSizeIdx = m_size;
-			alloc(m_implSizeIdx, m_pIndex);
+			allocPool(m_implSizeIdx, m_pIndex);
 			std::copy(rhs.m_pIndex, rhs.m_pIndex + m_implSizeIdx, m_pIndex);
 		}
 	}
@@ -142,8 +142,8 @@ public:
 		{
 			if (m_pData != nullptr)
 			{
-				free(m_implSize, m_pData);
-				free(m_implSizeIdx, m_pIndex);
+				freePool(m_implSize, m_pData);
+				freePool(m_implSizeIdx, m_pIndex);
 			}
 			m_last = rhs.m_last;
 			m_fillSize = rhs.m_fillSize;
@@ -159,10 +159,10 @@ public:
 			{
 				m_size = rhs.m_size;
 				m_implSize = m_size;
-				alloc(m_implSize, m_pData);
+				allocPool(m_implSize, m_pData);
 				std::copy(rhs.m_pData, rhs.m_pData + m_implSize, m_pData);
 				m_implSizeIdx = m_size;
-				alloc(m_implSizeIdx, m_pIndex);
+				allocPool(m_implSizeIdx, m_pIndex);
 				std::copy(rhs.m_pIndex, rhs.m_pIndex + m_implSizeIdx, m_pIndex);
 			}
 		}
@@ -218,9 +218,9 @@ public:
 		{
 			m_size = rhs.m_size;
 			m_implSize = m_size;
-			alloc(m_implSize, m_pData);
+			allocPool(m_implSize, m_pData);
 			m_implSizeIdx = m_size;
-			alloc(m_implSizeIdx, m_pIndex);
+			allocPool(m_implSizeIdx, m_pIndex);
 			std::copy(rhs.m_pIndex, rhs.m_pIndex + m_implSizeIdx, m_pIndex);
 
 			for (int i = 0; i < static_cast<int>(m_implSizeIdx); ++i)
@@ -246,11 +246,11 @@ public:
 		{
 			m_size = rhs.m_size;
 			m_implSize = m_size;
-			alloc(m_implSize, m_pData);
+			allocPool(m_implSize, m_pData);
 			std::copy(rhs.start(), rhs.start() + m_implSize, m_pData);
 			
 			m_implSizeIdx = m_size;
-			alloc(m_implSizeIdx, m_pIndex);
+			allocPool(m_implSizeIdx, m_pIndex);
 
 			for (int i = 0; i < static_cast<int>(m_implSizeIdx); ++i)
 			{

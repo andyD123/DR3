@@ -82,7 +82,7 @@ public:
 		m_scalarVal=scalarVal;
 		if (m_pData != nullptr)
 		{
-			free(m_implSize, m_pData);
+			freePool(m_implSize, m_pData);
 		}
 		m_size = 0;
 		m_implSize = 0;
@@ -97,7 +97,7 @@ public:
 		int sz = static_cast<int>(std::distance(ctr.begin(), ctr.end()) );
 		m_size =sz;
 		m_implSize = sz;
-		alloc(m_implSize,m_pData);
+		allocPool(m_implSize,m_pData);
 
 		auto repeatedPaddingValue = ctr.at(sz-1);
 		for(auto s =sz; s < static_cast<int>(m_implSize);s++)
@@ -113,7 +113,7 @@ public:
 
 	explicit Vec(int sz):m_size(sz), m_implSize(sz)
 	{
-		alloc(m_implSize, m_pData);
+		allocPool(m_implSize, m_pData);
 		m_isScalar = false;
 		m_scalarVal = InstructionTraits<INS_VEC>::nullValue;
 	}
@@ -122,7 +122,7 @@ public:
 
 	Vec(typename InstructionTraits<INS_VEC>::FloatType val, int sz) :m_size(sz), m_implSize(sz)
 	{
-		alloc(m_implSize, m_pData);
+		allocPool(m_implSize, m_pData);
 		m_isScalar = false;
 		m_scalarVal = InstructionTraits<INS_VEC>::nullValue;
 
@@ -135,7 +135,7 @@ public:
 	{
 		if(m_pData != nullptr)
 		{
-			free(m_implSize,m_pData);
+			freePool(m_implSize,m_pData);
 		}
 	}
 
@@ -146,7 +146,7 @@ public:
 		if( !m_isScalar)
 		{
 			m_implSize = m_size;
-			alloc(m_implSize,m_pData);
+			allocPool(m_implSize,m_pData);
 			std::copy(rhs.m_pData, rhs.m_pData+ m_implSize , m_pData);
 		}
 	}
@@ -157,7 +157,7 @@ public:
 		{
 			if (m_pData != nullptr)
 			{
-				free(m_implSize, m_pData);
+				freePool(m_implSize, m_pData);
 				m_pData = nullptr;
 				m_size = 0;
 				m_implSize = 0;
@@ -170,7 +170,7 @@ public:
 			{
 				m_size= rhs.m_size;
 				m_implSize = m_size;
-				alloc(m_implSize,m_pData);
+				allocPool(m_implSize,m_pData);
 				std::copy(rhs.m_pData, rhs.m_pData+ m_implSize , m_pData);
 			}
 		}

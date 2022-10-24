@@ -1738,7 +1738,7 @@ void testReduce_Vec(int SZ)
 
 
 	auto resSUM =reduce(testVec, SUM);
-	auto expectedSum = asNumber((SZ - 1) * SZ / 2.0);
+	auto expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
 	EXPECT_NUMERIC_EQ(resSUM, asNumber(expectedSum));
 
 	auto resMAX = reduce(testVec, MAX);

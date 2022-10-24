@@ -35,32 +35,32 @@ template<>
 std::unordered_map<int, AllocPolicy<unsigned int>*>  AllAllocators<unsigned int>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<unsigned int>*>();
 
 
-void free(size_t N, double* pOld)
+void freePool(size_t N, double* pOld)
 {
 	return freeT(N, pOld);
 }
 
-void free(size_t N, float* pOld)
+void freePool(size_t N, float* pOld)
 {
 	return freeT(N, pOld);
 }
 
-void free(size_t N, unsigned int* pOld)
+void freePool(size_t N, unsigned int* pOld)
 {
 	return freeT(N, pOld);
 }
 
-void alloc(size_t& N, double*& pMem)
+void allocPool(size_t& N, double*& pMem)
 {
 	allocT(N, pMem);
 }
 
-void alloc(size_t& N, float*& pMem)
+void allocPool(size_t& N, float*& pMem)
 {
 	allocT(N, pMem);
 }
 
-void alloc(size_t& N, unsigned int*& pMem)
+void allocPool(size_t& N, unsigned int*& pMem)
 {
 	allocT(N, pMem);
 }

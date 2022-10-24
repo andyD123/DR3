@@ -18,6 +18,7 @@
 #include <numeric>
 
 
+AllAllocatorsGuard<typename VecXX::SCALA_TYPE> allocGuard;
 
 TEST(TestBasicVec, TestMakeVec)
 {
