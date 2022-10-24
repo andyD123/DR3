@@ -1,0 +1,5 @@
+
+Vec4 f a ( 0 . 0 f , 0. 5 f , 1. 0 f , 1. 5 f ) ; // d e f i n e v e c t o r
+ Vec4 f b = s i n ( a ) ; // s i n  f u n c ti o n 
+// b = ( 0. 0 0 0 0 f , 0. 4 7 9 4 f , 0. 8 4 1 5 f , 0. 9 9 7 5 f ) 
+

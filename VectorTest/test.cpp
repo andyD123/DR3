@@ -343,6 +343,8 @@ TEST(TestFuncions, cdfnorminv)
 
 TEST(TestFuncions, cdfnorm)
 {
+	//current version for double is OK for about 8 digits, from Abromowitz & Stegun
+
 	std::vector<Numeric> mix{ asNumber(1.0 / 4.0), asNumber(1./ 2.0), asNumber(1./ 3.0) };
 	VecXX Vec1(mix);
 	VecXX vecScalar(asNumber(1.0 / 2.2));

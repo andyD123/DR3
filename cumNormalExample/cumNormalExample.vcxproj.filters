@@ -15,21 +15,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="accumulate_example.cpp">
+    <ClCompile Include="cumNormalExample.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AVX512Dance.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\Vectorisation\intel_Libs\libirc.lib" />
-    <Library Include="..\Vectorisation\intel_Libs\svmlpatch.lib" />
-    <Library Include="..\Vectorisation\intel_Libs\svml_disp.lib" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AVX512Dance.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
