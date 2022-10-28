@@ -31,7 +31,7 @@ bool check_vector( const VEC& rhs)
 	{
 	    //std::
 		assert(false);
-		throw std::exception("bad vector size of non scalar");
+		throw std::runtime_error("bad vector size of non scalar");
 	}
 }
 
@@ -55,7 +55,7 @@ bool check_pair(const VEC& lhs, const VEC& rhs)
 	{
 		
 		assert(false);
-		throw std::exception("bad vector size");
+		throw std::runtime_error("bad vector size");
 	}
 }
 
@@ -75,7 +75,7 @@ bool check_pair_different_type(const VEC1& lhs, const VEC2& rhs)
 	{
 		//std::
 		assert(false);
-		throw std::exception("bad vector size");
+		throw std::runtime_error("bad vector size");
 	}
 }
 
@@ -116,7 +116,7 @@ bool check_vector(const Vec<INS_VEC>& rhs)
 	{
 		//std::
 		assert(false);
-		throw std::exception("bad vector size of non scalar");
+		throw std::runtime_error("bad vector size of non scalar");
 	}
 }
 
@@ -125,7 +125,8 @@ bool check_vector(const Vec<INS_VEC>& rhs)
 template<typename INS_VEC>
 bool check_vector(const VecD<INS_VEC>& rhs)
 {
-	//do nothing
+	// Always return true
+	return true;
 	/*
 	auto rhsSz = rhs.size();
 
@@ -155,7 +156,7 @@ bool check_vector_for_filter(const Vec<INS_VEC>& rhs)
 	{
 		//std::
 		assert(false);
-		throw std::exception("bad vector size of non scalar");
+		throw std::runtime_error("bad vector size of non scalar");
 	}
 }
 
@@ -191,7 +192,7 @@ bool check_view_pair(const Vec<INS_VEC>& lhs, const Vec<INS_VEC>& rhs)
 
 	//std::
 	assert(false);
-	throw std::exception("bad vector size");
+	throw std::runtime_error("bad vector size");
 
 }
 
@@ -206,6 +207,6 @@ bool check_view_pair(const VecView<INS_VEC>& lhs, const VecView<INS_VEC>& rhs)
 
 	//std::
 	assert(false);
-	throw std::exception("bad vector size");
+	throw std::runtime_error("bad vector size");
 
 }

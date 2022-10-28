@@ -11,6 +11,8 @@
 *****************************************************************************/
 #pragma once
 
+#include <cstddef>
+
 void freePool(size_t N, double* pOld);
 void freePool(size_t N, float* pOld);
 void freePool(size_t N, unsigned int* pOld);

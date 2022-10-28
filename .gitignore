@@ -2,6 +2,9 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
+/build
+/build_vcc
+
 /packages
 /.vs/DRCubed/v16/TestStore/0
 /accumulateExample/clang-cl
