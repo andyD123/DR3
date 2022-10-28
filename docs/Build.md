@@ -1,7 +1,7 @@
-Supported platforms:
-OS: Windows, Ubuntu
-Compiler: Visual Studio, gcc, clang
-CPU:
+Supported platforms:    
+OS: Windows, Ubuntu   
+Compiler: Visual Studio, gcc, clang   
+CPU:   
 
 ```
 mkdir build; cd build    
