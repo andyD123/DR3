@@ -1,4 +1,4 @@
-# Supported platforms:    
+# Supported platforms    
 OS: Windows, Ubuntu   
 Compiler: Visual Studio, gcc, clang   
 CPU:   
