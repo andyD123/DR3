@@ -480,7 +480,7 @@ void ApplyUnitaryOperationWrite(OP& oper, const VecView<INS_VEC>& rhs, Vec<INS_V
 	}
 	else
 	{
-		throw std::exception("ApplyUnitaryOperationWrite not suppported for scalars ");
+		throw std::runtime_error("ApplyUnitaryOperationWrite not suppported for scalars ");
 	}
 
 }

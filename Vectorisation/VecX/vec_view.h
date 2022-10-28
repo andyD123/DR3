@@ -518,7 +518,7 @@ Vec<INS_VEC>  merge(std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >& src)
 		|| std::get<1>(src).isScalar()
 		)
 	{
-		throw std::exception("cant merge scalar views");
+		throw std::runtime_error("cant merge scalar views");
 	}
 
 	Vec<INS_VEC> ret(std::get<0>(src).srcSize());

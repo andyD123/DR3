@@ -1,3 +1,5 @@
+# DR3 
+
 To get full use of the repo, you need a modern processor which has AVX512 instructions. 
 If your processor only has  AVX2, you need to change target instruction sets in the projects to AVX2, and don’t generate AVX512
 In the projects because your machine wont run them.
@@ -61,5 +63,7 @@ The main library is  Vectorisation.  This refrence a local copy of the VCL2 libr
 VCL2 to be used with the intel IC2022 compiler.
 
 
+## Building DR3
 
+See [docs/Build.md](docs/Build.md) for instructions on how to build DR3 from source and a list of supported platforms.
 

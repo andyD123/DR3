@@ -11,7 +11,7 @@
 #include <iomanip>  
 #include <thread>
 #include <map>
-
+#include <cstring>
 
 
 #include "../Vectorisation/VecX/dr3.h"
@@ -222,11 +222,11 @@ class TimerGuard
 	std::chrono::steady_clock::time_point  m_startTme;
 
 public:
-	TimerGuard(double& runTime) : m_runTime(runTime), m_startTme(std::chrono::high_resolution_clock::now()) { runTime = 0.; }
+	TimerGuard(double& runTime) : m_runTime(runTime), m_startTme(std::chrono::steady_clock::now()) { runTime = 0.; }
 
 	~TimerGuard()
 	{
-		auto endTime = std::chrono::high_resolution_clock::now();
+		auto endTime = std::chrono::steady_clock::now();
 		auto runtime = endTime - m_startTme;
 		m_runTime = runtime.count() / billion;
 	}
@@ -1530,8 +1530,14 @@ void doCountIf()
 	
 		auto v1 = getRandomShuffledVector(VEC_SZ); 
 		auto C = v1;
-		volatile __int64 resStl = 0;// .0;
 
+		#ifdef __clang__
+			volatile __int64_t resStl = 0;// .0;
+		#elif __GNUC__
+			volatile __int64_t resStl = 0;// .0;
+		#elif _MSC_VER
+			volatile __int64 resStl = 0;// .0;			
+		#endif		
 		
 		double halfSize = VEC_SZ * 0.5;
 		auto isOverHalf= [&](auto x) { return x > halfSize; };
