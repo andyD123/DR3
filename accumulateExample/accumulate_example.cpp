@@ -1530,28 +1530,22 @@ void doCountIf()
 	
 		auto v1 = getRandomShuffledVector(VEC_SZ); 
 		auto C = v1;
+	
+		volatile long resStl = 0;
 
-		#ifdef __clang__
-			volatile __int64_t resStl = 0;// .0;
-		#elif __GNUC__
-			volatile __int64_t resStl = 0;// .0;
-		#elif _MSC_VER
-			volatile __int64 resStl = 0;// .0;			
-		#endif		
-		
 		double halfSize = VEC_SZ * 0.5;
 		auto isOverHalf= [&](auto x) { return x > halfSize; };
 
 		for (long l = 0; l < 100; l++)
 		{
-			resStl = std::count_if(begin(v1), end(v1), isOverHalf);
+			resStl = static_cast< long>( std::count_if(begin(v1), end(v1), isOverHalf) );
 		}
 
 			
 		{   TimerGuard timer(time);
 			for (long l = 0; l < TEST_LOOP_SZ; l++)
 			{
-				resStl = std::count_if(begin(v1), end(v1), isOverHalf);
+				resStl = static_cast<long>(std::count_if(begin(v1), end(v1), isOverHalf));
 			}
 		}
 		

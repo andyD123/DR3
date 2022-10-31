@@ -16,6 +16,7 @@
 #include "apply_operation.h"
 #include "error_utils.h"
 #include <vector>
+#include <stdexcept>
 
 
 template <typename INS_VEC>
