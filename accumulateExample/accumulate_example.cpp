@@ -15,6 +15,7 @@
 
 
 #include "../Vectorisation/VecX/dr3.h"
+#include "../Vectorisation/VecX/accumulate_transform.h"
 
 #include "norm.h"
 
@@ -328,6 +329,8 @@ void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of of oper
 void    binarySelectionBetweenMiddleWeightFunction();
 void	binarySelectionBetweenHeavyWeightFunction();
 void	doCountIf();
+void    doMinMax();
+
 
 
 void doAVXMax512Dance();
@@ -341,12 +344,18 @@ void doAVXMax512Dance();
 int main()
 {
 
+
+
 	std::cout << "\n \n \n \n testMemCpy2() \n" << std::endl;
 	testMemCpy2(); 
 
 	//accumulate 
 	std::cout << "\n \n \n \n doMax() \n"  << std::endl;
 	doMax();
+
+	//multi reduce
+	std::cout << "\n \n \n \n doMinMax() \n" << std::endl;
+	doMinMax();
 
 //transform accum
 	std::cout << "\n \n \n \n doInnerProd() \n" << std::endl;
@@ -445,8 +454,6 @@ void testMemCpy2()
 }
 
 
-
-
 void doMax()
 {
 
@@ -463,19 +470,19 @@ void doMax()
 		double time = 0.;
 		volatile  double res = 0.;
 		auto v1 = getRandomShuffledVector(VEC_SZ, 0);
-		
+
 		//warm up
 		for (long l = 0; l < 100; l++)
 		{
 			res = *std::max_element(v1.begin(), v1.end());
 		}
 
-		
+
 		{   TimerGuard timer(time);
-			for (long l = 0; l < TEST_LOOP_SZ; l++)
-			{
-				res = *std::max_element(v1.begin(), v1.end());
-			}
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+			res = *std::max_element(v1.begin(), v1.end());
+		}
 		}
 		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
 	};
@@ -492,21 +499,21 @@ void doMax()
 
 		auto v1 = getRandomShuffledVector(SZ, 0); // std stl vector double or float 
 		VecXX vec(v1);
-					
+
 		//warm up
 		for (long l = 0; l < 100; l++)
 		{
 			res = reduce(vec, mxDbl);
 		}
 
-		
+
 		{   TimerGuard timer(time);
-			for (long l = 0; l < TEST_LOOP_SZ; l++)
-			{
-				res = reduce(vec, mxDbl);
-			}
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+			res = reduce(vec, mxDbl);
 		}
-		
+		}
+
 		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
 
 	};
@@ -527,7 +534,108 @@ void doMax()
 		auto  valDr3 = dr3_raw_results.m_calc_results[perf_stl.first];
 		auto  valStl = run_res_stl.m_calc_results[perf_stl.first];
 		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
-		std::cout <<"  std::max_element, size " << perf_stl.first << ", " << perf_stl.second.first << ", + - ," << perf_stl.second.second << "\t \t DR3 reduce, size " << perf_stl.first << ", " << stats_DR3_perf[perf_stl.first].first << ",  + - ," << stats_DR3_perf[perf_stl.first].second << ", numerical check : " << strMatch << "\n";
+		std::cout << "  std::max_element, size " << perf_stl.first << ", " << perf_stl.second.first << ", + - ," << perf_stl.second.second << "\t \t DR3 reduce, size " << perf_stl.first << ", " << stats_DR3_perf[perf_stl.first].first << ",  + - ," << stats_DR3_perf[perf_stl.first].second << ", numerical check : " << strMatch << "\n";
+	}
+}
+
+
+
+
+
+
+void doMinMax()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto accumulate_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		volatile  double res_min = 0.;
+		auto v1 = getRandomShuffledVector(VEC_SZ, 0);
+
+		//warm up
+		for (long l = 0; l < 100; l++)
+		{
+			res = *std::max_element(v1.begin(), v1.end());
+
+			res_min = *std::min_element(v1.begin(), v1.end());
+		}
+
+
+		{   TimerGuard timer(time);
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+			res = *std::max_element(v1.begin(), v1.end());
+			res_min = *std::min_element(v1.begin(), v1.end());
+		}
+		}
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+
+
+	auto DR3_accumulate = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		// generic lambda for max either calling a max instruction or doing a selection with iff
+	   // auto mxDbl = [](auto lhs, auto rhs) { return max(lhs, rhs); };
+		auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); }; //using iff fastest 
+		auto minDbl = [](auto lhs, auto rhs) { return iff(lhs < rhs, lhs, rhs); }; //using iff fastest 
+
+		auto v1 = getRandomShuffledVector(SZ, 0); // std stl vector double or float 
+		VecXX vec(v1);
+
+
+		auto ress = ApplyAccumulate2UR_X2(vec, mxDbl, minDbl);
+		//warm up
+		for (long l = 0; l < 100; l++)
+		{
+			 ress = ApplyAccumulate2UR_X2(vec, mxDbl, minDbl);
+		}
+
+
+		{   TimerGuard timer(time);
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+			//res = reduce1(vec, mxDbl);
+
+			 ress = ApplyAccumulate2UR_X2(vec, mxDbl, minDbl);
+
+			 res = std::get<0>(ress);
+			 double mnn = std::get<1>(ress);
+		}
+		}
+
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+
+	auto run_res_stl = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, accumulate_run, TEST_LOOP_SZ);
+	auto stats_stl = performanceStats(run_res_stl.m_raw_results);
+
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate, TEST_LOOP_SZ);
+	auto stats_DR3_perf = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	//print out results
+	for (const auto& perf_stl : stats_stl)
+	{
+		auto  valDr3 = dr3_raw_results.m_calc_results[perf_stl.first];
+		auto  valStl = run_res_stl.m_calc_results[perf_stl.first];
+		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
+		std::cout << "  std::max_element, size " << perf_stl.first << ", " << perf_stl.second.first << ", + - ," << perf_stl.second.second << "\t \t DR3 reduce, size " << perf_stl.first << ", " << stats_DR3_perf[perf_stl.first].first << ",  + - ," << stats_DR3_perf[perf_stl.first].second << ", numerical check : " << strMatch << "\n";
 	}
 }
 
