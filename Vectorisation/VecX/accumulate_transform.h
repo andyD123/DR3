@@ -1842,19 +1842,19 @@ typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename Ins
 		{
 			RHS1.load_a(pRhs1 + i);
 			RES = oper(RES, RHS1);
-			RES_A = oper2(RES_A, RHS1_A);
+			RES_A = oper2(RES_A, RHS1);
 
 			RHS2.load_a(pRhs1 + i + width);
 			RES1 = oper(RES1, RHS2);
-			RES1_A = oper2(RES1_A, RHS2_A);
+			RES1_A = oper2(RES1_A, RHS2);
 
 			RHS3.load_a(pRhs1 + i + width * 2);
 			RES2 = oper(RES2, RHS3);
-			RES2_A = oper2(RES2_A, RHS3_A);
+			RES2_A = oper2(RES2_A, RHS3);
 
 			RHS4.load_a(pRhs1 + i + width * 3);
 			RES3 = oper(RES3, RHS4);
-			RES3_A = oper2(RES3_A, RHS4_A);
+			RES3_A = oper2(RES3_A, RHS4);
 
 		}
 
@@ -1886,7 +1886,7 @@ typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename Ins
 		{
 			RHS1.load_a(pRhs1 + i);
 			RES = oper(RES, RHS1);
-			RES_A = oper2(RES_A, RHS1_A);
+			RES_A = oper2(RES_A, RHS1);
 		}
 
 	}
@@ -1894,7 +1894,7 @@ typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename Ins
 	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
 	typename InstructionTraits<INS_VEC>::FloatType result_A = RES_A[0];
 	int min_wdth = std::min(sz, width);
-	//across vectors lanes  // not assuming horizontal versoion exist
+	//across vectors lanes  // not assuming horizontal version exist
 	for (int j = 1; j < min_wdth; ++j)
 	{
 		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], oper);
@@ -1915,3 +1915,149 @@ typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename Ins
 
 
 //////////////
+
+//////experimental unrolled  double transform accumulation
+template< typename INS_VEC, typename TF, typename TF2, typename OP, typename OP2>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+ApplyTransformAccumulate2UR_X2(const Vec<INS_VEC>& rhs1, TF& opTrans, OP& oper, TF2& opTrans2, OP2& oper2)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
+	{
+		return { rhs1.getScalarValue(),rhs1.getScalarValue() };
+	}
+
+	int sz = rhs1.size();
+	auto pRhs1 = rhs1.start();
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	INS_VEC RHS1;
+	INS_VEC RES;
+
+	INS_VEC RHS2;
+	INS_VEC RES1;
+
+	INS_VEC RHS3;
+	INS_VEC RES2;
+
+	INS_VEC RHS4;
+	INS_VEC RES3;
+
+	//
+	INS_VEC RHS1_A;
+	INS_VEC RES_A;
+
+	INS_VEC RHS2_A;
+	INS_VEC RES1_A;
+
+	INS_VEC RHS3_A;
+	INS_VEC RES2_A;
+
+	INS_VEC RHS4_A;
+	INS_VEC RES3_A;
+
+	//
+
+	int i = 0;
+
+	if (sz >= step * 2)
+	{
+		//initialise first set of registers
+		{
+			RES.load_a(pRhs1 + i);
+			RES1.load_a(pRhs1 + i + width);
+			RES2.load_a(pRhs1 + i + width * 2);
+			RES3.load_a(pRhs1 + i + width * 3);
+
+
+			RES_A = opTrans2(RES);
+			RES1_A = opTrans2(RES1);
+			RES2_A = opTrans2(RES2);
+			RES3_A = opTrans2(RES3);
+
+
+			RES = opTrans(RES);
+			RES1 = opTrans(RES1);
+			RES2 = opTrans(RES2);
+			RES3 = opTrans(RES3);
+		}
+
+		i += step;
+		int rhsSZ = rhs1.size();
+		for (; i <= (rhsSZ - step); i += step)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RES, opTrans(RHS1));
+			RES_A = oper2(RES_A, opTrans2(RHS1));
+
+			RHS2.load_a(pRhs1 + i + width);
+			RES1 = oper(RES1, opTrans(RHS2));
+			RES1_A = oper2(RES1_A, opTrans2(RHS2));
+
+			RHS3.load_a(pRhs1 + i + width * 2);
+			RES2 = oper(RES2, opTrans(RHS3));
+			RES2_A = oper2(RES2_A, opTrans2(RHS3));
+
+			RHS4.load_a(pRhs1 + i + width * 3);
+			RES3 = oper(RES3, opTrans(RHS4));
+			RES3_A = oper2(RES3_A, opTrans2(RHS4));
+
+		}
+
+		// odd bits
+		for (; i <= rhsSZ - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RES, opTrans(RHS1));
+			RES_A = oper2(RES_A, opTrans2(RHS1));
+		}
+
+		RES = oper(RES, RES1);
+		RES2 = oper(RES2, RES3);
+		RES = oper(RES, RES2);
+
+		RES_A = oper2(RES_A, RES1_A);
+		RES2_A = oper2(RES2_A, RES3_A);
+		RES_A = oper2(RES_A, RES2_A);
+
+	}
+	else
+	{
+		RES.load_a(pRhs1);
+		RES_A = opTrans2(RES);
+		RES= opTrans(RES);
+
+		i += width;
+		// odd bits
+		for (; i <= sz - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RES, opTrans(RHS1));
+			RES_A = oper2(RES_A, opTrans2(RHS1));
+		}
+
+	}
+
+	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
+	typename InstructionTraits<INS_VEC>::FloatType result_A = RES_A[0];
+	int min_wdth = std::min(sz, width);
+	//across vectors lanes  // not assuming horizontal version exist
+	for (int j = 1; j < min_wdth; ++j)
+	{
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], oper);
+		result_A = ApplyBinaryOperationVec<INS_VEC, OP2>(result_A, RES_A[j], oper2);
+	}
+
+	//end bits for vecs not filling padding
+	for (; i < rhs1.size(); ++i)
+	{
+		//this is a bug need to transform
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(pRhs1[i], result, oper);
+		result_A = ApplyBinaryOperationVec<INS_VEC, OP2>(pRhs1[i], result_A, oper2);
+	}
+
+	return { result, result_A };
+}
+
+

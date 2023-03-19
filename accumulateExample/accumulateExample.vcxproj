@@ -389,7 +389,7 @@
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -505,7 +505,9 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="accumulate_example.cpp" />
+    <ClCompile Include="accumulate_example.cpp">
+      <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Precise</FloatingPointModel>
+    </ClCompile>
     <ClCompile Include="AVX512Dance.cpp" />
   </ItemGroup>
   <ItemGroup>

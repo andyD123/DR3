@@ -328,8 +328,9 @@ void	binarySelectionBetweenConst();
 void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of of operations
 void    binarySelectionBetweenMiddleWeightFunction();
 void	binarySelectionBetweenHeavyWeightFunction();
-void	doCountIf();
+void	doCountIf(); 
 void    doMinMax();
+void    doSumSqrsMulti();
 
 
 
@@ -385,6 +386,11 @@ int main()
 	
 	std::cout << "\n \n \n \n doCountIf() \n" << std::endl;
 	doCountIf();
+
+	// experimental
+	doMinMax();
+	doSumSqrsMulti();
+	//return 0;
 
 	
 	// use namespace DRC::VecD8D  run this and watch power consumption
@@ -542,11 +548,12 @@ void doMax()
 
 
 
-
+//example doing  multi reduction operation after load
+//should be faster 
 void doMinMax()
 {
 
-	const long TEST_LOOP_SZ = 1000;
+	const long TEST_LOOP_SZ = 100;// 1000;
 	const int repeatRuns = 20;
 	const int vectorStepSize = 200;
 	const int maxVectorSize = 20000;
@@ -594,24 +601,22 @@ void doMinMax()
 		auto v1 = getRandomShuffledVector(SZ, 0); // std stl vector double or float 
 		VecXX vec(v1);
 
-
-		auto ress = ApplyAccumulate2UR_X2(vec, mxDbl, minDbl);
+		auto ress = reduceM(vec, mxDbl, minDbl);
 		//warm up
 		for (long l = 0; l < 100; l++)
 		{
-			 ress = ApplyAccumulate2UR_X2(vec, mxDbl, minDbl);
+			 res = reduce(vec, mxDbl);
+			 double mnn = reduce(vec, minDbl);
+			 ignore(mnn);
 		}
 
 
 		{   TimerGuard timer(time);
 		for (long l = 0; l < TEST_LOOP_SZ; l++)
 		{
-			//res = reduce1(vec, mxDbl);
-
-			 ress = ApplyAccumulate2UR_X2(vec, mxDbl, minDbl);
-
-			 res = std::get<0>(ress);
-			 double mnn = std::get<1>(ress);
+		  	 res = reduce(vec, mxDbl);
+	   	     double mnn = reduce(vec, minDbl);
+			 ignore(mnn);
 		}
 		}
 
@@ -621,6 +626,42 @@ void doMinMax()
 
 
 
+	auto DR3_accumulate_multi = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		// generic lambda for max either calling a max instruction or doing a selection with iff
+	   // auto mxDbl = [](auto lhs, auto rhs) { return max(lhs, rhs); };
+		auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); }; //using iff fastest 
+		auto minDbl = [](auto lhs, auto rhs) { return iff(lhs < rhs, lhs, rhs); }; //using iff fastest 
+
+		auto v1 = getRandomShuffledVector(SZ, 0); // std stl vector double or float 
+		VecXX vec(v1);
+
+		auto ress = reduceM(vec, mxDbl, minDbl);
+		//warm up
+		for (long l = 0; l < 100; l++)
+		{
+			ress = reduceM(vec, mxDbl, minDbl);
+		}
+
+
+		{   TimerGuard timer(time);
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+			ress = reduceM(vec, mxDbl, minDbl);
+			double mmmm = std::get<0>(ress);
+			double mnn = std::get<1>(ress);
+			ignore(mnn);
+			ignore(mmmm);
+		}
+		}
+
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
 	auto run_res_stl = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, accumulate_run, TEST_LOOP_SZ);
 	auto stats_stl = performanceStats(run_res_stl.m_raw_results);
 
@@ -628,14 +669,21 @@ void doMinMax()
 	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate, TEST_LOOP_SZ);
 	auto stats_DR3_perf = performanceStats(dr3_raw_results.m_raw_results);
 
+	auto dr3_raw_results_mult = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate_multi, TEST_LOOP_SZ);
+	auto stats_DR3_perf_mult = performanceStats(dr3_raw_results_mult.m_raw_results);
+
 
 	//print out results
 	for (const auto& perf_stl : stats_stl)
 	{
 		auto  valDr3 = dr3_raw_results.m_calc_results[perf_stl.first];
 		auto  valStl = run_res_stl.m_calc_results[perf_stl.first];
-		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
-		std::cout << "  std::max_element, size " << perf_stl.first << ", " << perf_stl.second.first << ", + - ," << perf_stl.second.second << "\t \t DR3 reduce, size " << perf_stl.first << ", " << stats_DR3_perf[perf_stl.first].first << ",  + - ," << stats_DR3_perf[perf_stl.first].second << ", numerical check : " << strMatch << "\n";
+		auto  valDr3Mult = dr3_raw_results_mult.m_calc_results[perf_stl.first];
+		auto strMatch = valuesAreEqual(valDr3, valStl, valDr3Mult) ? "calcs match" : "cal difference";
+		std::cout << "  std::max_element, size " << perf_stl.first << ", " << perf_stl.second.first << ", + - ," << perf_stl.second.second 
+			<< "\t \t DR3 reduce, size " << perf_stl.first << ", " << stats_DR3_perf[perf_stl.first].first << ",  + - ," << stats_DR3_perf[perf_stl.first].second 
+			<< "\t \t DR3 reduce_mult, size " << perf_stl.first << ", " << stats_DR3_perf_mult[perf_stl.first].first << ",  + - ," << stats_DR3_perf_mult[perf_stl.first].second
+			<< ", numerical check : " << strMatch << "\n";
 	}
 }
 
@@ -911,6 +959,167 @@ void doSumSqrs()
 		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
 		auto strMatch = valuesAreEqual(valDr3, valStl) ? "calcs match" : "cal difference";
 		std::cout << "STL inner product sum sqrs , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 inner product sum sqrs , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
+	}
+
+
+
+}
+
+
+
+/*
+applies multiple transforms and reductions after the load operation 
+reducing memorry traversal
+
+here we do squaring an just return a copy as transform
+and sum as the reduction, usefuk for stats to get sum of all values
+and sum of all squares of values
+*/
+void doSumSqrsMulti()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+	auto zero = InstructionTraits<VecXX::INS>::nullValue;
+
+	getRandomShuffledVector(-1); // reset  random input vectors
+
+	auto inner_prod_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		volatile  double res2 = 0.;
+
+		auto v1 = getRandomShuffledVector(VEC_SZ);
+
+		//warm up
+		for (long l = 0; l < 100; l++)
+		{
+			res = inner_product(v1.cbegin(), v1.cend(), v1.cbegin(), zero);
+		}
+
+
+		{   TimerGuard timer(time);
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+			res = inner_product(v1.cbegin(), v1.cend(), v1.cbegin(), zero);
+
+			res2 =std::accumulate(v1.cbegin(), v1.cend(),  zero);
+		}
+		}
+
+		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+	};
+
+	auto DR3_inner_prod = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		volatile  double res2 = 0.;
+
+		auto v1 = getRandomShuffledVector(SZ);
+		VecXX t1(v1);
+
+		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+		//auto Mult = [](auto X, auto Y) { return X * Y; };
+		auto Unit = [](auto X) { return X; };
+		auto SQR = [](auto X) { return X*X; };
+
+		//warm up
+		for (long l = 0; l < 100; l++)
+		{
+
+			res = transformReduce(t1, SQR, Sum);
+			res2 = transformReduce(t1, Unit, Sum);
+
+		}
+
+
+		{   TimerGuard timer(time);
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+		 	res = transformReduce( t1, SQR, Sum);
+			res2 = transformReduce(t1, Unit, Sum);	
+		}
+		}
+
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+	auto DR3_inner_prod_multi_transformReduce = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		double time = 0.;
+		volatile  double res = 0.;
+		volatile  double res2 = 0.;
+
+		auto v1 = getRandomShuffledVector(SZ);
+		VecXX t1(v1);
+
+		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+		//auto Mult = [](auto X, auto Y) { return X * Y; };
+		auto Unit = [](auto X) { return X; };
+		auto SQR = [](auto X) { return X * X; };
+
+		//warm up
+		for (long l = 0; l < 100; l++)
+		{
+	
+			auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);
+			//auto total 
+			res2 = std::get<0>(tpl);
+			//auto total_sqr
+			res = std::get<1>(tpl);
+		}
+
+
+		{   TimerGuard timer(time);
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+
+			auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);
+			res2 = std::get<0>(tpl);
+			auto res0 = std::get<1>(tpl);
+			ignore(res0);
+	
+		}
+		}
+
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+
+	};
+
+
+
+
+
+	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, inner_prod_run, TEST_LOOP_SZ);
+	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
+
+
+	auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_inner_prod, TEST_LOOP_SZ);
+	auto stats_DR3_inner_prod = performanceStats(dr3_raw_results.m_raw_results);
+
+
+	auto dr3_raw_results_multiReduce = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_inner_prod_multi_transformReduce, TEST_LOOP_SZ);
+	auto stats_DR3_inner_prod_multiReduce = performanceStats(dr3_raw_results_multiReduce.m_raw_results);
+
+
+	//print out results
+	for (const auto& elem : stats_inner_prod)
+	{
+		auto  valDr3 =  dr3_raw_results.m_calc_results[elem.first];
+		auto  valDr3_multi =  dr3_raw_results_multiReduce.m_calc_results[elem.first];
+		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
+		auto strMatch = valuesAreEqual(valDr3, valStl, valDr3_multi) ? "calcs match" : "cal difference";
+		std::cout << "STL inner product sum sqrs , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second 
+			<< "\t \t DR3 inner product sum sqrs , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second 
+			<< "\t \t DR3 Multi reduce , size " << elem.first << " , " << stats_DR3_inner_prod_multiReduce[elem.first].first << ", +- ," << stats_DR3_inner_prod_multiReduce[elem.first].second
+			<< ", numerical check: " << strMatch << "\n";
 	}
 
 
