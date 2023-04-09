@@ -471,6 +471,209 @@ void testBinaryTransform(int SZ)
 
 
 
+/////////////////////
+
+template<typename INS_VEC>
+struct Sampler_No_Offset
+{
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	template <int VAL>
+	typename INS_VEC  get() {};// cant instantiate
+
+
+	template<>
+	typename INS_VEC  get<0>() { return X_0.value; };
+
+
+	inline void load(Float* pData)
+	{
+
+		X_0.load_u(pData);
+
+	}
+
+	static constexpr int max() { return 0; }
+	static constexpr int min() { return 0; }
+
+
+
+	RegisterElement< INS_VEC, 0, false> X_0;
+
+
+};
+
+
+template<typename INS_VEC>
+struct Sampler_NegOffset
+{
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	template <int VAL>
+	typename INS_VEC  get() {};// cant instantiate
+
+
+	template<>
+	typename INS_VEC  get<-1>() { return X_0.value; };
+
+
+	inline void load(Float* pData)
+	{
+		X_0.load_u(pData);
+	}
+
+	static constexpr int max() { return -1; }
+	static constexpr int min() { return 1; }
+
+	RegisterElement< INS_VEC, -1, false> X_0;
+};
+
+
+template<typename INS_VEC>
+struct Sampler_PositiveOffset
+{
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	template <int VAL>
+	typename INS_VEC  get() {};// cant instantiate
+
+
+	template<>
+	typename INS_VEC  get<1>() { return X_0.value; };
+
+
+	inline void load(Float* pData)
+	{
+		X_0.load_u(pData);
+	}
+
+	static constexpr int max() { return 1; }
+	static constexpr int min() { return 1; }
+
+	RegisterElement< INS_VEC, 1, false> X_0;
+};
+
+
+/*
+template<typename INS_VEC>
+struct TestSampler
+{
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	template <int VAL>
+	typename INS_VEC  get() {};// cant instantiate
+
+	template<>
+	typename INS_VEC  get<1>() { return X_1.value; };
+
+	template<>
+	typename INS_VEC  get<0>() { return X_0.value; };
+
+	template<>
+	typename INS_VEC  get<-1>() { return X_Minus_1.value; };
+
+
+	inline void load(Float* pData)
+	{
+		X_1.load_u(pData);
+		X_0.load_u(pData);
+		X_Minus_1.load_u(pData);
+	}
+
+	static constexpr int max() { return 1; }
+	static constexpr int min() { return -1; }
+
+
+	RegisterElement< INS_VEC, 1, false> X_1;
+	RegisterElement< INS_VEC, 0, false> X_0;
+	RegisterElement< INS_VEC, -1, false> X_Minus_1;
+
+
+};
+*/
+
+
+
+void testTransform_M_X(int SZ)
+{
+
+	auto doubleIt = [](Sampler_No_Offset<VecXX::INS>& sampler) { auto x = sampler.get<0>(); return 2.0 * x; };
+
+	Sampler_No_Offset < VecXX::INS> testSampler;
+
+	std::vector<Numeric> input(SZ, asNumber(0.0));
+	std::iota(begin(input), end(input), asNumber(0.0));
+
+	VecXX testVec(input);
+	VecXX res = 0.0 * testVec;
+
+
+	transform(testVec, res, doubleIt, testSampler,0, testVec.size());
+	std::vector<double> r_dbg_res = res;
+
+	for (int k = 0; k < SZ; k++)
+	{
+		EXPECT_NUMERIC_EQ(res[k], asNumber(2* k));
+	}
+	
+
+
+	Sampler_NegOffset < VecXX::INS> testSampler_negOffset;
+	auto doubleItNeg = [](Sampler_NegOffset<VecXX::INS>& sampler) { auto x = sampler.get<-1>(); return 2.0 * x; };
+
+
+	res = testVec * 0.0;
+	transform(testVec, res, doubleItNeg, testSampler_negOffset, 0, testVec.size());
+	r_dbg_res = res;
+	for (int k = 1; k < SZ; k++)
+	{
+		EXPECT_NUMERIC_EQ(res[k], asNumber(2 *( k-1)));
+	}
+
+
+	Sampler_PositiveOffset < VecXX::INS> testSampler_positiveOffset;
+	auto doubleItPositive = [](Sampler_PositiveOffset<VecXX::INS>& sampler) { auto x = sampler.get<1>(); return 2.0 * x; };
+
+   res = testVec * 0.0;
+	transform(testVec, res, doubleItPositive, testSampler_positiveOffset, 0, testVec.size());
+
+	r_dbg_res = res;
+	for (int k = 0; k < (SZ-1); k++)
+	{
+		EXPECT_NUMERIC_EQ(res[k], asNumber(2 * (k + 1)));
+	}
+
+}
+
+
+TEST(TestDR3, test_transform_withSampler)
+{
+
+	testTransform_M_X(8);
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		
+		testTransform_M_X(SZ);
+	}
+
+	//	testTransform_M_X(34);
+	//	testTransform_M_X(65);
+	//	testTransform_M_X(63);
+	//	testTransform_M_X(64);
+}
+
+
+
+
+///////////////////
+
+
+
 TEST(TestDR3, test_transform_binary)
 {
 

@@ -73,6 +73,31 @@ void transformM(LAMBDA& lambda, Vec<INS_VEC>& inputVec)
 	ApplyUnitaryOperationM(inputVec, lambda);
 }
 
+
+//// experimental inplace transforms
+// Sampler loads multiple offset INS_VECs so that lagged and advanced values can be used by the lambda oper,
+// oper takes the sampler as an input argument, iteration and transformation of input vector   
+// is confined to startPos and endPos, subject to not going out of range.
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename SAMPLER >
+void transform(VEC_TYPE<INS_VEC>& inputVec, VEC_TYPE<INS_VEC>& result, OP& oper, SAMPLER& sampler, int startPos = 0, int endPos = -1)
+{
+	ApplyTransformUR_X_Impl_EX(inputVec, result, oper,  sampler, startPos, endPos);
+}
+
+
+
+//// experimental inplace transforms binary transform bersion of above
+// Sampler loads multiple offset INS_VECs so that lagged and advanced values can be used by the lambda oper,
+// oper takes the sampler as an input argument, iteration and transformation of input vector   
+// is confined to startPos and endPos, subject to not going out of range.
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename SAMPLER >
+void transform(const VEC_TYPE<INS_VEC>& inputVec, const VEC_TYPE<INS_VEC>& aux_inputVec, VEC_TYPE<INS_VEC>& result, OP& oper, SAMPLER& sampler, int startPos = 0, int endPos = -1)
+{
+	ApplyTransformUR_X_Impl_EX(inputVec, aux_inputVec, result, oper, sampler, startPos, endPos);
+}
+
+
+
 //not unrolled x1
 template<typename LAMBDA, typename INS_VEC>
 void  transform1(LAMBDA& lambda, Vec<INS_VEC>& inputVec)

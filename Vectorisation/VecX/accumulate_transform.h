@@ -21,6 +21,129 @@
 #include <tuple>
 
 
+
+
+
+template<typename INS_VEC, int OFFSET>
+struct SampleElement :public RegisterElement< INS_VEC,  OFFSET, false>
+{
+
+	template <int VAL>
+	typename INS_VEC  get() {};// cant instantiate
+
+
+	template<>
+	typename INS_VEC  get<OFFSET>() { return ::m_offsetData1; };
+
+	
+};
+
+template<typename INS_VEC, int X_Minus1 =-1,int X0 = 0, int X1 = 1 >
+struct TrinomialSampler 
+{
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	template <int VAL>
+	typename INS_VEC  get() {};// cant instantiate
+
+	template<>
+	typename INS_VEC  get<X1>() { return X_1.value; };
+
+	template<>
+	typename INS_VEC  get<X0>() { return X_0.value; };
+
+	template<>
+	typename INS_VEC  get<X_Minus1>() { return X_Minus_1.value; };
+
+
+	inline void load(Float* pData)
+	{
+		X_1.load_u(pData);
+		X_0.load_u(pData);
+		X_Minus_1.load_u(pData);
+	}
+
+	static constexpr int max()  { return std::max(X_Minus1, std::max(X0, X1)); }
+	static constexpr int min()  { return std::min(X_Minus1, std::min(X0, X1)); }
+
+
+	RegisterElement< INS_VEC, X1, false> X_1;
+	RegisterElement< INS_VEC, X0, false> X_0;
+	RegisterElement< INS_VEC, X_Minus1, false> X_Minus_1;
+
+
+};
+
+
+
+template<typename INS_VEC, int X0 =0, int X1 =1>
+struct BinomialSampler
+{
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	template <int VAL>
+	typename INS_VEC  get() {  };// cant instantiate
+
+	template<>
+	typename INS_VEC  get<X1>() { return X_1.value; };
+
+	template<>
+	typename INS_VEC  get<X0>() { return X_0.value; };
+
+	
+
+	inline void load(Float* pData)
+	{
+		X_1.load_u(pData);
+		X_0.load_u(pData);
+	}
+
+	static constexpr int max() { return std::max(X0, X1); }
+	static constexpr int min() { return std::min(X0, X1); }
+
+
+	RegisterElement< INS_VEC, 1, false> X_1;
+	RegisterElement< INS_VEC, 0, false> X_0;
+
+};
+
+
+template<typename INS_VEC, int X0 = 0, int X1 = 1>
+struct UnitarySampler
+{
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	template <int VAL>
+	typename INS_VEC  get() {  };// cant instantiate
+
+
+	template<>
+	typename INS_VEC  get<X0>() { return X_0.value; };
+
+
+	inline void load(Float* pData)
+	{
+		X_0.load_u(pData);
+	}
+
+	static constexpr int max() { return X0; }
+	static constexpr int min() { return X0; }
+
+	RegisterElement< INS_VEC, 0, false> X_0;
+
+};
+
+//should be variadic
+
+
+
+
+
+
+
 /*
 when we init a vec for transform we  just allocate a  new one using size
 when we init a view for transform. if this is a transform of the existrig
@@ -1072,86 +1195,198 @@ void ApplyTransformUR_X_Impl(VEC_TYPE<INS_VEC>& rhs1, OP& oper)
 }
 
 
+
+// experimental 
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename SAMPLER >
+void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE<INS_VEC>& ret, OP& oper, SAMPLER& sampler, int i = 0, int impSZ = -1)
+{
+
+	impSZ = (impSZ < 0) ? rhs1.paddedSize() : impSZ;
+
+
+	auto pRhs1 = rhs1.start();
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+
+	SAMPLER RHS1(sampler);
+	INS_VEC RES;
+
+
+	SAMPLER RHS2(sampler);
+	INS_VEC RES1;
+
+	SAMPLER RHS3(sampler);
+	INS_VEC RES2;
+
+	SAMPLER RHS4(sampler);
+	INS_VEC RES3;
+
+	//we can only get a starting position bigger than  zero when we access points in the 
+	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
+	i = i+ std::max(0,-sampler.min());
+	
+	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
+	// that we stay in a valid range 
+	impSZ = impSZ -std::max(0,sampler.max());
+
+	int ld_offset = 0;
+	int SV_offset = 0;
+
+	int rhsSZ = impSZ - step;
+	for (; i < rhsSZ; i += step)
+	{
+		RHS1.load(pRhs1 + i+ ld_offset);
+		RES = oper(RHS1);
+		RES.store(pRet + i + SV_offset);
+
+		RHS2.load(pRhs1 + i + ld_offset + width);
+		RES1 = oper(RHS2);
+		RES1.store(pRet + i + SV_offset + width);
+
+		RHS3.load(pRhs1 + i + ld_offset + width * 2);
+		RES2 = oper(RHS3);
+		RES2.store(pRet + i  + SV_offset + width * 2);
+
+		RHS4.load(pRhs1 + i + ld_offset + width * 3);
+		RES3 = oper(RHS4);
+		RES3.store(pRet + i +  SV_offset +width * 3);
+	}
+
+	for (; i <= impSZ - width; i += width)
+	{
+		RHS1.load(pRhs1 + i + ld_offset );
+		RES = oper(RHS1);
+		RES.store(pRet + i  + SV_offset);
+	}
+
+	//one register case or do it scalar ops ?
+
+	if ( i < (impSZ- width) )
+	{
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//move to one register width from last valid
+	//point to calculate
+	i = impSZ - width;
+
+	RHS1.load(pRhs1 + i + ld_offset);
+	RES = oper(RHS1);
+	RES.store(pRet + i + SV_offset);
+
+}
+
+
+
+// experimental binary transform
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename SAMPLER >
+void ApplyTransformUR_X_Impl_EX(const VEC_TYPE<INS_VEC>& rhs1,const VEC_TYPE<INS_VEC>& aux, VEC_TYPE<INS_VEC>& ret, OP& oper, SAMPLER& sampler, int i = 0, int impSZ = -1)
+{
+
+	impSZ = (impSZ < 0) ? rhs1.paddedSize() : impSZ;
+
+	auto pAux1 = aux.start();
+	auto pRhs1 = rhs1.start();
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	INS_VEC AUX1;
+	SAMPLER RHS1(sampler);
+	INS_VEC RES;
+
+	INS_VEC AUX2;
+	SAMPLER RHS2(sampler);
+	INS_VEC RES1;
+
+	INS_VEC AUX3;
+	SAMPLER RHS3(sampler);
+	INS_VEC RES2;
+
+	INS_VEC AUX4;
+	SAMPLER RHS4(sampler);
+	INS_VEC RES3;
+
+	//int i = 0;
+
+	//we can only get a starting position bigger than  zero when we access points in the 
+	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
+	i = i + std::max(0, -sampler.min());
+
+	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
+	// that we stay in a valid range 
+	impSZ = impSZ - std::max(0, sampler.max());
+
+	int ld_offset = 0;
+	int SV_offset = 0;
+
+	int rhsSZ = impSZ - step;
+	for (; i < rhsSZ; i += step)
+	{
+		AUX1.load(pAux1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1,AUX1);
+		RES.store(pRet + i + SV_offset);
+
+		AUX2.load(pAux1 + i + ld_offset + width);
+		RHS2.load(pRhs1 + i + ld_offset + width);
+		RES1 = oper(RHS2, AUX2);
+		RES1.store(pRet + i + SV_offset + width);
+
+		AUX3.load(pAux1 + i + ld_offset + width * 2);
+		RHS3.load(pRhs1 + i + ld_offset + width * 2);
+		RES2 = oper(RHS3, AUX3);
+		RES2.store(pRet + i + SV_offset + width * 2);
+
+		AUX4.load(pAux1 + i + ld_offset + width * 3);
+		RHS4.load(pRhs1 + i + ld_offset + width * 3);
+		RES3 = oper(RHS4, AUX4);
+		RES3.store(pRet + i + SV_offset + width * 3);
+	}
+
+	for (; i <= impSZ - width; i += width)
+	{
+		AUX1.load(pAux1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1, AUX1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//one register case or do it scalar ops ?
+
+	if (i < (impSZ - width))
+	{
+		AUX1.load(pAux1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1,AUX1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//move to one register width from last valid
+	//point to calculate
+	i = impSZ - width;
+	AUX1.load(pAux1 + i + ld_offset);
+	RHS1.load(pRhs1 + i + ld_offset);
+	RES = oper(RHS1, AUX1);
+	RES.store(pRet + i + SV_offset);
+
+}
+
+
+
+
+
 template< typename INS_VEC, typename OP >
 void ApplyTransformUR_X(VecView<INS_VEC>& rhs1, OP& oper)
 {
 	ApplyTransformUR_X_Impl(rhs1, oper);
 
-	/*
-	if (!rhs1.isScalar())
-	{
-
-
-		check_vector(rhs1); //calls overload with a view
-		//views are not scalar
-
-		//int sz = rhs1.size();
-		auto pRhs1 = rhs1.start();
-		auto pRet = pRhs1;
-
-		const int width = InstructionTraits<INS_VEC>::width;
-		int step = 4 * width;
-
-		INS_VEC RHS1;
-		INS_VEC RES;
-
-		INS_VEC RHS2;
-		INS_VEC RES1;
-
-		INS_VEC RHS3;
-		INS_VEC RES2;
-
-		INS_VEC RHS4;
-		INS_VEC RES3;
-
-		int i = 0;
-
-
-		int impSZ = rhs1.paddedSize();
-
-		//int rhsSZ = sz - step;
-		int rhsSZ = impSZ - step;
-
-		for (; i < rhsSZ; i += step)
-		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RHS1);
-			RES.store_a(pRet + i);
-
-			RHS2.load_a(pRhs1 + i + width);
-			RES1 = oper(RHS2);
-			RES1.store_a(pRet + i + width);
-
-			RHS3.load_a(pRhs1 + i + width * 2);
-			RES2 = oper(RHS3);
-			RES2.store_a(pRet + i + width * 2);
-
-			RHS4.load_a(pRhs1 + i + width * 3);
-			RES3 = oper(RHS4);
-			RES3.store_a(pRet + i + width * 3);
-		}
-
-		for (; i <= impSZ - width; i += width)
-		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RHS1);
-			RES.store_a(pRet + i);
-		}
-
-		//views are padded and filled to width of register 
-		// so no end bits
-
-	}
-	else
-	{
-		auto val = rhs1.getScalarValue();
-		auto scalarRes = oper(INS_VEC(val))[0];
-		VecView<INS_VEC> result;
-		result = scalarRes;
-		rhs1 = result;
-	}
-
-	*/
 }
 
 template< typename INS_VEC, typename OP >

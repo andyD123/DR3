@@ -46,10 +46,29 @@ precision of results compare for float types is incorrect.
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-using namespace DRC::VecD4D;	//avx2   double
+//using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-//using namespace DRC::VecD8D;  //avx512 double
+using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
+
+
+
+void testSampler()
+{
+
+	double sampleData[] = { 0., 1.0,2.,3.,4.,5.,6.,7.,8.,9.,10.};
+
+	//TriSampler<DRC::VecD4D::VecXX::INS>  zzz;
+	TrinomialSampler<VecXX::INS>  zzz;
+
+	zzz.load(&sampleData[1]);
+
+	auto x = zzz.get<-1>();
+	auto y = zzz.get<0>();
+	auto z = zzz.get<1>();
+}
+
+
 
 
 using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
@@ -188,6 +207,9 @@ auto getRandomShuffledVector(int SZ, int instance_number=0)
 		return v;
 	}
 }
+
+
+
 
 
 
@@ -337,18 +359,216 @@ void    doSumSqrsMulti();
 void doAVXMax512Dance();
 
 
+/*
+
+// broken version
+
+void doSamplerTransform()
+{
+
+	const long TEST_LOOP_SZ = 1000;
+	const int repeatRuns = 20;
+	const int vectorStepSize = 200;
+	const int maxVectorSize = 20000;
+	const int minVectorSize = 400;
+
+
+	int SZ = 2000;// 100;// 360;
+
+	//auto v1 =  getRandomShuffledVector(SZ, 0); // std stl vector double or float 
+
+	std::vector<double> v(SZ, 0.0);
+	std::iota(begin(v), end(v),0.0);
+
+	VecXX vec(v);
+
+	VecXX vec2(v);
+
+	vec2 -= double(SZ * 0.5);// 180.0;
+
+	auto isPositive = [](const auto& x) { return x >= 0.; };
+	auto zeros = vec2 * 0.0;
+	vec2 = select(isPositive,vec2, vec2, zeros);
+	std::vector<double> v_tst = vec2;
+
+
+	//TriSampler<DRC::VecD4D::VecXX::INS> sampler;
+
+	TrinomialSampler<VecXX::INS> sampler;
+
+
+	VecXX ret(initTransformer(vec));
+
+	VecXX res = ret;
+	//std::vector<double> v_res = res;
+	vec = vec2; //option payoff
+
+
+	double T = 1.;
+	int N = SZ;
+
+	double r =  0.06;// 0.06;
+	double sig = 0.2;
+	double div = 0.;// 0.03;
+
+	double S = 110.;
+	double K = 120.;
+
+	VecXX St(1.0, 2*vec2.size()+1);  //should be all 1;
+
+	//int prices at maturity
+	double Dt = T / N;
+	double Dx = 0.2;
+	double eDx = exp(Dx);
+	double mult = exp(-(N) * Dx);
+
+	double last = 1.0 * S * mult / eDx;
+	for (auto& el : St)
+	{
+		last =el =last*eDx;
+	}
+
+	std::vector<double> dbk = St;
+
+	double nu = r - div - 0.5 * sig * sig;
+	VecXX::INS pu = 0.5 * ((sig * sig * Dt + nu * nu * Dt * Dt) / (Dx * Dx) +  nu * Dt / Dx);
+	VecXX::INS pm = 1.0 - (sig * sig * Dt + nu * nu * Dt * Dt) / (Dx * Dx) ;
+	VecXX::INS pd = 0.5 * ((sig * sig * Dt + nu * nu * Dt * Dt) / (Dx * Dx) - nu * Dt / Dx);
+	VecXX::INS disc = exp(-r * Dt);
+
+
+	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
+	{ auto X1 = sampler.get<1>(); auto X0 = sampler.get<0>(); auto X_1 = sampler.get<-1>();
+		return disc*(X1*pu + X0*pm + X_1*pd); 
+	};
+
+
+	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	auto terminalNodes = transform(payOffFunc, St);
+
+	dbk = terminalNodes;
+
+	vec = terminalNodes;
+	res = vec;
+
+	int i = 0; int j = vec.size();
+
+	double time = 0;
+	{
+		TimerGuard timer(time);
 
 
 
+	while ((i + 1) < j)
+	{
+
+		++i;
+		--j;
+
+	//	res *= 0.; //to set all bits to zero
+		transform(vec, res, trinomialRollBack, sampler, i, j);
+
+		++i;
+		--j;
+
+		transform(res, vec, trinomialRollBack, sampler, i, j);
+	}
+
+	dbk = res;
+
+	std::cout << " price = " << res[N ] << "  options per second = " << 1.0 / time <<  "num steps =" << i << std::endl;
+
+
+	for (int ii =0; ii>-1;) {};
+
+}
+
+	*/
+
+
+
+double europeanBinomialPricer(double S, double K, double sig, double r, double T, int N)
+{
+
+
+
+	bool bisOdd = (N & 1);
+
+	VecXX terminalAssetPrices(1.0, N +1);
+
+	double Dt = T / N; 
+	double  u = std::exp(sig * std::sqrt(Dt));
+	double d = 1. / u;
+
+
+	VecXX::INS pu = (exp(r * Dt) - d) / (u - d);
+	VecXX::INS oneMinusP = (1.0 - pu);
+	VecXX::INS disc = exp(-r * Dt);
+
+	BinomialSampler<VecXX::INS> sampler;
+
+	auto binomialRollBack = [=](BinomialSampler<VecXX::INS>& sampler)
+	{
+		auto X1 = sampler.get<1>();
+		auto X0 = sampler.get<0>();
+		return disc * (X1 * pu + X0 * oneMinusP);
+	};
+
+
+	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	//set up underlying asset prices at maturity
+	double last = S * std::pow(d, N + 2);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= (u * u);
+		el = last;
+	}
+
+
+	auto odd_slice = transform(payOffFunc, terminalAssetPrices);
+	auto even_slice = odd_slice;
+
+	int j = N+1;
+	for (int i = 0; i < N / 2; ++i)
+	{
+		transform(odd_slice, even_slice, binomialRollBack, sampler, 0, j);
+		transform(even_slice, odd_slice, binomialRollBack, sampler, 0, j-1);
+		j -= 2;
+
+	}
+	return odd_slice[0];;
+}
+
+
+
+void doBinomialPricer()
+{
+	double S = 100.;
+	double K = 100.;
+	double vol = 0.1;
+	double rate = 0.10;
+	double T = 1;
+	int N = 10;
+	
+	//broken with N=30
+//	N = 10;
+	auto res = europeanBinomialPricer(S, K, vol, rate, T, N);
+	std::cout << "price " << res << "\n";
+}
 
 
 int main()
 {
 
-
+	doBinomialPricer();
+	return 0;
 
 	std::cout << "\n \n \n \n testMemCpy2() \n" << std::endl;
 	testMemCpy2(); 
+
+
 
 	//accumulate 
 	std::cout << "\n \n \n \n doMax() \n"  << std::endl;
@@ -602,6 +822,7 @@ void doMinMax()
 		VecXX vec(v1);
 
 		auto ress = reduceM(vec, mxDbl, minDbl);
+		ignore(ress);
 		//warm up
 		for (long l = 0; l < 100; l++)
 		{
@@ -612,12 +833,13 @@ void doMinMax()
 
 
 		{   TimerGuard timer(time);
-		for (long l = 0; l < TEST_LOOP_SZ; l++)
-		{
-		  	 res = reduce(vec, mxDbl);
-	   	     double mnn = reduce(vec, minDbl);
-			 ignore(mnn);
-		}
+			for (long l = 0; l < TEST_LOOP_SZ; l++)
+			{
+		  		 res = reduce(vec, mxDbl);
+	   			 double mnn = reduce(vec, minDbl);
+				 ignore(mnn);
+			}
+
 		}
 
 		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
