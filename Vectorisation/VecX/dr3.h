@@ -449,6 +449,17 @@ typename InstructionTraits<INS_VEC>::FloatType reduce(const VecView<INS_VEC>& rh
 }
 
 
+//////experimental unrolled  double accumulation
+template< typename INS_VEC, typename OP, typename OP1>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1)
+{
+	return ApplyAccumulate2UR_X2(rhs, oper, oper1);
+
+}
+
+
+
 
 //unitary transform
 template< typename INS_VEC, typename OPT, typename OP>
@@ -505,6 +516,14 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(const VecView<INS
 }
 
 
+
+//////experimental unrolled  double transform accumulation
+template< typename INS_VEC, typename TF1, typename RED1,  typename TF2,  typename RED2>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+transformReduceM(const Vec<INS_VEC>& rhs, TF1& transform1, RED1& reduce1, TF2& transform2, RED2& reduce2)
+{
+	return ApplyTransformAccumulate2UR_X2(rhs, transform1, reduce1, transform2, reduce2);
+}
 
 
 
