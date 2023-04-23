@@ -1,4 +1,35 @@
-# DR3 
+# DR3 Repo
+
+The repository holds a C++ library that enables the development of code that prioritizes speed.
+There are numerous functionalities provided by the library that can enhance the efficiency of C++ code, such as:
+- Automatic vectorization
+- Memory prefetching
+- Function inlining
+- Loop unrolling
+- Function overloading
+
+Automatic vectorization that automatically transforms loops into vectorized code. Automatic vectorization is a powerful technique that can significantly improve the performance of code that is heavily dependent on arithmetic operations.
+Memory prefetching brings data into memory before it is needed.
+Function inlining replaces a function call with the function's body and improves performance by eliminating the overhead of function calls.
+Loop unrolling repeats the body of a loop a fixed number of times and improves performance by reducing the number of branch instructions and allowing the CPU to execute more instructions in parallel.
+Function overloading makes the code more concise by eliminating the need to create separate functions for different types of data, improves readability by making it easier to see the other implementations of a function, and is more efficient by allowing the compiler to generate more specialized code for different types of data.
+
+For C++ programmers seeking to optimize their code, the DR3 repository is an excellent asset. Its user-friendly interface and various features can significantly enhance the performance of C++ code.
+
+## Code Details
+
+* The code is written in C++17 or higher.
+* The code builds on gcc and msvc compilers.
+* The code has been tested on Linux and Windows platforms
+* The code uses CMake cross-platform build automation.
+* The code has examples and test cases
+* The code is open source and licensed under the MIT license.
+
+Suport for other platforms and compilers can easily be added since the library uses standard C++ without any dependencies except the Google Test framework.
+
+## How to Use
+
+To use the DR3 repo, simply clone the repo to your local machine and include the `dr3.h` header file in your code. You can then use the library's functions to significantly improve the performance of your code.
 
 To get full use of the repo, you need a modern processor which has AVX512 instructions. 
 If your processor only has  AVX2, you need to change target instruction sets in the projects to AVX2, and don’t generate AVX512
@@ -43,7 +74,6 @@ https://ark.intel.com/content/www/us/en/ark/products/123550/intel-xeon-silver-41
 or
 https://www.intel.com/content/www/us/en/products/details/processors/xeon/scalable.html
 
-
 The getting started project shows the useage of vectors lambdas and filters
 
 The accumulateExample builds performance examples covered in the cppCon2022 talk. 
@@ -63,7 +93,28 @@ The main library is  Vectorisation.  This refrence a local copy of the VCL2 libr
 VCL2 to be used with the intel IC2022 compiler.
 
 
-## Building DR3
+# AVX Architectures in Intel Processors
 
-See [docs/Build.md](docs/Build.md) for instructions on how to build DR3 from source and a list of supported platforms.
+## AVX
 
+* AVX is a 256-bit instruction set extension that was introduced in the Intel Sandy Bridge processor family.
+* AVX provides new instructions for performing arithmetic operations on 256-bit vectors of data.
+
+## AVX2
+
+* AVX2 is a 256-bit instruction set extension that was introduced in the Intel Haswell processor family.
+* AVX2 adds new instructions for performing arithmetic operations on 256-bit vectors of data, as well as new instructions for performing integer and floating-point conversions.
+
+## AVX512
+
+* AVX512 is a 512-bit instruction set extension that was introduced in the Intel Knights Landing processor family.
+* AVX512 provides new instructions for performing arithmetic operations on 512-bit vectors of data, as well as new instructions for performing integer and floating-point conversions.
+
+## Compatibility
+
+* AVX, AVX2, and AVX512 are all backward compatible with each other.
+* This means that code that is compiled for one AVX instruction set can be run on a processor that supports a later AVX instruction set.
+
+## Performance
+
+* AVX, AVX2, and AVX512 can significantly improve the performance of code that is heavily dependent on arithmetic operations.
