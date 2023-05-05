@@ -110,7 +110,7 @@ struct BinomialSampler
 };
 
 
-template<typename INS_VEC, int X0 = 0, int X1 = 1>
+template<typename INS_VEC, int X0 = 0>
 struct UnitarySampler
 {
 
@@ -1227,6 +1227,8 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE<INS_VEC>& ret,
 	//we can only get a starting position bigger than  zero when we access points in the 
 	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
 	i = i+ std::max(0,-sampler.min());
+
+	int i_min_start = i;
 	
 	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
 	// that we stay in a valid range 
@@ -1273,11 +1275,15 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE<INS_VEC>& ret,
 
 	//move to one register width from last valid
 	//point to calculate
-	i = impSZ - width;
+	// or zero
+	i = std::max(i_min_start, (impSZ - width));
 
 	RHS1.load(pRhs1 + i + ld_offset);
 	RES = oper(RHS1);
 	RES.store(pRet + i + SV_offset);
+
+	// ithunk this probably needs to be a masked write so we only 
+	// overwrite valid re-calculated bits
 
 }
 

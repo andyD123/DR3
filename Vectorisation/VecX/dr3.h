@@ -86,7 +86,7 @@ void transform(VEC_TYPE<INS_VEC>& inputVec, VEC_TYPE<INS_VEC>& result, OP& oper,
 
 
 
-//// experimental inplace transforms binary transform bersion of above
+//// experimental inplace transforms binary transform version of above
 // Sampler loads multiple offset INS_VECs so that lagged and advanced values can be used by the lambda oper,
 // oper takes the sampler as an input argument, iteration and transformation of input vector   
 // is confined to startPos and endPos, subject to not going out of range.

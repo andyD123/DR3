@@ -206,7 +206,7 @@ public:
 	//explicit
 	operator std::vector<typename InstructionTraits<INS_VEC>::FloatType>()
 	{
-		return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(begin(), begin() + size());// end());
+		return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(begin(), end());// begin() + size());// end());
 	}
 
 
@@ -260,7 +260,7 @@ public:
 	
 	inline typename InstructionTraits<INS_VEC>::FloatType* end() const
 	{
-		return start() + m_size;
+		return start() + static_cast<size_t>(m_size);
 	}
 
 	inline static  INS_VEC reg(typename InstructionTraits<INS_VEC>::FloatType val)

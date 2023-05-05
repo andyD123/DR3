@@ -167,7 +167,7 @@ struct InstructionTraits<Vec8d>
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = true;
-	static constexpr uint32_t limit = 100000;
+	static constexpr uint32_t limit = 1000000;
 
 	static constexpr  bool isCompact =  true;
 	using RegBoolType = Vec8db;
@@ -189,7 +189,7 @@ struct InstructionTraits<Vec16f>
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = true;
-	static constexpr uint32_t limit = 100000;
+	static constexpr uint32_t limit = 1000000;
 
 	static constexpr  bool isCompact = true; 
 	using RegBoolType = Vec16fb;

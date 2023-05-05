@@ -17,6 +17,9 @@
 #include "../Vectorisation/VecX/dr3.h"
 #include "../Vectorisation/VecX/accumulate_transform.h"
 
+
+#include "../Vectorisation/VecX/zip_utils.h"
+
 #include "norm.h"
 
 
@@ -46,9 +49,9 @@ precision of results compare for float types is incorrect.
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-//using namespace DRC::VecD4D;	//avx2   double
+using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-using namespace DRC::VecD8D;  //avx512 double
+//using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
 
 
@@ -488,6 +491,125 @@ void doSamplerTransform()
 
 
 
+void doZipping()
+{
+
+	auto v1 = getRandomShuffledVector(200);
+	VecXX a(v1);
+	VecXX b = 2. * a;
+	VecXX c = 3. * a;
+	VecXX d = 4. * a;
+	VecXX e = 5. * a;
+
+	auto zipped  = make_Zipped<VecXX::INS>(a, b, c);
+	auto it = make_Zipped_itr(a, b, c);
+
+
+	//auto zipped =
+	const VecXX& aa = a;
+	const VecXX& bb = b;
+	const VecXX& cc = c;
+	const VecXX& dd = d; 
+	const VecXX& ee = e;
+
+	auto zp5 = make_Zipped<VecXX::INS>(aa, bb, cc,dd,ee);
+	auto zp5_itr = make_Zipped_itr<VecXX::INS>(aa, bb, cc, dd, ee);
+
+
+	//it.inc(1);
+
+	auto addingLambda = [](auto& zpped)
+	{
+		const auto& X = std::get<0>(zpped.m_registers);
+		const auto& Y = std::get<1>(zpped.m_registers);
+		const auto& Z = std::get<2>(zpped.m_registers);
+
+		return X + Y + Z;
+	};
+
+
+	VecXX::INS X = 0.;
+	for (int i = 0; i < 200 / 8; ++i)
+	{
+		zipped.load(it);
+		auto sum = addingLambda(zipped);
+		X += sum;
+		it.inc(1);
+	}
+
+	std::cout << X[0];
+
+	zipped.load(it);
+
+
+	auto addingLambda5 = [](auto& zpped)
+	{
+		const auto& X = std::get<0>(zpped.m_registers);
+		const auto& Y = std::get<1>(zpped.m_registers);
+		const auto& Z = std::get<2>(zpped.m_registers);
+		const auto& L = std::get<3>(zpped.m_registers);
+		const auto& M = std::get<4>(zpped.m_registers);
+
+		return X + Y + Z + L + M;
+	};
+
+
+
+	//Vec<INS_VEC> res =   transform(OP & oper, const Zipped_ITR< INS_VEC, N>&zip)
+
+	auto res = transform(addingLambda5, zp5_itr);
+
+	std::vector<double> vdb = res;
+
+	enum class Access { down = -1, mid = 0, up = 1 };
+	using Mysample = Named_Zip_iter < VecXX::INS, 3, Access > ;
+
+	//NAMED_INDEX
+
+	//Mysample instance;
+
+
+//	Named_Zipped_Reg < VecXX::INS, 3, Access > myReg;
+	Zipped_Reg < VecXX::INS, 3 > myReg;
+	using reg = Zipped_Reg < VecXX::INS, 3 >;
+
+	//auto zz = Access::down;
+	auto yy = myReg.get<int(Access::up)>();
+
+
+
+	//////////////////////////////
+
+
+	VecXX out1 = a;
+	VecXX out2 = b;
+
+	VecXX& out1_r = out1;
+	VecXX& out2_r = out2;
+
+
+	auto zp_out = make_Zipped_itr_ref<VecXX::INS>(out1_r, out2_r);
+
+	auto addingLambdaIO = [&](const auto& zpped, auto& out_zipp)
+	{
+		const auto& X = std::get<0>(zpped.m_registers);
+		const auto& Y = std::get<1>(zpped.m_registers);
+		const auto& Z = std::get<2>(zpped.m_registers);
+
+		std::get<0>(out_zipp.m_registers) =  X + Y + Z;
+		std::get<1>(out_zipp.m_registers) = X + Y ;
+	};
+
+
+	transform(addingLambdaIO, zp5_itr,zp_out);
+
+
+	std::vector<double> vdb1 = out1;
+	std::vector<double> vdb2 = out2;
+
+}
+
+
 double europeanBinomialPricer(double S, double K, double sig, double r, double T, int N)
 {
 
@@ -517,6 +639,7 @@ double europeanBinomialPricer(double S, double K, double sig, double r, double T
 
 
 	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+//	auto payOffFunc = [=](auto X) { return select(X < K, K - X, 0.0); };
 
 	//set up underlying asset prices at maturity
 	double last = S * std::pow(d, N + 2);
@@ -547,20 +670,676 @@ void doBinomialPricer()
 {
 	double S = 100.;
 	double K = 100.;
-	double vol = 0.1;
+	double vol = 0.2;
 	double rate = 0.10;
 	double T = 1;
-	int N = 10;
+	int N = 50000;
 	
-	//broken with N=30
-//	N = 10;
 	auto res = europeanBinomialPricer(S, K, vol, rate, T, N);
 	std::cout << "price " << res << "\n";
 }
 
 
+
+
+
+
+double europeanTrinomialPricer(double S, double K, double sig, double r, double T, int N)
+{
+
+	double y = 0.0;// 0.03; //div yield
+
+	
+	VecXX terminalAssetPrices(1.0, 2*N + 1);
+
+	double Dt = T / N;
+	//double Dx = sig * std::sqrt(3.0* Dt);
+	double Dx = sig * std::sqrt(2.0 * Dt);
+
+	double v = r - y - 0.5 * sig * sig;
+	
+
+	double  u = Dx;// std::exp(sig * std::sqrt(Dt));
+	double d = 1. / u;
+	
+
+	VecXX::INS pu = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) + (v * Dt) / Dx);
+
+	VecXX::INS pd = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) - (v * Dt) / Dx);
+		
+	VecXX::INS pm = 1. - (Dt*sig*sig + v*v* Dt*Dt) / (Dx*Dx); 
+
+
+	VecXX::INS disc = exp(-r * Dt);
+	
+	TrinomialSampler<VecXX::INS> sampler;
+
+	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
+	{
+		auto X1 = sampler.get<1>();
+		auto X0 = sampler.get<0>();
+		auto X_1 = sampler.get<-1>();
+		return disc * (X1 * pu + X0 * pm  +  X_1* pd);
+	};
+
+
+	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	//set up underlying asset prices at maturity
+	double last = S * exp( -(N + 1)* Dx);
+	double edx = exp(Dx);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= edx;
+		el = last;
+	}
+
+	auto odd_slice = transform(payOffFunc, terminalAssetPrices);
+	auto even_slice = odd_slice;
+
+	int j = 2*N + 1  -1;
+	int i = 0;
+	for (; i < N ; i+=2)
+	{
+		transform(odd_slice, even_slice, trinomialRollBack, sampler, i, j);
+		transform(even_slice, odd_slice, trinomialRollBack, sampler, i+1, j - 1);
+		j -= 2;
+	}
+
+	return odd_slice[N];
+}
+
+
+
+
+double americanTrinomialPricer(double S, double K, double sig, double r, double T, int N)
+{
+
+	double y = 0.0;// 0.03; //div yield
+
+
+	VecXX terminalAssetPrices(1.0, 2 * N + 1);
+
+	double Dt = T / N;
+	double Dx = sig * std::sqrt(2.0 * Dt);
+	double v = r - y - 0.5 * sig * sig;
+
+	double  u = Dx;
+	double d = 1. / u;
+
+
+	VecXX::INS pu = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) + (v * Dt) / Dx);
+	VecXX::INS pd = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) - (v * Dt) / Dx);
+	VecXX::INS pm = 1. - (Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx);
+
+
+	VecXX::INS disc = exp(-r * Dt);
+	TrinomialSampler<VecXX::INS> sampler;
+
+	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
+	{
+		auto X1 = sampler.get<1>();
+		auto X0 = sampler.get<0>();
+		auto X_1 = sampler.get<-1>();
+		return disc * (X1 * pu + X0 * pm + X_1 * pd);
+	};
+
+	//call
+	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	//put
+	//auto payOffFunc = [=](auto X) { return select(X < K, K -X , 0.0); };
+
+	//set up underlying asset prices at maturity
+	double last = S * exp(-(N + 1) * Dx);
+	double edx = exp(Dx);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= edx;
+		el = last;
+	}
+
+	auto excerciseValue  = transform(payOffFunc, terminalAssetPrices);
+	auto odd_slice = excerciseValue;
+
+	UnitarySampler<VecXX::INS> identity_sampler; //identity just 
+
+	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler , auto excercisePrice )
+	{
+		auto optPrice = sampler.get<0>();
+		return max(optPrice, excercisePrice);
+	};
+
+
+	auto even_slice = odd_slice;
+
+	int j = 2 * N + 1 - 1;
+	int i = 0;
+	for (; i < N; i += 2)
+	{
+		transform(odd_slice, even_slice, trinomialRollBack, sampler, i, j);
+		// transform to get early excercise for american bit , iderntity sampler just passes values straight through
+		transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, i, j);
+
+		transform(even_slice, odd_slice, trinomialRollBack, sampler, i + 1, j - 1);
+		transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, i+1, j-1);
+		
+		j -= 2;
+	}
+
+	return odd_slice[N];
+}
+
+
+
+
+void doTrinomialPricer()
+{
+
+	double res = 0.0;
+	double time = 0;
+	{
+		TimerGuard timer(time);
+
+		double S = 100.;
+		double K = 100.;
+		double vol = 0.2;
+		double rate = 0.06;
+		double T = 1;
+		int N = 1000;// 500;
+		 res = americanTrinomialPricer(S, K, vol, rate, T, N);
+
+		
+	}
+	std::cout << std::setprecision(12) << "price " << res << "\n";
+	std::cout << " takes secs" << time << "\n";
+}
+
+
+
+
+
+
+
+
+double americanFiniteDiffPricer(double S, double K, double sig, double r, double T, int N)
+{
+
+	//dividend yield
+	double y = 0.0;// 0.03;// 0.03; //div yield
+	VecXX terminalAssetPrices(1.0, 2 * N + 1);
+
+	double Dt = T / N;
+	double Dx =  sig* std::sqrt(2.0 * Dt);
+	double v = r - y - 0.5 * sig * sig;
+
+	double  u = Dx;
+	double d = 1. / u;
+
+
+	VecXX::INS pu = 0.5 *Dt* (( sig * sig ) / (Dx * Dx) + v  / Dx);
+	VecXX::INS pd = 0.5 * Dt * ((sig * sig) / (Dx * Dx) - v / Dx);
+	VecXX::INS pm = 1. - Dt * (sig * sig) / (Dx * Dx) -  r * Dt;
+
+
+	VecXX::INS disc = exp(-r * Dt);
+	TrinomialSampler<VecXX::INS> sampler;
+
+	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
+	{
+		auto X1 = sampler.get<1>();
+		auto X0 = sampler.get<0>();
+		auto X_1 = sampler.get<-1>();
+		return  (X1 * pu + X0 * pm + X_1 * pd);
+	};
+
+
+	//Pay off functions
+	//call
+	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	//put
+	//auto payOffFunc = [=](auto X) { return select(X < K, K - X, 0.0); };
+
+	//set up underlying asset prices at maturity
+	double last = S * exp(-(N + 1) * Dx);
+	double edx = exp(Dx);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= edx;
+		el = last;
+	}
+
+	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
+	auto odd_slice = excerciseValue;
+
+	UnitarySampler<VecXX::INS> identity_sampler; //identity  
+
+	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
+	{
+		auto optPrice = sampler.get<0>();
+		return max(optPrice, excercisePrice);
+	};
+
+	auto even_slice = odd_slice*0.0;
+
+	int J = 2 * N;
+
+	int k = 0;
+	for (; k < N; k += 2)
+	{
+
+		transform(odd_slice, even_slice, trinomialRollBack, sampler, 0, J);
+
+		//boundary condition
+		even_slice[0 ] = even_slice[1]	+ terminalAssetPrices[1] - terminalAssetPrices[0];
+		even_slice[J] = even_slice[J - 1];
+
+		// transform to get early excercise for american bit , iderntity sampler just passes values straight through
+		transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, 0, J);
+	
+
+		transform(even_slice, odd_slice, trinomialRollBack, sampler, 0 , J);
+		//boundary condition
+		odd_slice[0] = odd_slice[1] + terminalAssetPrices[1] - terminalAssetPrices[0];
+		odd_slice[J] = odd_slice[J - 1];
+		transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, 0, J);
+
+	}
+
+	return odd_slice[N];
+}
+
+
+
+
+void doAmericanFiniteDiff()
+{
+	double time = 0;
+	double res = 0.0;
+	{
+	TimerGuard timer(time);
+	
+
+
+		std::cout << std::setprecision(12) << " start \n";
+		double S = 100.;
+		double K = 100.;
+		double vol = 0.2;
+		double rate = 0.06;
+		double T = 1;
+		int N = 10000;
+
+		 res = americanFiniteDiffPricer(S, K, vol, rate, T, N);
+
+		
+	}
+	std::cout << std::setprecision(12) << "price " << res << "\n";
+	std::cout << " takes secs" << time << "\n";
+}
+
+
+
+
+double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r, double T, int N)
+{
+
+	//dividend yield
+	double y = 0.0;// 0.03;// 0.03; //div yield
+	VecXX terminalAssetPrices(1.0, 2 * N + 1);
+
+	double Dt = T / N;
+	double Dx =  sig* std::sqrt(2.0 * Dt);
+	double v = r - y - 0.5 * sig * sig;
+
+	double  u = Dx;
+	double d = 1. / u;
+
+
+	VecXX::SCALA_TYPE pu = -0.5 * Dt * ((sig * sig) / (Dx * Dx) + v / Dx);
+	VecXX::SCALA_TYPE pd = -0.5 * Dt * ((sig * sig) / (Dx * Dx) - v / Dx);
+	VecXX::SCALA_TYPE pm = 1. + Dt * (sig * sig) / (Dx * Dx) + r * Dt;
+
+
+	std::vector<double> vdbg;
+	//Pay off functions
+
+	//call
+	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	//put
+	//auto payOffFunc = [=](auto X) { return select(X < K, K - X, 0.0); };
+
+	//set up underlying asset prices at maturity
+	double last = S * exp(-(N + 1) * Dx);
+	double edx = exp(Dx);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= edx;
+		el = last;
+	}
+
+	//option vakue at maturity
+
+	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
+
+	//derivative boundary condition
+	double  lambda_L =-1. * (terminalAssetPrices[1] - terminalAssetPrices[0]);
+	double  lambda_U = 0.0;
+
+	auto odd_slice = excerciseValue;
+	vdbg = odd_slice;
+
+
+	auto even_slice = odd_slice * 0.0;
+
+	int J = 2 * N;
+	int k = 0;
+
+	VecXX pmp(1.0, J + 1);
+	VecXX pp(1.0, J + 1);
+
+	for (; k < N; k += 2)
+	{
+
+		// SOLVE IMPLICIT TRIDIAGONAL  IN LINE 
+		//SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+		pmp[1] = pm + pd;	
+		pp[1] = odd_slice[1] + pd * lambda_L;
+
+
+
+		// eliminate upper diagonal
+		for (int j = 2; j < J; ++j)
+		{
+			pmp[j] = pm - pu * pd / pmp[j - 1];
+			pp[j] = odd_slice[j] - pp[j - 1] * pd / pmp[j - 1];
+		}
+
+		even_slice[1] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		even_slice[J - 1] = even_slice[J] - lambda_U;
+
+		
+		// back substitution
+		for (int j = J - 2; j != 0; j--)
+		{
+			even_slice[j] = (pp[j] - pu * even_slice[j + 1]) / pmp[j];
+		}
+
+
+		// american
+//		for (int j = 0; j < (J+1); j++)
+//		{
+//			even_slice[j] = std::max(even_slice[j], excerciseValue[j]);
+//		}
+
+
+		// calc odd slice now
+//////////////////////////////////////////////////////////////////////
+		
+		pmp[1] = pm + pd;	
+		pp[1] = even_slice[1] + pd * lambda_L;
+
+
+		// eliminate upper diagonal
+		for (int j = 2; j < J; ++j)
+		{
+			pmp[j] = pm - pu * pd / pmp[j - 1];
+			pp[j] = even_slice[j] - pp[j - 1] * pd / pmp[j - 1];
+		}
+
+		odd_slice[1] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		odd_slice[J - 1] = odd_slice[J] - lambda_U;
+
+
+		// back substitution
+		for (int j = J - 2; j != 0; j--)
+		{
+			odd_slice[j] = (pp[j] - pu * odd_slice[j + 1]) / pmp[j];
+		}
+
+		//american
+//		for (int j = 0; j < (J + 1); j++)
+//		{
+//			odd_slice[j] = std::max(odd_slice[j], excerciseValue[j]);
+//		}
+
+
+	}
+
+	return odd_slice[N];
+}
+
+
+
+
+void doAmericanImplicitFiniteDiff()
+{
+	double time = 0;
+	double res = 0.0;
+	{
+	TimerGuard timer(time);
+
+		std::cout << std::setprecision(12) << " start \n";
+		double S = 100.;
+		double K = 100.;
+		double vol = 0.2;
+		double rate = 0.06;
+		double T = 1;
+		int N = 10000;
+		res = americanImplicitFiniteDiffPricer(S, K, vol, rate, T, N);		
+	}
+	std::cout << std::setprecision(12) << "price " << res << "\n";
+	std::cout << " takes secs" <<time << "\n";
+}
+
+
+
+
+
+/////////////////////
+
+
+double americanCrankNicholsonPricer(double S, double K, double sig, double r, double T, int N)
+{
+
+	//dividend yield
+	double y = 0.;// 0.03;// 0.0;// 0.03;// 0.03; //div yield
+	VecXX terminalAssetPrices(1.0, 2 * N + 1);
+
+	double Dt = T / N;
+	double Dx =  sig* std::sqrt(1.0 * Dt);// 0.2;//
+	double v = r - y - 0.5 * sig * sig;
+
+	double  u = Dx;
+	double d = 1. / u;
+
+
+	VecXX::SCALA_TYPE pu = -0.25 * Dt * ((sig * sig) / (Dx * Dx) + v / Dx);
+	VecXX::SCALA_TYPE pd = -0.25 * Dt * ((sig * sig) / (Dx * Dx) - v / Dx);
+	VecXX::SCALA_TYPE pm = 1. + 0.5	*Dt * (sig * sig) / (Dx * Dx) + 0.5* r * Dt;
+
+	std::vector<double> vdbg;
+	//Pay off functions
+
+	//call
+	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	//put
+	//auto payOffFunc = [=](auto X) { return select(X < K, K - X, 0.0); };
+
+	//set up underlying asset prices at maturity
+	double last = S * exp(-(N + 1) * Dx);
+	double edx = exp(Dx);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= edx;
+		el = last;
+	}
+
+	//option vakue at maturity
+
+	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
+
+	//vdbg = terminalAssetPrices;
+	//vdbg = excerciseValue;
+
+	//derivative boundary condition
+	double  lambda_L = -1. * (terminalAssetPrices[1] - terminalAssetPrices[0]);
+	double  lambda_U = 0.0;
+
+	auto odd_slice = excerciseValue;
+	vdbg = odd_slice;
+
+
+
+	auto even_slice = odd_slice * 0.0;
+
+	even_slice[0] = odd_slice[0];
+
+	int J = 2 * N;
+
+	int k = 0;
+
+	VecXX pmp(1.0, J + 1);
+	VecXX pp(1.0, J + 1);
+
+	for (; k <= N; k += 2)
+	{
+
+		// SOLVE IMPLICIT TRIDIAGONAL  IN LINE 
+		//SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+		pmp[1] = pm + pd;
+		pp[1] = -pu*odd_slice[2] -(pm-2.)* odd_slice[1] -   pd* odd_slice[0]  + pd * lambda_L;
+
+
+
+		// eliminate upper diagonal
+		for (int j = 2; j < J; ++j)
+		{
+			pmp[j] = pm - pu * pd / pmp[j - 1];
+			pp[j] = -pu*odd_slice[j+1] -(pm-2.0)* odd_slice[j] -pd* odd_slice[j-1] - pp[j - 1] * pd / pmp[j - 1];
+		}
+
+
+
+		even_slice[J] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		even_slice[J - 1] = even_slice[J] - lambda_U;
+
+
+		// back substitution
+		for (int j = J - 1; j >= 0; j--)
+		{
+			even_slice[j] = (pp[j] - pu * even_slice[j + 1]) / pmp[j];
+		}
+
+
+		even_slice[0] = odd_slice[0];
+		//vdbg = even_slice;
+
+		//american condition
+		for (int j = 0; j < (J+1); j++)
+		{
+			even_slice[j] = std::max(even_slice[j], excerciseValue[j]);
+		}
+
+
+	//	vdbg = even_slice;
+
+	//	vdbg = odd_slice;
+	//	vdbg = pmp;
+	//	vdbg = pp;
+		
+		
+		// calc odd slice now
+//////////////////////////////////////////////////////////////////////
+
+		pmp[1] = pm + pd;
+		pp[1] = -pu * even_slice[2] - (pm - 2.) * even_slice[1] - pd * even_slice[0] + pd * lambda_L;
+		
+
+		// eliminate upper diagonal
+		for (int j = 2; j < J; ++j)
+		{
+			pmp[j] = pm - pu * pd / pmp[j - 1];
+			pp[j] = -pu * even_slice[j + 1] - (pm - 2.0) * even_slice[j] - pd * even_slice[j - 1] - pp[j - 1] * pd / pmp[j - 1];
+		}
+
+		odd_slice[J] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		odd_slice[J - 1] = odd_slice[J] - lambda_U;
+
+
+		// back substitution
+		for (int j = J - 1; j >= 0; j--)
+		{
+			odd_slice[j] = (pp[j] - pu * odd_slice[j + 1]) / pmp[j];
+		}
+
+		odd_slice[0] = even_slice[0];
+
+		//american condition
+		for (int j = 0; j < (J + 1); j++)
+		{
+			odd_slice[j] = std::max(odd_slice[j], excerciseValue[j]);
+		}
+	
+		
+	//	vdbg = odd_slice;
+	//	vdbg = even_slice;
+	//	vdbg = pmp;
+	//	vdbg = pp;
+		
+	}
+
+	return odd_slice[N];
+}
+
+
+
+
+void doAmericanCrankNicholson()
+{
+	double time = 0;
+	double res = 0.0;
+	{
+		TimerGuard timer(time);
+
+		std::cout << std::setprecision(12) << " start \n";
+		double S = 100.;
+		double K = 100.;
+		double vol = 0.2;
+		double rate = 0.06;
+		double T = 1;
+		int N = 10000;
+		res = americanCrankNicholsonPricer(S, K, vol, rate, T, N);
+	}
+	std::cout << std::setprecision(12) << "price " << res << "\n";
+	std::cout << " takes secs" << time << "\n";
+}
+
+
+
+
+
 int main()
 {
+
+	doAmericanCrankNicholson();
+	//return 0;
+
+
+	doAmericanImplicitFiniteDiff();
+	//return 0;
+
+	
+	doAmericanFiniteDiff();
+//	return 0;
+
+	doTrinomialPricer();
+	return 0;
+
+//	doZipping();
+//	return 0;
 
 	doBinomialPricer();
 	return 0;

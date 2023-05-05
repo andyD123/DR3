@@ -84,7 +84,9 @@ struct  UnitaryOpElement
 	using  IdxType = typename InstructionTraits< INS_VEC>::IdxType;
 	IdxType idx;
 
-	uint32_t limit = 100000; //maxs size for scatter TO DO 
+	
+
+	uint32_t limit = InstructionTraits< INS_VEC>::limit; //maxs size for scatter TO DO 
 
 
 	UnitaryOpElement()
