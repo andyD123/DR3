@@ -2015,6 +2015,243 @@ Vec<INS_VEC> ApplyAdjacentDiff(const Vec<INS_VEC>& rhs1, OP& oper)
 
 
 
+/*
+// works experimental
+// generic scan   
+template< typename INS_VEC, typename OP>
+Vec<INS_VEC> ApplyScan8(const Vec<INS_VEC>& rhs1, OP& oper)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1))
+	{
+		throw std::range_error("ApplyScan called on scalar");
+	}
+
+	Vec<INS_VEC> result(rhs1.size());
+
+	auto pRes = result.start();
+	auto pRhs1 = rhs1.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 1 * width;
+
+
+	INS_VEC RHS1;
+	INS_VEC RES1;
+
+	
+
+	INS_VEC runValue = 0.0;
+
+	int sz = rhs1.paddedSize();
+
+	//https://gfxcourses.stanford.edu/cs149/fall20content/media/dataparallel/08_dataparallel.pdf
+
+	int i = 0;
+	for (; i < (sz - step); i += step)
+	{
+
+		RHS1.load_a(pRhs1 + i);
+		INS_VEC temp = oper(RHS1, runValue);
+		INS_VEC RHS = blend8<8,  1, 2, 3, 4, 5, 6,7>(RHS1, temp);
+
+		INS_VEC RHS_R1 = permute8<0, 0, 1, 2, 3, 4, 5, 6>(RHS);
+		auto sum_1 = oper(RHS, RHS_R1);
+		sum_1 = blend8<0, 1+8, 2, 3+8, 4, 5+8, 6, 7+8>( RHS, sum_1);
+		auto pairs = permute8<0, 0, 1, 1, 0, 0, 5, 5>(sum_1);
+
+		auto res_1 = oper(pairs, sum_1);
+		auto sum_2 = blend8<0, 1, 8+2, 8+3, 4, 5, 8+6,8+ 7>(sum_1, res_1);
+		auto shift_3 = permute8<0,0,0,0,3,3,3,3>(sum_2);
+		auto res_3 = oper(shift_3, sum_2);
+
+		 res_3 = blend8<0, 1,  2, 3, 8+4,8+ 5, 8 + 6, 8 + 7>(sum_2, res_3);
+		 res_3.store_a(pRes + i);
+		 runValue = permute8<7, 7, 7, 7, 7, 7, 7, 7>(res_3);
+
+	}
+	for (int j = i; j < (sz - 1); j++)
+	{
+		result[j] = ApplyBinaryOperation1<INS_VEC, OP>(rhs1[j], rhs1[j + 1], oper);
+	}
+
+	return result;
+
+};
+
+*/
+
+
+
+
+
+// works experimental
+// generic scan
+template< typename INS_VEC, typename OP>
+Vec<INS_VEC> ApplyScan8(const Vec<INS_VEC>& rhs1, OP& oper)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1))
+	{
+		throw std::range_error("ApplyScan called on scalar");
+	}
+
+	Vec<INS_VEC> result(rhs1.size());
+
+	auto pRes = result.start();
+	auto pRhs1 = rhs1.start();
+
+	constexpr int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+
+	
+
+	INS_VEC runValue = 0.0;
+
+	int sz = rhs1.paddedSize();
+
+
+/*
+
+	auto scanIt4 = [&](typename InstructionTraits<INS_VEC>::FloatType* pRhs)//, INS_VEC& runValue)
+	{
+		INS_VEC RHS;
+		RHS.load_a(pRhs);
+
+		INS_VEC RHS1 = blend4<4, 0, 1, 2>(RHS, runValue);
+
+		auto sum_1 = oper(RHS, RHS1);
+
+		INS_VEC RHS2 = blend4<4,4, 0, 1>(sum_1, runValue);
+
+		return  oper(RHS2, sum_1);
+
+
+	};
+	
+
+*/
+
+
+
+/**/
+
+		auto scan= [&](typename InstructionTraits<INS_VEC>::FloatType* pRhs)
+		{
+			INS_VEC RHS;
+			RHS.load_a(pRhs);
+
+
+			INS_VEC RHS1 = blend8<8, 0, 1, 2, 3, 4, 5, 6>(RHS, runValue);
+
+			auto sum_1 = oper(RHS, RHS1);
+
+			INS_VEC RHS2 = blend8<8, 8, 0, 1, 2, 3, 4, 5>(sum_1, runValue);
+
+			auto sum_2 = oper(RHS2, sum_1);
+
+			INS_VEC RHS3 = blend8<8, 8, 8, 8, 0, 1, 2, 3>(sum_2, runValue);
+
+			auto sum_3 = oper(RHS3, sum_2);
+
+			return sum_3;
+
+		};
+		;
+		
+
+
+
+/*
+		auto scanI16= [&](typename InstructionTraits<INS_VEC>::FloatType* pRhs)
+		{
+			INS_VEC RHS;
+			RHS.load_a(pRhs);
+
+
+			INS_VEC RHS1 = blend16<16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14>(RHS, runValue);
+
+			auto sum_1 = oper(RHS, RHS1);
+
+			INS_VEC RHS2 = blend16<16, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13>(sum_1, runValue);
+
+			auto sum_2 = oper(RHS2, sum_1);
+
+			INS_VEC RHS3 = blend16<16, 16, 16, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11>(sum_2, runValue);
+
+			auto sum_3 = oper(RHS3, sum_2);
+
+			INS_VEC RHS4 = blend16<16, 16, 16, 16, 16, 16, 16, 16, 0, 1, 2, 3, 4, 5, 6, 7>(sum_3, runValue);
+
+			auto sum_4 = oper(RHS4, sum_3);
+
+			return sum_4;
+
+		};
+		
+*/
+
+
+
+	//https://gfxcourses.stanford.edu/cs149/fall20content/media/dataparallel/08_dataparallel.pdf
+
+	constexpr int LAST_ELEM = width - 1;
+
+
+	auto scanN = scan;
+	
+
+	int i = 0;
+	for (; i < (sz - step); i += step)
+	{
+
+
+		INS_VEC Res1 = scanN(pRhs1);
+
+		INS_VEC Res2 = scanN(pRhs1 + width);
+		
+		INS_VEC Res3 = scanN(pRhs1 + 2 * width);
+		
+		INS_VEC Res4 = scanN(pRhs1 + 3 * width);
+
+		INS_VEC runValue1 = Res1[LAST_ELEM];
+		INS_VEC runValue2 = Res2[LAST_ELEM];
+		INS_VEC runValue3 = Res3[LAST_ELEM];
+		INS_VEC runValue4 = Res4[LAST_ELEM];
+
+		auto sv12 = runValue1 + runValue2;
+		auto sv13 = runValue1 + runValue2 + runValue3;
+
+		auto sv34 = runValue3 + runValue4;
+
+		Res2 += runValue1;
+		Res3 += sv12;
+		Res4 += sv13;
+
+		runValue += sv34 + sv12;
+		
+		Res1.store_a(pRes + i );
+		Res2.store_a(pRes + i + width);
+		Res3.store_a(pRes + i + 2*width);
+		Res4.store_a(pRes + i + 3*width);
+
+
+	}
+	for (int j = i; j < (sz - 1); j++)
+	{
+		result[j] = ApplyBinaryOperation1<INS_VEC, OP>(rhs1[j], rhs1[j + 1], oper);
+	}
+
+	return result;
+
+};
+
+
+
+
+
+
 
 //////experimental unrolled  double accumulation
 template< typename INS_VEC, typename OP, typename OP2>

@@ -49,17 +49,19 @@ precision of results compare for float types is incorrect.
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-using namespace DRC::VecD4D;	//avx2   double
+//using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-//using namespace DRC::VecD8D;  //avx512 double
+using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
 
+
+using FLOAT = typename InstructionTraits<VecXX::INS>::FloatType;
 
 
 void testSampler()
 {
 
-	double sampleData[] = { 0., 1.0,2.,3.,4.,5.,6.,7.,8.,9.,10.};
+	FLOAT sampleData[] = { 0., 1.0,2.,3.,4.,5.,6.,7.,8.,9.,10.};
 
 	//TriSampler<DRC::VecD4D::VecXX::INS>  zzz;
 	TrinomialSampler<VecXX::INS>  zzz;
@@ -76,7 +78,7 @@ void testSampler()
 
 using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
 
-AllAllocatorsGuard<FLOAT> allocGuard;
+//AllAllocatorsGuard<FLOAT> allocGuard;
 
 const double billion = 1000000000.0;
 
@@ -491,6 +493,61 @@ void doSamplerTransform()
 
 
 
+void doScan()
+{
+
+	auto v1 = std::vector<VecXX::SCALA_TYPE>(4000,0.0);
+	FLOAT last = -1.0;
+	for (auto& x : v1)
+	{
+		x = last + 1.0;
+		last = x;
+	}
+	// getRandomShuffledVector(200);
+	VecXX a(v1);
+	std::vector<FLOAT> dbg = v1;
+
+	auto sum = [](auto X, auto Y) { return X + Y; };
+
+
+	double time = 0;
+	{
+		TimerGuard timer(time);
+
+		//a += 1.0;
+
+		for (long l = 0; l < 1000000; ++l)
+		{
+			VecXX result = ApplyScan8(a, sum);
+			//dbg = a;
+		//	dbg = result;
+		}
+	}
+	std::cout << "run time = " << time << "\n";
+
+
+	 time = 0;
+	{
+		TimerGuard timer(time);
+
+		//a += 1.0;
+
+		for (long l = 0; l < 1000000; ++l)
+		{
+			//VecXX result = ApplyScan8(a, sum);
+			std::inclusive_scan(begin(v1), end(v1), dbg.begin());
+		//	dbg = a;
+		//	dbg = result;
+		}
+	}
+	std::cout << "run time std::scan = " << time << "\n";
+
+
+	
+
+}
+
+
 void doZipping()
 {
 
@@ -559,7 +616,7 @@ void doZipping()
 
 	auto res = transform(addingLambda5, zp5_itr);
 
-	std::vector<double> vdb = res;
+	std::vector<FLOAT> vdb = res;
 
 	enum class Access { down = -1, mid = 0, up = 1 };
 	using Mysample = Named_Zip_iter < VecXX::INS, 3, Access > ;
@@ -604,8 +661,8 @@ void doZipping()
 	transform(addingLambdaIO, zp5_itr,zp_out);
 
 
-	std::vector<double> vdb1 = out1;
-	std::vector<double> vdb2 = out2;
+	std::vector<FLOAT> vdb1 = out1;
+	std::vector<FLOAT> vdb2 = out2;
 
 }
 
@@ -1001,7 +1058,7 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 	VecXX::SCALA_TYPE pm = 1. + Dt * (sig * sig) / (Dx * Dx) + r * Dt;
 
 
-	std::vector<double> vdbg;
+	std::vector<FLOAT> vdbg;
 	//Pay off functions
 
 	//call
@@ -1159,7 +1216,7 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 	VecXX::SCALA_TYPE pd = -0.25 * Dt * ((sig * sig) / (Dx * Dx) - v / Dx);
 	VecXX::SCALA_TYPE pm = 1. + 0.5	*Dt * (sig * sig) / (Dx * Dx) + 0.5* r * Dt;
 
-	std::vector<double> vdbg;
+	std::vector<FLOAT> vdbg;
 	//Pay off functions
 
 	//call
@@ -1324,6 +1381,16 @@ void doAmericanCrankNicholson()
 int main()
 {
 
+	try
+	{
+		doScan();
+	}
+	catch (...)
+	{
+	}
+	return 0;
+	/*
+
 	doAmericanCrankNicholson();
 	//return 0;
 
@@ -1343,11 +1410,14 @@ int main()
 
 	doBinomialPricer();
 	return 0;
+*/
+
+	//return 0;
 
 	std::cout << "\n \n \n \n testMemCpy2() \n" << std::endl;
 	testMemCpy2(); 
 
-
+	return 0;
 
 	//accumulate 
 	std::cout << "\n \n \n \n doMax() \n"  << std::endl;
