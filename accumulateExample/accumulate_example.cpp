@@ -516,16 +516,20 @@ void doScan()
 
 		//a += 1.0;
 
+		VecXX result;
 		for (long l = 0; l < 1000000; ++l)
 		{
-			VecXX result = ApplyScan8(a, sum);
+			 result = ApplyScan(a, sum);
 			//dbg = a;
-		//	dbg = result;
+			
 		}
+
+		dbg = result;
 	}
 	std::cout << "run time = " << time << "\n";
 
 
+	auto dbg_cpy = dbg;
 	 time = 0;
 	{
 		TimerGuard timer(time);
@@ -538,14 +542,23 @@ void doScan()
 			std::inclusive_scan(begin(v1), end(v1), dbg.begin());
 		//	dbg = a;
 		//	dbg = result;
+
+
 		}
 	}
 	std::cout << "run time std::scan = " << time << "\n";
 
+//	/*
+	for (int i = 0; i < dbg_cpy.size(); ++i)
+	{
+		std::cout << i << "  ,  " << dbg[i] << "   , " << dbg_cpy[i] << std::endl;
+	}
 
+//	*/
 	
 
 }
+
 
 
 void doZipping()
@@ -665,6 +678,7 @@ void doZipping()
 	std::vector<FLOAT> vdb2 = out2;
 
 }
+
 
 
 double europeanBinomialPricer(double S, double K, double sig, double r, double T, int N)
@@ -1076,7 +1090,7 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 		el = last;
 	}
 
-	//option vakue at maturity
+	//option value at maturity
 
 	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
 
@@ -1380,7 +1394,7 @@ void doAmericanCrankNicholson()
 
 int main()
 {
-
+	/**/
 	try
 	{
 		doScan();
@@ -1389,7 +1403,10 @@ int main()
 	{
 	}
 	return 0;
-	/*
+	
+
+//
+/*
 
 	doAmericanCrankNicholson();
 	//return 0;
@@ -1410,6 +1427,7 @@ int main()
 
 	doBinomialPricer();
 	return 0;
+//
 */
 
 	//return 0;

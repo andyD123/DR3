@@ -582,6 +582,7 @@
     <ClInclude Include="VecX\instruction_traits.h" />
     <ClInclude Include="VecX\math_ops.h" />
     <ClInclude Include="VecX\operations.h" />
+    <ClInclude Include="VecX\scan.h" />
     <ClInclude Include="VecX\target_name_space.h" />
     <ClInclude Include="VecX\transform.h" />
     <ClInclude Include="VecX\unroll_operators.h" />
@@ -592,6 +593,7 @@
     <ClInclude Include="VecX\vec_d.h" />
     <ClInclude Include="VecX\vec_double.h" />
     <ClInclude Include="VecX\vec_view.h" />
+    <ClInclude Include="VecX\zip_utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VecX\alloc_policy.cpp" />
