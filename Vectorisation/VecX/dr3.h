@@ -601,5 +601,10 @@ Vec<INS_VEC> adjacentDiff(const Vec<INS_VEC>& rhs1, OP& oper)
 
 
 
-
-
+//
+//inclusive scan
+template< typename INS_VEC, typename OP>
+Vec<INS_VEC> scan(const Vec<INS_VEC>& rhs1, OP& oper)
+{
+	return ApplyScan(rhs1, oper);
+}

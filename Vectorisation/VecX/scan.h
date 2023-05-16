@@ -139,7 +139,7 @@ auto scan2(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValu
 
 
 template<typename INS_VEC, typename OP>
-auto scanN(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValue, OP& oper)
+auto scanN(typename InstructionTraits<INS_VEC>::FloatType*  pRhs, INS_VEC runValue, OP& oper)
 {
 	if constexpr (InstructionTraits<INS_VEC>::width == 8)
 	{
@@ -185,12 +185,14 @@ Vec<INS_VEC> ApplyScan(const Vec<INS_VEC>& rhs1, OP& oper)
 
 	INS_VEC contValue = 0.0;
 
-	int sz = rhs1.paddedSize();
+	int sz = rhs1.size();
 
 
 	//https://gfxcourses.stanford.edu/cs149/fall20content/media/dataparallel/08_dataparallel.pdf
 
 	constexpr int LAST_ELEM = width - 1;
+
+	
 
 
 	int i = 0;
@@ -207,25 +209,33 @@ Vec<INS_VEC> ApplyScan(const Vec<INS_VEC>& rhs1, OP& oper)
 		INS_VEC runValue3 = Res3[LAST_ELEM];
 		INS_VEC runValue4 = Res4[LAST_ELEM];
 
-		auto sv12 = runValue1 +runValue2;
-		auto sv13 = runValue1 + runValue2 + runValue3;
-		auto s14 = sv13 + runValue4;
+		auto sv12 = oper(runValue1, runValue2);
+		auto sv13 = oper(sv12, runValue3);
+		auto s14 = oper(sv13,runValue4);
 
-		Res1 += contValue;
-		Res2 += runValue1 +contValue;
-		Res3 += sv12 +contValue;
-		Res4 += sv13 +contValue;
+		//Res1 += contValue;
+		Res1 =oper(Res1, contValue);
+		Res2 = oper(Res2, oper(runValue1, contValue));
+		Res3 = oper(Res3, oper(sv12, contValue));
+		Res4 = oper(Res4, oper(sv13, contValue));
 
 		//runValue += s14;
-		contValue += s14;
+		//contValue += s14;
+
+		contValue = oper(contValue, s14);
 
 		Res1.store_a(pRes + i);
 		Res2.store_a(pRes + i + width);
 		Res3.store_a(pRes + i + 2 * width);
 		Res4.store_a(pRes + i + 3 * width);
 
-
 	}
+
+	if (i == 0) // small and need to init first element
+	{ 
+		i++; 
+		result[0] = rhs1[0];
+	};
 	for (int j = i; j < sz ; j++)
 	{
 		result[j] = ApplyBinaryOperation1<INS_VEC, OP>(rhs1[j], result[j - 1], oper);
@@ -235,9 +245,9 @@ Vec<INS_VEC> ApplyScan(const Vec<INS_VEC>& rhs1, OP& oper)
 
 };
 
-/////////////////////TRANSFORM SCAN /////////////////
+/////////////////////TRANSFORM SCAN  BROKEN/////////////////
 
-
+/*
 
 template<typename INS_VEC, typename OP, typename TRANSFORM>
 auto scan16(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC& runValue, OP& oper, typename TRANSFORM& trfrm)
@@ -394,4 +404,4 @@ Vec<INS_VEC> ApplyTransformScan(const Vec<INS_VEC>& rhs1, OP& oper, TRANSFORM& t
 
 };
 
-
+*/

@@ -613,7 +613,7 @@ void testTransform_M_X(int SZ)
 
 
 	transform(testVec, res, doubleIt, testSampler,0, testVec.size());
-	std::vector<double> r_dbg_res = res;
+	std::vector<Numeric> r_dbg_res = res;
 
 	for (int k = 0; k < SZ; k++)
 	{

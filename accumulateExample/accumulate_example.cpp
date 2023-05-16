@@ -364,140 +364,68 @@ void    doSumSqrsMulti();
 void doAVXMax512Dance();
 
 
-/*
 
-// broken version
 
-void doSamplerTransform()
+/*?
+
+#include "immintrin.h"
+#define N_UNROLL (16)
+#define NUM_ELES_IN_ZMM (8)
+void awe_scan(int* p_n, double* restrict src, double* restrict dst, double* p_init_val)
 {
+	__m512d zmm, zmm1, zmm2, zmm3, zmm4, zmm_acc, zmm_tmp1, zmm_tmp2;
+	__m512d zmm5, zmm6, zmm7, zmm8, zmm9, zmm10, zmm11;
+	__m512i idx, acc_idx;
+	int n = *p_n;
+	zmm_acc = _mm512_set1_pd(*p_init_val);
+	acc_idx = _mm512_set1_epi64(7);
+	idx =   _mm512_set1 ep164(3);
 
-	const long TEST_LOOP_SZ = 1000;
-	const int repeatRuns = 20;
-	const int vectorStepSize = 200;
-	const int maxVectorSize = 20000;
-	const int minVectorSize = 400;
+	int n_block	=	(n / N_UNROLL) * N_UNROLL;
+	int n_tail = n - n_block;
 
-
-	int SZ = 2000;// 100;// 360;
-
-	//auto v1 =  getRandomShuffledVector(SZ, 0); // std stl vector double or float 
-
-	std::vector<double> v(SZ, 0.0);
-	std::iota(begin(v), end(v),0.0);
-
-	VecXX vec(v);
-
-	VecXX vec2(v);
-
-	vec2 -= double(SZ * 0.5);// 180.0;
-
-	auto isPositive = [](const auto& x) { return x >= 0.; };
-	auto zeros = vec2 * 0.0;
-	vec2 = select(isPositive,vec2, vec2, zeros);
-	std::vector<double> v_tst = vec2;
-
-
-	//TriSampler<DRC::VecD4D::VecXX::INS> sampler;
-
-	TrinomialSampler<VecXX::INS> sampler;
-
-
-	VecXX ret(initTransformer(vec));
-
-	VecXX res = ret;
-	//std::vector<double> v_res = res;
-	vec = vec2; //option payoff
-
-
-	double T = 1.;
-	int N = SZ;
-
-	double r =  0.06;// 0.06;
-	double sig = 0.2;
-	double div = 0.;// 0.03;
-
-	double S = 110.;
-	double K = 120.;
-
-	VecXX St(1.0, 2*vec2.size()+1);  //should be all 1;
-
-	//int prices at maturity
-	double Dt = T / N;
-	double Dx = 0.2;
-	double eDx = exp(Dx);
-	double mult = exp(-(N) * Dx);
-
-	double last = 1.0 * S * mult / eDx;
-	for (auto& el : St)
+	for (int j = 0; j < n_block; j += N_UNROLL) 
 	{
-		last =el =last*eDx;
+		zmm0 = _mm512_loadu_pd(src);
+		zmm5 = _mm512_loadu_pd(src + NUM_ELES_IN_ZMM);
+		
+		zmm2 = _mm512_maskz_permute_pd(0xAA, zmm0, 0x00);
+		zmm7 = _mm512_maskz_permute_pd(0xAA, zmm5, 0x00);
+		zmm10 = _mm512_add_pd(zmm0, zmm2);
+		zmm11 = _mm512_add_pd(zmm5, zmm7);
+
+		zmm1 = _mm512_maskz_permutex_pd(0xCC, zmm0, 0x40);
+		zmm6 =	_mm512_maskz_permutex_pd(0xCC, zmm5, 0x40);
+		zmm10 = _mm512_add_pd(zmm10, zmm1);
+		zmm11 = _mm512_add_pd(zmm11, zmm6);
+
+		zmm1 = 	_mm512_maskz_permute_pd(0xCC, zmm1, 0x44);
+		zmm6 = _mm512_maskz_permute_pd(0xCC, zmm6, 0x44);
+		zmm10 = _mm512_add_pd(zmm10, zmm1);
+		zmm11 = _mm512_add_pd(zmm11, zmm6);
+
+		zmm_tmp1 _mm512_maskz_permutexvar_pd(0xF0, idx, zmm10);
+		zmm_tmp2 = _mm512_maskz_permutexvar_pd(0xF0, idx, zmm11);
+		= _mm512_add_pd(zmm10, zmm_tmp1); = _mm512_add_pd(zmm11, zmm_tmp2);
+		zmm10
+			zmm11
+			zmm_tmp1 = _mm512_add_pd(zmm10, zmm_acc);
+		zmm_acc = _mm512_add_pd(zmm11, zmm_tmp1);
+		zmm_acc = _mm512_permutexvar_pd(acc_idx, zmm_acc);
+		zmm_tmp2 = _mm512_permutexvar_pd(acc_idx, zmm_tmp1); _mm512_storeu_pd(dst, zmm_tmp1);
+		zmm11 = _mm512_add_pd(zmm11, zmm_tmp2); _mm512_storeu_pd(dst + NUM_ELES_IN_ZMM, zmm11);
+		src + N_UNROLL;
+		dst + N_UNROLL;
 	}
-
-	std::vector<double> dbk = St;
-
-	double nu = r - div - 0.5 * sig * sig;
-	VecXX::INS pu = 0.5 * ((sig * sig * Dt + nu * nu * Dt * Dt) / (Dx * Dx) +  nu * Dt / Dx);
-	VecXX::INS pm = 1.0 - (sig * sig * Dt + nu * nu * Dt * Dt) / (Dx * Dx) ;
-	VecXX::INS pd = 0.5 * ((sig * sig * Dt + nu * nu * Dt * Dt) / (Dx * Dx) - nu * Dt / Dx);
-	VecXX::INS disc = exp(-r * Dt);
-
-
-	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
-	{ auto X1 = sampler.get<1>(); auto X0 = sampler.get<0>(); auto X_1 = sampler.get<-1>();
-		return disc*(X1*pu + X0*pm + X_1*pd); 
-	};
-
-
-	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
-
-	auto terminalNodes = transform(payOffFunc, St);
-
-	dbk = terminalNodes;
-
-	vec = terminalNodes;
-	res = vec;
-
-	int i = 0; int j = vec.size();
-
-	double time = 0;
-	{
-		TimerGuard timer(time);
-
-
-
-	while ((i + 1) < j)
-	{
-
-		++i;
-		--j;
-
-	//	res *= 0.; //to set all bits to zero
-		transform(vec, res, trinomialRollBack, sampler, i, j);
-
-		++i;
-		--j;
-
-		transform(res, vec, trinomialRollBack, sampler, i, j);
-	}
-
-	dbk = res;
-
-	std::cout << " price = " << res[N ] << "  options per second = " << 1.0 / time <<  "num steps =" << i << std::endl;
-
-
-	for (int ii =0; ii>-1;) {};
-
-}
 
 	*/
-
 
 
 void doScan()
 {
 
 	auto v1 = std::vector<VecXX::SCALA_TYPE>(4000,0.0);
-	FLOAT last = -1.0;
+	FLOAT last = 0.0;// -1.0;
 	for (auto& x : v1)
 	{
 		x = last + 1.0;
@@ -507,7 +435,9 @@ void doScan()
 	VecXX a(v1);
 	std::vector<FLOAT> dbg = v1;
 
-	auto sum = [](auto X, auto Y) { return X + Y; };
+	//auto sum = [](auto X, auto Y) { return X + Y; };
+
+	auto sum = [](auto X, auto Y) { return  X + Y; };
 
 
 	double time = 0;
@@ -528,7 +458,7 @@ void doScan()
 	}
 	std::cout << "run time = " << time << "\n";
 
-
+///*
 	auto dbg_cpy = dbg;
 	 time = 0;
 	{
@@ -555,6 +485,7 @@ void doScan()
 	}
 
 //	*/
+	
 	
 
 }
@@ -1040,14 +971,161 @@ void doAmericanFiniteDiff()
 		double rate = 0.06;
 		double T = 1;
 		int N = 10000;
-
-		 res = americanFiniteDiffPricer(S, K, vol, rate, T, N);
+    	 res = americanFiniteDiffPricer(S, K, vol, rate, T, N);
 
 		
 	}
 	std::cout << std::setprecision(12) << "price " << res << "\n";
 	std::cout << " takes secs" << time << "\n";
 }
+
+
+
+
+double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, double r, double T, int N)
+{
+
+	//dividend yield
+	double y = 0.0;// 0.03;// 0.03; //div yield
+	VecXX terminalAssetPrices(1.0, 2 * N + 1);
+
+	double Dt = T / N;
+	double Dx = sig * std::sqrt(2.0 * Dt);
+	double v = r - y - 0.5 * sig * sig;
+
+	double  u = Dx;
+	double d = 1. / u;
+
+
+	VecXX::SCALA_TYPE pu = -0.5 * Dt * ((sig * sig) / (Dx * Dx) + v / Dx);
+	VecXX::SCALA_TYPE pd = -0.5 * Dt * ((sig * sig) / (Dx * Dx) - v / Dx);
+	VecXX::SCALA_TYPE pm = 1. + Dt * (sig * sig) / (Dx * Dx) + r * Dt;
+
+
+	std::vector<FLOAT> vdbg;
+	//Pay off functions
+
+	//call
+	//auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	//put
+	auto payOffFunc = [=](auto X) { return select(X < K, K - X, 0.0); };
+
+	//set up underlying asset prices at maturity
+	double last = S * exp(-(N + 1) * Dx);
+	double edx = exp(Dx);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= edx;
+		el = last;
+	}
+
+	//option value at maturity
+
+	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
+
+	
+	auto american = [](auto X, auto Y) { return select(X> Y,X,Y); };
+	
+
+	//derivative boundary condition
+	double  lambda_L = -1. * (terminalAssetPrices[1] - terminalAssetPrices[0]);
+	double  lambda_U = 0.0;
+
+	auto odd_slice = excerciseValue;
+	vdbg = odd_slice;
+
+
+	auto even_slice = odd_slice * 0.0;
+
+	int J = 2 * N;
+	int k = 0;
+
+	VecXX pmp(1.0, J + 1);
+	VecXX pp(1.0, J + 1);
+
+	////////////
+	// SOLVE IMPLICIT TRIDIAGONAL  IN LINE 
+	//SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+	pmp[1] = pm + pd;
+	pp[1] = odd_slice[1] + pd * lambda_L;
+
+
+	auto pu_pd = pu * pd;
+
+	// eliminate upper diagonal
+	for (int j = 2; j < J; ++j)
+	{
+		pmp[j] = pm - pu_pd / pmp[j - 1];
+	}
+
+	auto inv_pmp = 1.0 / pmp;
+
+	auto pd_inv_pmp = pd * inv_pmp;
+
+	/////////////
+
+	for (; k < N; k += 2)
+	{
+
+		// SOLVE IMPLICIT TRIDIAGONAL  IN LINE 
+		//SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+		//pmp[1] = pm + pd;
+		pp[1] = odd_slice[1] + pd * lambda_L;
+
+		// eliminate upper diagonal
+		for (int j = 2; j < J; ++j)
+		{
+
+			pp[j] = odd_slice[j] - pp[j - 1] * pd_inv_pmp[j - 1];
+		}
+
+		even_slice[1] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		even_slice[J - 1] = even_slice[J] - lambda_U;
+
+
+		// back substitution
+		for (int j = J - 2; j != 0; j--)
+		{
+			even_slice[j] = (pp[j] - pu * even_slice[j + 1]) * inv_pmp[j];
+		}
+
+
+		odd_slice =	transform(american,odd_slice,  (const VecXX&)  excerciseValue);
+
+
+		// calc odd slice now
+//////////////////////////////////////////////////////////////////////
+
+
+		pp[1] = even_slice[1] + pd * lambda_L;
+
+
+		// eliminate upper diagonal
+		for (int j = 2; j < J; ++j)
+		{
+			pp[j] = even_slice[j] - pp[j - 1] * pd_inv_pmp[j - 1]; 
+		}
+
+		odd_slice[1] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		odd_slice[J - 1] = odd_slice[J] - lambda_U;
+
+
+		// back substitution
+		for (int j = J - 2; j != 0; j--)
+		{
+			odd_slice[j] = (pp[j] - pu * odd_slice[j + 1]) * inv_pmp[j];
+		}
+
+
+		odd_slice =	transform(american,odd_slice, (const VecXX&) excerciseValue );
+		
+
+	}
+
+	return odd_slice[N];
+}
+
 
 
 
@@ -1137,13 +1215,16 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 			even_slice[j] = (pp[j] - pu * even_slice[j + 1]) / pmp[j];
 		}
 
+		/*
 
 		// american
-//		for (int j = 0; j < (J+1); j++)
-//		{
-//			even_slice[j] = std::max(even_slice[j], excerciseValue[j]);
-//		}
-
+		for (int j = 0; j < (J+1); j++)
+		{
+			even_slice[j] = std::max(even_slice[j], excerciseValue[j]);
+		}
+		 
+*/
+		//even_slice =	transform(even_slice, excerciseValue);
 
 		// calc odd slice now
 //////////////////////////////////////////////////////////////////////
@@ -1169,17 +1250,19 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 			odd_slice[j] = (pp[j] - pu * odd_slice[j + 1]) / pmp[j];
 		}
 
+		/*
 		//american
-//		for (int j = 0; j < (J + 1); j++)
-//		{
-//			odd_slice[j] = std::max(odd_slice[j], excerciseValue[j]);
-//		}
-
+		for (int j = 0; j < (J + 1); j++)
+		{
+			odd_slice[j] = std::max(odd_slice[j], excerciseValue[j]);
+		}
+		*/
 
 	}
 
 	return odd_slice[N];
 }
+
 
 
 
@@ -1198,10 +1281,11 @@ void doAmericanImplicitFiniteDiff()
 		double rate = 0.06;
 		double T = 1;
 		int N = 10000;
-		res = americanImplicitFiniteDiffPricer(S, K, vol, rate, T, N);		
+		//res = americanImplicitFiniteDiffPricer(S, K, vol, rate, T, N);		
+		res = americanImplicitFiniteDiffPricerFast(S, K, vol, rate, T, N);
 	}
 	std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << " takes secs" <<time << "\n";
+	std::cout << "americanImplicitFiniteDiffPricerFast takes secs" <<time << "\n";
 }
 
 
@@ -1394,7 +1478,7 @@ void doAmericanCrankNicholson()
 
 int main()
 {
-	/**/
+
 	try
 	{
 		doScan();
@@ -1403,17 +1487,21 @@ int main()
 	{
 	}
 	return 0;
-	
+	/*	*/
 
-//
-/*
+///*
+
+	doAmericanImplicitFiniteDiff();
+	
+	return 0;
+
+
 
 	doAmericanCrankNicholson();
 	//return 0;
 
 
-	doAmericanImplicitFiniteDiff();
-	//return 0;
+
 
 	
 	doAmericanFiniteDiff();
@@ -1427,8 +1515,8 @@ int main()
 
 	doBinomialPricer();
 	return 0;
-//
-*/
+//*/
+
 
 	//return 0;
 
