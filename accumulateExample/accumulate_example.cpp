@@ -364,63 +364,6 @@ void    doSumSqrsMulti();
 void doAVXMax512Dance();
 
 
-
-
-/*?
-
-#include "immintrin.h"
-#define N_UNROLL (16)
-#define NUM_ELES_IN_ZMM (8)
-void awe_scan(int* p_n, double* restrict src, double* restrict dst, double* p_init_val)
-{
-	__m512d zmm, zmm1, zmm2, zmm3, zmm4, zmm_acc, zmm_tmp1, zmm_tmp2;
-	__m512d zmm5, zmm6, zmm7, zmm8, zmm9, zmm10, zmm11;
-	__m512i idx, acc_idx;
-	int n = *p_n;
-	zmm_acc = _mm512_set1_pd(*p_init_val);
-	acc_idx = _mm512_set1_epi64(7);
-	idx =   _mm512_set1 ep164(3);
-
-	int n_block	=	(n / N_UNROLL) * N_UNROLL;
-	int n_tail = n - n_block;
-
-	for (int j = 0; j < n_block; j += N_UNROLL) 
-	{
-		zmm0 = _mm512_loadu_pd(src);
-		zmm5 = _mm512_loadu_pd(src + NUM_ELES_IN_ZMM);
-		
-		zmm2 = _mm512_maskz_permute_pd(0xAA, zmm0, 0x00);
-		zmm7 = _mm512_maskz_permute_pd(0xAA, zmm5, 0x00);
-		zmm10 = _mm512_add_pd(zmm0, zmm2);
-		zmm11 = _mm512_add_pd(zmm5, zmm7);
-
-		zmm1 = _mm512_maskz_permutex_pd(0xCC, zmm0, 0x40);
-		zmm6 =	_mm512_maskz_permutex_pd(0xCC, zmm5, 0x40);
-		zmm10 = _mm512_add_pd(zmm10, zmm1);
-		zmm11 = _mm512_add_pd(zmm11, zmm6);
-
-		zmm1 = 	_mm512_maskz_permute_pd(0xCC, zmm1, 0x44);
-		zmm6 = _mm512_maskz_permute_pd(0xCC, zmm6, 0x44);
-		zmm10 = _mm512_add_pd(zmm10, zmm1);
-		zmm11 = _mm512_add_pd(zmm11, zmm6);
-
-		zmm_tmp1 _mm512_maskz_permutexvar_pd(0xF0, idx, zmm10);
-		zmm_tmp2 = _mm512_maskz_permutexvar_pd(0xF0, idx, zmm11);
-		= _mm512_add_pd(zmm10, zmm_tmp1); = _mm512_add_pd(zmm11, zmm_tmp2);
-		zmm10
-			zmm11
-			zmm_tmp1 = _mm512_add_pd(zmm10, zmm_acc);
-		zmm_acc = _mm512_add_pd(zmm11, zmm_tmp1);
-		zmm_acc = _mm512_permutexvar_pd(acc_idx, zmm_acc);
-		zmm_tmp2 = _mm512_permutexvar_pd(acc_idx, zmm_tmp1); _mm512_storeu_pd(dst, zmm_tmp1);
-		zmm11 = _mm512_add_pd(zmm11, zmm_tmp2); _mm512_storeu_pd(dst + NUM_ELES_IN_ZMM, zmm11);
-		src + N_UNROLL;
-		dst + N_UNROLL;
-	}
-
-	*/
-
-
 void doScan()
 {
 
@@ -682,10 +625,6 @@ void doBinomialPricer()
 }
 
 
-
-
-
-
 double europeanTrinomialPricer(double S, double K, double sig, double r, double T, int N)
 {
 
@@ -856,10 +795,6 @@ void doTrinomialPricer()
 	std::cout << std::setprecision(12) << "price " << res << "\n";
 	std::cout << " takes secs" << time << "\n";
 }
-
-
-
-
 
 
 
@@ -1475,10 +1410,128 @@ void doAmericanCrankNicholson()
 
 
 
+double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r, double T, double H, double rebate, int N)
+{
+
+	double y = 0.0;// 0.03; //div yield
+
+
+	VecXX terminalAssetPrices(1.0, 2 * N + 1);
+
+	double Dt = T / N;
+	double Dx = sig * std::sqrt(2.0 * Dt);
+	double v = r - y - 0.5 * sig * sig;
+
+	double  u = Dx;
+	double d = 1. / u;
+
+
+	VecXX::INS pu = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) + (v * Dt) / Dx);
+	VecXX::INS pd = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) - (v * Dt) / Dx);
+	VecXX::INS pm = 1. - (Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx);
+
+
+	VecXX::INS disc = exp(-r * Dt);
+	TrinomialSampler<VecXX::INS> sampler;
+
+	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
+	{
+		auto X1 = sampler.get<1>();
+		auto X0 = sampler.get<0>();
+		auto X_1 = sampler.get<-1>();
+		return disc * (X1 * pu + X0 * pm + X_1 * pd);
+	};
+
+	
+	//auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); }; //call
+	auto payOffFunc = [=](auto X) { return select(X < K, K -X , 0.0); };  //put
+
+	//set up underlying asset prices at maturity
+	double last = S * exp(-(N + 1) * Dx);
+	double edx = exp(Dx);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= edx;
+		el = last;
+	}
+
+
+
+	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
+	auto odd_slice = excerciseValue;
+
+	UnitarySampler<VecXX::INS> identity_sampler; //identity just 
+
+	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
+	{
+		auto optPrice = sampler.get<0>();
+		return max(optPrice, excercisePrice);
+	};
+
+
+	auto applyBarrier = [=](UnitarySampler<VecXX::INS>& sampler, auto stockPrice)
+	{
+		auto optPrice = sampler.get<0>();
+		return select(stockPrice < H, optPrice, rebate);
+	};
+
+
+	auto even_slice = odd_slice;
+
+	int j = 2 * N + 1 - 1;
+	int i = 0;
+	for (; i < N; i += 2)
+	{
+		transform(odd_slice, even_slice, trinomialRollBack, sampler, i, j);
+		// transform to get early excercise for american bit , iderntity sampler just passes values straight through
+	//	transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, i, j);
+		transform(even_slice, terminalAssetPrices, even_slice, applyBarrier, identity_sampler, i, j);
+
+		transform(even_slice, odd_slice, trinomialRollBack, sampler, i + 1, j - 1);
+	//	transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, i + 1, j - 1);
+		transform(odd_slice, terminalAssetPrices, odd_slice, applyBarrier, identity_sampler, i + 1, j - 1);
+
+		j -= 2;
+	}
+
+	return odd_slice[N];
+}
+
+
+
+
+void doAmericanTrinomialPricerUpAndOut()
+{
+
+	double res = 0.0;
+	double time = 0;
+	{
+		TimerGuard timer(time);
+
+		double S = 100.;
+		double K = 100.;
+		double vol = 0.2;
+		double rate = 0.06;
+		double T = 1;
+		int N = 1000;// 500;
+		double H = 3.;
+		double rebate = 0.0;
+		res = americanTrinomialPricerUpAndOut(S, K, vol, rate, T, H, rebate, N);
+
+
+	}
+	std::cout << std::setprecision(12) << "price " << res << "\n";
+	std::cout << " takes secs" << time << "\n";
+}
+
+
+
+
+
 
 int main()
 {
-
+/*
 	try
 	{
 		doScan();
@@ -1487,9 +1540,12 @@ int main()
 	{
 	}
 	return 0;
-	/*	*/
+		*/
 
-///*
+///
+
+	doAmericanTrinomialPricerUpAndOut();
+	return 0;
 
 	doAmericanImplicitFiniteDiff();
 	
