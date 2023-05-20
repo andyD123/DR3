@@ -30,11 +30,11 @@ struct SampleElement :public RegisterElement< INS_VEC,  OFFSET, false>
 {
 
 	template <int VAL>
-	typename INS_VEC  get() {};// cant instantiate
+	INS_VEC  get() {};// cant instantiate
 
 
 	template<>
-	typename INS_VEC  get<OFFSET>() { return ::m_offsetData1; };
+	INS_VEC  get<OFFSET>() { return ::m_offsetData1; };
 
 	
 };
@@ -46,16 +46,16 @@ struct TrinomialSampler
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
 	template <int VAL>
-	typename INS_VEC  get() {};// cant instantiate
+	INS_VEC  get() {};// cant instantiate
 
 	template<>
-	typename INS_VEC  get<X1>() { return X_1.value; };
+	INS_VEC  get<X1>() { return X_1.value; };
 
 	template<>
-	typename INS_VEC  get<X0>() { return X_0.value; };
+	INS_VEC  get<X0>() { return X_0.value; };
 
 	template<>
-	typename INS_VEC  get<X_Minus1>() { return X_Minus_1.value; };
+	INS_VEC  get<X_Minus1>() { return X_Minus_1.value; };
 
 
 	inline void load(Float* pData)
@@ -85,13 +85,13 @@ struct BinomialSampler
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
 	template <int VAL>
-	typename INS_VEC  get() {  };// cant instantiate
+	INS_VEC  get() {  };// cant instantiate
 
 	template<>
-	typename INS_VEC  get<X1>() { return X_1.value; };
+	INS_VEC  get<X1>() { return X_1.value; };
 
 	template<>
-	typename INS_VEC  get<X0>() { return X_0.value; };
+	INS_VEC  get<X0>() { return X_0.value; };
 
 	
 
@@ -118,11 +118,11 @@ struct UnitarySampler
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
 	template <int VAL>
-	typename INS_VEC  get() {  };// cant instantiate
+	INS_VEC  get() {  };// cant instantiate
 
 
 	template<>
-	typename INS_VEC  get<X0>() { return X_0.value; };
+	INS_VEC  get<X0>() { return X_0.value; };
 
 
 	inline void load(Float* pData)

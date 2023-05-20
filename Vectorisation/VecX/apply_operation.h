@@ -42,7 +42,7 @@ static INS_VEC cdfnormD(INS_VEC x)
 }
 
 
-
+/**/
 template<typename INS_VEC>
 static INS_VEC cdfnorm(const INS_VEC& z)  
 {
@@ -64,12 +64,12 @@ static INS_VEC cdfnorm(const INS_VEC& z)
 	INS_VEC p = asInsVec(0.2316419);	
 	INS_VEC c2 = asInsVec(0.3989423);
 
-	const auto  cond1 = (z > asInsVec(6.0));
-	INS_VEC x = select(cond1, asInsVec(1.0), z);
-	x = x;
+//	const auto  cond1 = (z > asInsVec(6.0));
+//	INS_VEC x = select(cond1, asInsVec(1.0), z);
+//	x = x;
 	
-	INS_VEC y = select( (z < asInsVec(-6.0)),asInsVec(0.0), z);
-	y = y;
+//	INS_VEC y = select( (z < asInsVec(-6.0)),asInsVec(0.0), z);
+//	y = y;
 	INS_VEC a = abs(z);
 	INS_VEC t = asInsVec(1.0) / (asInsVec(1.0) + a*p);
 	INS_VEC b = c2*exp((-z)*(z / asInsVec(2.0)));

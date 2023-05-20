@@ -2,11 +2,13 @@
 
 #include "vec.h"
 #include "instruction_traits.h"
-
+#include "error_utils.h"
 
 
 #include <array>
 #include <utility>
+
+
 
 
 //usage  read only 
@@ -61,7 +63,7 @@ struct Zipped_ITR
 
 	void incOffset()
 	{
-		for (long i = 0; i < m_itrs.size(); ++i)
+		for (size_t i = 0; i < m_itrs.size(); ++i)
 		{
 			m_itrs[i] += m_offset;
 		}
@@ -72,7 +74,7 @@ struct Zipped_ITR
 	//increase position whole number of registers
 	void inc(int reg)
 	{
-		for (long i = 0; i < m_itrs.size();++i)
+		for (size_t i = 0; i < m_itrs.size();++i)
 		{
 			m_itrs[i]+= (reg * InstructionTraits<INS_VEC>::width);
 		}
@@ -151,6 +153,7 @@ struct Zipped_Reg
 
 
 
+/**/
 
 template <typename  SAMPLER, typename INS_VEC,  int N, int M>
 struct Sampled_Zipped_Reg
@@ -193,13 +196,13 @@ struct Sampled_Zipped_Reg
 	//dont store sampler
 	void store(Zipped_ITR<INS_VEC, N>& it)
 	{
-		/*
-		for (size_t i = 0; i < N; ++i)
-		{
-			auto& reg = m_sampler[i];
-			//reg.store(it.m_itrs[i]);
-		}
-		*/
+		
+		//for (size_t i = 0; i < N; ++i)
+		//{
+		//	auto& reg = m_sampler[i];
+		//	//reg.store(it.m_itrs[i]);
+		//}
+		
 	}
 
 };
@@ -221,11 +224,13 @@ template < typename INS_VEC,   typename  ...T>
 constexpr auto make_Zipped( T& ...args)
 {
 	
-	using FT = typename InstructionTraits<INS_VEC>::FloatType;
+//	using FT = typename InstructionTraits<INS_VEC>::FloatType;
 
 	constexpr int N = sizeof...(T);
 	Zipped_Reg<INS_VEC, N> ret;
 	return ret;
+
+	
 
 }
 
@@ -245,7 +250,7 @@ constexpr auto make_Zipped_itr(typename T& ...args)
 template < typename INS_VEC, typename  ...T>
 constexpr auto make_Zipped_itr(  T& ...args)
 {
-	using FT = typename InstructionTraits<INS_VEC>::FloatType;
+//	using FT = typename InstructionTraits<INS_VEC>::FloatType;
 
 	constexpr int N = sizeof...(T);
 	Zipped_ITR<INS_VEC, N > zpd;
@@ -278,7 +283,7 @@ constexpr auto make_Zipped_itr(  T& ...args)
 template < typename INS_VEC, typename  ...T>
  auto make_Zipped_itr_ref(T& ...args)
 {
-	using FT = typename InstructionTraits<INS_VEC>::FloatType;
+//	using FT = typename InstructionTraits<INS_VEC>::FloatType;
 
 	constexpr int N = sizeof...(T);
 	Zipped_ITR<INS_VEC, N > zpd;
