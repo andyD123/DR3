@@ -1,6 +1,7 @@
 // lattice.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+
 #include <algorithm>
 #include <random>
 #include <numeric>
@@ -18,13 +19,36 @@
 #include "../Vectorisation/VecX/accumulate_transform.h"
 #include "../Vectorisation/VecX/error_utils.h"
 
-
+                                                  
 #include "../Vectorisation/VecX/zip_utils.h"
 
-//#include "norm.h"
 
+
+                                                                   
 
 /*
+* 
+Some initial implementations of  lattice models taken from the psudo code in clewlow and strickland
+https://www.amazon.co.uk/Implementing-Derivative-Models-Clewlow-1998-04-29/dp/B01K0S2UMC/ref=sr_1_1?crid=1X6ARB2YR7JAG&keywords=strickland+and+clewlow&qid=1685036394&sprefix=stricklamd+and+clewlow%2Caps%2C57&sr=8-1
+
+to see how easy to code up with SIMD lambdas 
+
+Sampler makes it easy to vectorise offset relationships  eg f ( X[i], x[i+1]) )
+
+There is a need for iterating over multiple vexx  quantities at the same time so we need to introduce
+so sort of zip iteration
+
+
+We need a vectorised scan function  or something similar to achieve some sort of  vectorisation in tri diagonal solvers
+// eg thomas. And schemes by Gilkes et al .  
+// finally leading on to the need for representing multiple dimensional quantities 
+// so we need a span and MD span like functionality  to work with PDE implementations
+we also need to have some sort of span and padded/alligned  multi dimensional layout ie an MD span for SIMD
+and also the layout 
+
+however this is perhaps not the end. polyhedra, hilbert and koch curves 
+and of course tiling .
+
 Uncomment one of the Using namespace lines below to select the instruction set that you wish to run
 Those ending in F have float type as underlying, those ending with D have a double.
 
@@ -47,327 +71,9 @@ precision of results compare for float types is incorrect.
 */
 
 //pick an instruction set for intrinsics by selecting a name space
+//in utils
+#include "utils.h"
 
-//using namespace DRC::VecDb;
-//using namespace DRC::VecD2D;  //sse2   double
-//using namespace DRC::VecD4D;	//avx2   double
-//using namespace DRC::VecF8F;	// avx2  float
-using namespace DRC::VecD8D;  //avx512 double
-//using namespace DRC::VecF16F; //avx512   float
-
-
-using FLOAT = typename InstructionTraits<VecXX::INS>::FloatType;
-
-
-void testSampler()
-{
-
-	FLOAT sampleData[] = { 0., 1.0,2.,3.,4.,5.,6.,7.,8.,9.,10. };
-
-	//TriSampler<DRC::VecD4D::VecXX::INS>  zzz;
-	TrinomialSampler<VecXX::INS>  zzz;
-
-	zzz.load(&sampleData[1]);
-
-	auto x = zzz.get<-1>();
-	auto y = zzz.get<0>();
-	auto z = zzz.get<1>();
-
-	ignore(x);
-	ignore(y);
-	ignore(z);
-}
-
-
-
-
-using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
-
-//AllAllocatorsGuard<FLOAT> allocGuard;
-
-const double billion = 1000000000.0;
-
-
-template<typename T>
-bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3)
-{
-	bool  testOK = true;
-	const double ERR = 1e-13; //for examples
-	if (C1.size() != C2.size())
-	{
-		return false;
-	}
-
-	if (C3.size() != C2.size())
-	{
-		return false;
-	}
-
-	for (size_t i = 0; i < C3.size(); i++)
-	{
-		auto err1 = fabs((C1[i] - C2[i]) / (C2[i] + C1[i]));
-		auto err2 = fabs((C1[i] - C3[i]) / (C1[i] + C3[i]));
-
-		if ((err1 > ERR) || (err2 > ERR))
-		{
-			testOK = false;
-			std::cout << "\n err diff@ " << i << " err1 =" << err1 << ", err2 = " << err2 << "\n";
-			break;
-		}
-	}
-
-	return testOK;
-
-}
-
-
-double getErr(const  std::vector<double>& t)
-{
-	ignore(t);
-	return 2e-11;
-}
-
-
-float getErr(const  std::vector<float>& t)
-{
-	ignore(t);
-	return 1.0;
-}
-
-
-template<typename T>
-bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3, const std::vector<T>& input, T ERR = 1e-13)
-{
-
-
-	ERR = getErr(C1);
-
-	bool  testOK = true;
-
-	if (C1.size() != C2.size())
-	{
-		std::cout << "wrong size C1,C2" << C1.size() << ", " << C2.size() << std::endl;
-		return false;
-	}
-
-	if (C3.size() != C2.size())
-	{
-		std::cout << "wrong size C2,C3" << C2.size() << ", " << C3.size() << std::endl;
-		return false;
-	}
-
-	for (size_t i = 0; i < C3.size(); i++)
-	{
-		auto err1 = fabs((C1[i] - C2[i]) / (fabs(C2[i]) + fabs(C1[i])));
-		auto err2 = fabs((C1[i] - C3[i]) / (fabs(C1[i]) + fabs(C3[i])));
-
-		if ((err1 > ERR) || (err2 > ERR))
-		{
-			testOK = false;
-			std::cout << "\n err diff@ " << i << " err1 =" << err1 << ", err2 = " << err2 << "\n";
-			std::cout << "\n val @ " << i << " C1[i] =" << C1[i] << ", C2[i] = " << C2[i] << ", C3[i] = " << C3[i] << "input val=" << input[i] << "\n";
-			std::cout << std::endl;
-			break;
-		}
-	}
-
-	return testOK;
-
-}
-
-bool valuesAreEqual(double x, double y, double tol = 1e-14)
-{
-
-	auto err1 = fabs((x - y) / (fabs(x) + fabs(y)));
-
-	return (err1 > tol) ? false : true;
-}
-
-
-auto getRandomShuffledVector(int SZ, int instance_number = 0)
-{
-	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
-
-
-	static std::map<int, std::vector<FloatType> > vectors;
-
-
-	int key = 10 * SZ + instance_number;
-	//store vectors with key 10 times size  and add on 0-9 integer for instance of different random vector
-
-	if (SZ < 0)
-	{
-		vectors.clear();
-		SZ = 0;
-	}
-
-
-	if (vectors.find(key) != vectors.end())
-	{
-		return vectors[key];
-	}
-	else
-	{
-		std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
-		for (int i = 0; i < SZ; i++) { v[i] += /*FloatType(SZ / 2)*/ +i; }
-		std::random_device rd;
-		std::mt19937 g(rd());
-		std::shuffle(begin(v), end(v), g);
-		vectors[key] = v;
-		return v;
-	}
-}
-
-
-
-
-
-
-
-auto numOps = [](int TEST_LOOP_SZ, int SZ) { return  static_cast<int>(double(TEST_LOOP_SZ) * double(SZ)); };
-
-
-double getnull(double)
-{
-	return 0.0;
-}
-
-using Calc_Values = std::map<int, FLOAT>;
-using Calc_Values_V = std::map<int, std::vector<FLOAT> >;
-using  Mapped_Performance_Results = std::map<int, std::vector<double> >; // array size  v vector<throughput for runs>
-using Mapped_Stats = std::map<int, std::pair<double, double> >; // size -.pair ( throughput ,  std dev of through put)
-
-struct RunResults
-{
-	Mapped_Performance_Results m_raw_results;
-	Calc_Values  m_calc_results;
-};
-
-struct RunResultsVec
-{
-	Mapped_Performance_Results m_raw_results;
-	Calc_Values_V  m_calc_results;
-};
-
-class TimerGuard
-{
-	double& m_runTime;
-	std::chrono::steady_clock::time_point  m_startTme;
-
-public:
-	TimerGuard(double& runTime) : m_runTime(runTime), m_startTme(std::chrono::steady_clock::now()) { runTime = 0.; }
-
-	~TimerGuard()
-	{
-		auto endTime = std::chrono::steady_clock::now();
-		auto runtime = endTime - m_startTme;
-		m_runTime = runtime.count() / billion;
-	}
-};
-
-
-auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
-{
-
-	RunResults results;
-
-	for (int j = 0; j < testRepeats; ++j)
-	{
-		int VEC_SZ = vec_start_size;
-		for (; VEC_SZ < vec_maxSZ; VEC_SZ += vec_stepSZ)
-		{
-			auto res = func(VEC_SZ, testLoopSZ);
-			auto calculation_rate = res.second;
-			auto calc_value = res.first;
-			results.m_raw_results[VEC_SZ].push_back(calculation_rate);
-			if (j == 0)
-			{
-				results.m_calc_results[VEC_SZ] = static_cast<FLOAT>(calc_value);
-			}
-		}
-	}
-	return results;
-};
-
-
-auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
-{
-
-	RunResultsVec results;
-
-	for (int j = 0; j < testRepeats; ++j)
-	{
-		int VEC_SZ = vec_start_size;
-		for (; VEC_SZ < vec_maxSZ; VEC_SZ += vec_stepSZ)
-		{
-			auto res = func(VEC_SZ, testLoopSZ);
-			auto calculation_rate = res.second;
-			auto calc_value = res.first;
-			results.m_raw_results[VEC_SZ].push_back(calculation_rate);
-
-			if (j == 0)
-			{
-				std::vector<FLOAT> tmp = res.first;
-				results.m_calc_results[VEC_SZ] = tmp;
-			}
-
-		}
-	}
-	return results;
-};
-
-
-
-auto performanceStats = [](const Mapped_Performance_Results& raw_results)
-{
-
-	Mapped_Stats stats;
-
-	for (const auto& item : raw_results)
-	{
-		double sum = 0;
-		double sum_sqrd = 0;
-		double N = 0.0;
-		for (const auto run_rate : item.second)
-		{
-			sum += run_rate;
-			sum_sqrd += (run_rate * run_rate);
-			N++;
-		}
-
-		double avg = sum / N;
-		double varSqrd = sum_sqrd + (avg * avg * N) - (2.0 * avg * sum);
-		double var = std::sqrt(varSqrd / (N - 1.));
-
-		stats[item.first] = { avg ,var };
-
-	}
-	return stats;
-};
-
-
-
-/*
-//example functions fwd decl
-
-void	testMemCpy2();
-void    doMax();
-void    doInnerProd();
-void	doTransform();
-void 	doSumSqrs();
-void    khanAccumulation();
-void	binarySelectionBetweenConst();
-void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of of operations
-void    binarySelectionBetweenMiddleWeightFunction();
-void	binarySelectionBetweenHeavyWeightFunction();
-void	doCountIf();
-void    doMinMax();
-void    doSumSqrsMulti();
-
-
-
-void doAVXMax512Dance();
-*/
 
 void doScan()
 {
@@ -382,8 +88,6 @@ void doScan()
 	// getRandomShuffledVector(200);
 	VecXX a(v1);
 	std::vector<FLOAT> dbg = v1;
-
-	//auto sum = [](auto X, auto Y) { return X + Y; };
 
 	auto sum = [](auto X, auto Y) { return  X + Y; };
 
@@ -406,7 +110,7 @@ void doScan()
 	}
 	std::cout << "run time = " << time << "\n";
 
-	///*
+	
 	auto dbg_cpy = dbg;
 	time = 0;
 	{
@@ -416,28 +120,35 @@ void doScan()
 
 		for (long l = 0; l < 1000000; ++l)
 		{
-			//VecXX result = ApplyScan8(a, sum);
 			std::inclusive_scan(begin(v1), end(v1), dbg.begin());
-			//	dbg = a;
-			//	dbg = result;
-
-
 		}
 	}
 	std::cout << "run time std::scan = " << time << "\n";
 
-	//	/*
 	for (size_t i = 0; i < dbg_cpy.size(); ++i)
 	{
 		std::cout << i << "  ,  " << dbg[i] << "   , " << dbg_cpy[i] << std::endl;
 	}
 
-	//	*/
-
-
-
 }
 
+void testSampler()
+{
+
+	FLOAT sampleData[] = { 0., 1.0,2.,3.,4.,5.,6.,7.,8.,9.,10. };
+
+	TrinomialSampler<VecXX::INS>  zzz;
+
+	zzz.load(&sampleData[1]);
+
+	auto x = zzz.get<-1>();
+	auto y = zzz.get<0>();
+	auto z = zzz.get<1>();
+
+	ignore(x);
+	ignore(y);
+	ignore(z);
+}
 
 
 void doZipping()
@@ -564,12 +275,28 @@ void doZipping()
 
 
 
+VecXX  blackScholes(const VecXX& S, const VecXX& K, const VecXX& t, const VecXX& r, const VecXX& sigma)
+{
+	auto invK = 1.0 / K;
+	auto discountedRate = exp(-r * t);
+	auto S_invK = S * invK;
+	auto log_sK = log(S_invK);
+	auto rootT = sqrt(t);
+	auto sigmaRootT = rootT * sigma;
+	auto invSigmaRootT = 1.0 / sigmaRootT;
+	auto halfSigmaSqrd_t = (0.5 * sigma * sigma + r) * t;
+	auto d1 = invSigmaRootT * (log_sK + halfSigmaSqrd_t);
+	auto d2 = d1 - sigmaRootT;
+	auto normD1 = cdfnorm(d1);
+	auto normD2 = cdfnorm(d2);
+	auto C = S * normD1 - K * discountedRate * normD2;
+	// auto delta = normD1;
+	return C;
+}
+
+
 double europeanBinomialPricer(double S, double K, double sig, double r, double T, int N)
 {
-
-
-
-	//bool bisOdd = (N & 1);
 
 	VecXX terminalAssetPrices(1.0, N + 1);
 
@@ -595,7 +322,7 @@ double europeanBinomialPricer(double S, double K, double sig, double r, double T
 	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
 	//	auto payOffFunc = [=](auto X) { return select(X < K, K - X, 0.0); };
 
-		//set up underlying asset prices at maturity
+	//set up underlying asset prices at maturity
 	double last = S * std::pow(d, N + 2);
 	for (auto& el : terminalAssetPrices)
 	{
@@ -618,33 +345,32 @@ double europeanBinomialPricer(double S, double K, double sig, double r, double T
 	return odd_slice[0];;
 }
 
-
-
 void doBinomialPricer()
 {
 
 
 	double res = 0.0;
 	double time = 0;
+
+	double S = 100.;
+	double K = 100.;
+	double vol = 0.2;
+	double rate = 0.06;
+	double T = 1;
 	{
 		TimerGuard timer(time);
 
 
 
-		double S = 100.;
-		double K = 100.;
-		double vol = 0.2;
-		double rate = 0.06;
-		double T = 1;
-		int N = 10000;
+		int N = 30000;
 
 		res = europeanBinomialPricer(S, K, vol, rate, T, N);
 
 	}
-	std::cout << std::setprecision(12) << "price " << res << "\n";
+	auto expected = blackScholes(S, K, T, rate, vol);
+	std::cout << std::setprecision(12) << "binomial price " << res << "expected =" <<   expected.getScalarValue()  << "\n";
 	std::cout << " takes secs" << time << "\n";
 }
-
 
 double europeanTrinomialPricer(double S, double K, double sig, double r, double T, int N)
 {
@@ -655,22 +381,15 @@ double europeanTrinomialPricer(double S, double K, double sig, double r, double 
 	VecXX terminalAssetPrices(1.0, 2 * N + 1);
 
 	double Dt = T / N;
-	//double Dx = sig * std::sqrt(3.0* Dt);
-	double Dx = sig * std::sqrt(2.0 * Dt);
-
+	double Dx = sig * std::sqrt(3.0* Dt);
+	
 	double v = r - y - 0.5 * sig * sig;
 
 
-	//double  u = Dx;// std::exp(sig * std::sqrt(Dt));
-	//double d = 1. / u;
-
 
 	VecXX::INS pu = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) + (v * Dt) / Dx);
-
 	VecXX::INS pd = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) - (v * Dt) / Dx);
-
 	VecXX::INS pm = 1. - (Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx);
-
 
 	VecXX::INS disc = exp(-r * Dt);
 
@@ -711,10 +430,84 @@ double europeanTrinomialPricer(double S, double K, double sig, double r, double 
 	return odd_slice[N];
 }
 
-
-
-
 double americanTrinomialPricer(double S, double K, double sig, double r, double T, int N)
+{
+
+	double y = 0.0;// 0.03; //div yield
+
+
+	VecXX terminalAssetPrices(1.0, 2 * N + 1);
+
+	double Dt = T / N;
+	double Dx = sig * std::sqrt(2.0 * Dt);
+	double v = r - y - 0.5 * sig * sig;
+
+
+	VecXX::INS pu = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) + (v * Dt) / Dx);
+	VecXX::INS pd = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) - (v * Dt) / Dx);
+	VecXX::INS pm = 1. - (Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx);
+
+
+	VecXX::INS disc = exp(-r * Dt);
+	TrinomialSampler<VecXX::INS> sampler;
+
+	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
+	{
+		auto X1 = sampler.get<1>();
+		auto X0 = sampler.get<0>();
+		auto X_1 = sampler.get<-1>();
+		return disc * (X1 * pu + X0 * pm + X_1 * pd);
+	};
+
+	//call
+	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
+
+	//put
+	//auto payOffFunc = [=](auto X) { return select(X < K, K -X , 0.0); };
+
+	//set up underlying asset prices at maturity
+	double last = S * exp(-(N + 1) * Dx);
+	double edx = exp(Dx);
+	for (auto& el : terminalAssetPrices)
+	{
+		last *= edx;
+		el = last;
+	}
+
+	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
+	auto odd_slice = excerciseValue;
+
+	UnitarySampler<VecXX::INS> identity_sampler; //identity just  passes through
+
+	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
+	{
+		auto optPrice = sampler.get<0>();
+		return max(optPrice, excercisePrice);
+	};
+
+
+	auto even_slice = odd_slice;
+
+	int j = 2 * N + 1 - 1;
+	int i = 0;
+	for (; i < N; i += 2)
+	{
+		transform(odd_slice, even_slice, trinomialRollBack, sampler, i, j);
+		// transform to get early excercise for american bit , iderntity sampler just passes values straight through
+		transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, i, j);
+
+		transform(even_slice, odd_slice, trinomialRollBack, sampler, i + 1, j - 1);
+		transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, i + 1, j - 1);
+
+		j -= 2;
+	}
+
+	return odd_slice[N];
+}
+
+
+
+double europeanTrinomialPricer1(double S, double K, double sig, double r, double T, int N)
 {
 
 	double y = 0.0;// 0.03; //div yield
@@ -781,10 +574,10 @@ double americanTrinomialPricer(double S, double K, double sig, double r, double 
 	{
 		transform(odd_slice, even_slice, trinomialRollBack, sampler, i, j);
 		// transform to get early excercise for american bit , iderntity sampler just passes values straight through
-		transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, i, j);
+		//transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, i, j);
 
 		transform(even_slice, odd_slice, trinomialRollBack, sampler, i + 1, j - 1);
-		transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, i + 1, j - 1);
+    	//transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, i + 1, j - 1);
 
 		j -= 2;
 	}
@@ -808,31 +601,26 @@ void doTrinomialPricer()
 		double vol = 0.2;
 		double rate = 0.06;
 		double T = 1;
-		int N = 1000;// 500;
-		res = americanTrinomialPricer(S, K, vol, rate, T, N);
+		int N = 60000;// 500;
+		//res = americanTrinomialPricer(S, K, vol, rate, T, N);
+		res = europeanTrinomialPricer1(S, K, vol, rate, T, N);
 
 
 	}
 	std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << " takes secs" << time << "\n";
+	std::cout << "trinomial takes secs" << time << "\n";
 }
-
-
-
 
 double americanFiniteDiffPricer(double S, double K, double sig, double r, double T, int N)
 {
 
 	//dividend yield
-	double y = 0.0;// 0.03;// 0.03; //div yield
+	double y = 0.0;
 	VecXX terminalAssetPrices(1.0, 2 * N + 1);
 
 	double Dt = T / N;
 	double Dx = sig * std::sqrt(2.0 * Dt);
 	double v = r - y - 0.5 * sig * sig;
-
-	//double  u = Dx;
-	//double d = 1. / u;
 
 
 	VecXX::INS pu = 0.5 * Dt * ((sig * sig) / (Dx * Dx) + v / Dx);
@@ -840,9 +628,12 @@ double americanFiniteDiffPricer(double S, double K, double sig, double r, double
 	VecXX::INS pm = 1. - Dt * (sig * sig) / (Dx * Dx) - r * Dt;
 
 
-	//VecXX::INS disc = exp(-r * Dt);
-	TrinomialSampler<VecXX::INS> sampler;
 
+	TrinomialSampler<VecXX::INS> sampler;
+	//introduces offset variables so that we can get vectorised versions
+	// of X[i+1], X[i] and  x[i-1]
+	// under the hood these do unaligned loads into registers so taht we can still
+	// apply the vectorised 
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
 		auto X1 = sampler.get<1>();
@@ -871,8 +662,9 @@ double americanFiniteDiffPricer(double S, double K, double sig, double r, double
 	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
 	auto odd_slice = excerciseValue;
 
-	UnitarySampler<VecXX::INS> identity_sampler; //identity  
+	UnitarySampler<VecXX::INS> identity_sampler; //identity  pas through
 
+	//this is the american part of the option excercise
 	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
 	{
 		auto optPrice = sampler.get<0>();
@@ -882,18 +674,16 @@ double americanFiniteDiffPricer(double S, double K, double sig, double r, double
 	auto even_slice = odd_slice * 0.0;
 
 	int J = 2 * N;
-
 	int k = 0;
 	for (; k < N; k += 2)
 	{
 
 		transform(odd_slice, even_slice, trinomialRollBack, sampler, 0, J);
 
-		//boundary condition
+		//apply boundary condition
 		even_slice[0] = even_slice[1] + terminalAssetPrices[1] - terminalAssetPrices[0];
 		even_slice[J] = even_slice[J - 1];
-
-		// transform to get early excercise for american bit , iderntity sampler just passes values straight through
+		// transform to get early excercise for american exercise , iderntity sampler just passes values straight through
 		transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, 0, J);
 
 
@@ -908,9 +698,6 @@ double americanFiniteDiffPricer(double S, double K, double sig, double r, double
 	return odd_slice[N];
 }
 
-
-
-
 void doAmericanFiniteDiff()
 {
 	double time = 0;
@@ -918,39 +705,32 @@ void doAmericanFiniteDiff()
 	{
 		TimerGuard timer(time);
 
-
-
 		std::cout << std::setprecision(12) << " start \n";
 		double S = 100.;
 		double K = 100.;
 		double vol = 0.2;
 		double rate = 0.06;
 		double T = 1;
-		int N = 10000;
+		int N = 60000;
 		res = americanFiniteDiffPricer(S, K, vol, rate, T, N);
 
 
 	}
 	std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << " takes secs" << time << "\n";
+	std::cout << "finite dif takes secs" << time << "\n";
 }
-
-
-
 
 double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, double r, double T, int N)
 {
 
-	//dividend yield
-	double y = 0.0;// 0.03;// 0.03; //div yield
+	
+	double y = 0.0;//dividend yield
+
 	VecXX terminalAssetPrices(1.0, 2 * N + 1);
 
 	double Dt = T / N;
 	double Dx = sig * std::sqrt(2.0 * Dt);
 	double v = r - y - 0.5 * sig * sig;
-
-	//double  u = Dx;
-	//double d = 1. / u;
 
 
 	VecXX::SCALA_TYPE pu = -0.5 * Dt * ((sig * sig) / (Dx * Dx) + v / Dx);
@@ -1001,8 +781,8 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 	VecXX pp(1.0, J + 1);
 
 	////////////
-	// SOLVE IMPLICIT TRIDIAGONAL  IN LINE 
-	//SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+	//LOOP HOIST BITS FROM  IMPLICIT TRIDIAGONAL 
+
 	pmp[1] = pm + pd;
 	pp[1] = odd_slice[1] + pd * lambda_L;
 
@@ -1024,8 +804,8 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 	for (; k < N; k += 2)
 	{
 
-		// SOLVE IMPLICIT TRIDIAGONAL  IN LINE 
-		//SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+		// SOLVE IMPLICIT TRIDIAGONAL  IN LINE 	SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+	
 		//pmp[1] = pm + pd;
 		pp[1] = odd_slice[1] + pd * lambda_L;
 
@@ -1046,16 +826,13 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 			even_slice[j] = (pp[j] - pu * even_slice[j + 1]) * inv_pmp[j];
 		}
 
-
+		//american excercise bit
 		even_slice = transform(american, even_slice, (const VecXX&)excerciseValue);
 
 
-		// calc odd slice now
-//////////////////////////////////////////////////////////////////////
-
+		// now calculate the  odd slice 
 
 		pp[1] = even_slice[1] + pd * lambda_L;
-
 
 		// eliminate upper diagonal
 		for (int j = 2; j < J; ++j)
@@ -1073,18 +850,12 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 			odd_slice[j] = (pp[j] - pu * odd_slice[j + 1]) * inv_pmp[j];
 		}
 
-
+		//american excercise bit
 		odd_slice = transform(american, odd_slice, (const VecXX&)excerciseValue);
-
-
 	}
 
 	return odd_slice[N];
 }
-
-
-
-
 
 double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r, double T, int N)
 {
@@ -1219,10 +990,6 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 	return odd_slice[N];
 }
 
-
-
-
-
 void doAmericanImplicitFiniteDiff()
 {
 	double time = 0;
@@ -1236,16 +1003,13 @@ void doAmericanImplicitFiniteDiff()
 		double vol = 0.2;
 		double rate = 0.06;
 		double T = 1;
-		int N = 1000;
+		int N = 30000;
 		//res = americanImplicitFiniteDiffPricer(S, K, vol, rate, T, N);		
 		res = americanImplicitFiniteDiffPricerFast(S, K, vol, rate, T, N);
 	}
 	std::cout << std::setprecision(12) << "price " << res << "\n";
 	std::cout << "americanImplicitFiniteDiffPricerFast takes secs" << time << "\n";
 }
-
-
-
 
 
 /////////////////////
@@ -1261,9 +1025,6 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 	double Dt = T / N;
 	double Dx = sig * std::sqrt(1.0 * Dt);// 0.2;//
 	double v = r - y - 0.5 * sig * sig;
-
-	//double  u = Dx;
-	//double d = 1. / u;
 
 
 	VecXX::SCALA_TYPE pu = -0.25 * Dt * ((sig * sig) / (Dx * Dx) + v / Dx);
@@ -1292,24 +1053,18 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 
 	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
 
-	//vdbg = terminalAssetPrices;
-	//vdbg = excerciseValue;
 
 	//derivative boundary condition
 	double  lambda_L = -1. * (terminalAssetPrices[1] - terminalAssetPrices[0]);
 	double  lambda_U = 0.0;
 
 	auto odd_slice = excerciseValue;
-	//	vdbg = odd_slice;
 
-
-
+	//set up slices
 	auto even_slice = odd_slice * 0.0;
-
 	even_slice[0] = odd_slice[0];
 
 	int J = 2 * N;
-
 	int k = 0;
 
 	VecXX pmp(1.0, J + 1);
@@ -1318,11 +1073,10 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 	for (; k <= N; k += 2)
 	{
 
-		// SOLVE IMPLICIT TRIDIAGONAL  IN LINE 
-		//SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+		// SOLVE IMPLICIT TRIDIAGONAL  IN LINE //SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
+		
 		pmp[1] = pm + pd;
 		pp[1] = -pu * odd_slice[2] - (pm - 2.) * odd_slice[1] - pd * odd_slice[0] + pd * lambda_L;
-
 
 
 		// eliminate upper diagonal
@@ -1331,8 +1085,6 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 			pmp[j] = pm - pu * pd / pmp[j - 1];
 			pp[j] = -pu * odd_slice[j + 1] - (pm - 2.0) * odd_slice[j] - pd * odd_slice[j - 1] - pp[j - 1] * pd / pmp[j - 1];
 		}
-
-
 
 		even_slice[J] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
 		even_slice[J - 1] = even_slice[J] - lambda_U;
@@ -1405,9 +1157,6 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 	return odd_slice[N];
 }
 
-
-
-
 void doAmericanCrankNicholson()
 {
 	double time = 0;
@@ -1427,9 +1176,6 @@ void doAmericanCrankNicholson()
 	std::cout << std::setprecision(12) << "price " << res << "\n";
 	std::cout << " takes secs" << time << "\n";
 }
-
-
-
 
 double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r, double T, double H, double rebate, int N)
 {
@@ -1521,8 +1267,6 @@ double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r,
 }
 
 
-
-
 void doAmericanTrinomialPricerUpAndOut()
 {
 
@@ -1548,45 +1292,15 @@ void doAmericanTrinomialPricerUpAndOut()
 }
 
 
-
-
-VecXX  blackScholes(const VecXX& S, const VecXX& K, const VecXX& t, const VecXX& r, const VecXX& sigma)
-{
-	auto invK = 1.0 / K;
-	auto discountedRate = exp(-r * t);
-	auto S_invK = S * invK;
-	auto log_sK = log(S_invK);
-	auto rootT = sqrt(t);
-	auto sigmaRootT = rootT * sigma;
-	auto invSigmaRootT = 1.0 / sigmaRootT;
-	auto halfSigmaSqrd_t = (0.5 * sigma * sigma + r) * t;
-	auto d1 = invSigmaRootT * (log_sK + halfSigmaSqrd_t);
-	auto d2 = d1 - sigmaRootT;
-	auto normD1 = cdfnorm(d1);
-	auto normD2 = cdfnorm(d2);
-	auto C = S * normD1 - K * discountedRate * normD2;
-	// auto delta = normD1;
-	return C;
-}
-
-
-
-
 double euroTrinomialPricerWithInit(double S, double K, double sig, double r, double T, int N)
 {
 
 	double y = 0.0;// 0.03; //div yield
-
-
 	VecXX terminalAssetPrices(1.0, 2 * N + 1);
 
 	double Dt = T / N;
 	double Dx = sig * std::sqrt(2.0 * Dt);
 	double v = r - y - 0.5 * sig * sig;
-
-	//double  u = Dx;
-	//double d = 1. / u;
-
 
 	VecXX::INS pu = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) + (v * Dt) / Dx);
 	VecXX::INS pd = 0.5 * ((Dt * sig * sig + v * v * Dt * Dt) / (Dx * Dx) - (v * Dt) / Dx);
@@ -1666,6 +1380,8 @@ double euroTrinomialPricerWithInit(double S, double K, double sig, double r, dou
 	//use BS transform and normal for first pair of slices
 	even_slice = transform(blackScholeInit, terminalAssetPrices);
 
+	//even_slice = transform(payOffFunc, terminalAssetPrices);
+
 	//std::vector<double> dbg = even_slice;
 
 	transform(even_slice, odd_slice, trinomialRollBack, sampler, i + 1, j - 1);
@@ -1676,7 +1392,7 @@ double euroTrinomialPricerWithInit(double S, double K, double sig, double r, dou
 	for (; i < N; i += 2)
 	{
 		transform(odd_slice, even_slice, trinomialRollBack, sampler, i, j);
-		// transform to get early excercise for american bit , iderntity sampler just passes values straight through
+		// transform to get early excercise for american bit , identity sampler just passes values straight through
 		//transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, i, j);
 
 		transform(even_slice, odd_slice, trinomialRollBack, sampler, i + 1, j - 1);
@@ -1691,22 +1407,45 @@ double euroTrinomialPricerWithInit(double S, double K, double sig, double r, dou
 }
 
 
-
-
 void doTrinomialPricerWithInit()
 {
 
+	//warm up
+	{
+		double res = 0.0;
+		
+		{
+
+			double S = 100.;
+			double K = 100.;
+			double vol = 0.2;
+			double rate = 0.06;
+			double T = 1;
+			int N = 300;// 500;
+
+			for (int k = 0; k < 100; k++)
+			{
+				res = euroTrinomialPricerWithInit(S, K, vol, rate, T, N);
+			}
+		}
+	}
+
+
 	double res = 0.0;
 	double time = 0;
+
+
+	double S = 100.;
+	double K = 100.;
+	double vol = 0.2;
+	double rate = 0.06;
+	double T = 1;
+
 	{
 		TimerGuard timer(time);
 
-		double S = 100.;
-		double K = 100.;
-		double vol = 0.2;
-		double rate = 0.06;
-		double T = 1;
-		int N = 10000;// 500;
+
+		int N = 3000;// 500;
 
 		for (int k = 0; k < 100; k++)
 		{
@@ -1715,17 +1454,49 @@ void doTrinomialPricerWithInit()
 
 
 	}
-	std::cout << std::setprecision(12) << "price " << res << "\n";
+
+	auto expected = blackScholes(S, K, T, rate, vol);
+	std::cout << std::setprecision(12) << "price " << res << "   expected =" << expected.getScalarValue() << "\n";
+
+	//std::cout << std::setprecision(12) << "price " << res << "\n";
 	std::cout << " takes secs" << time << "\n";
 }
-
-
-
 
 
 int main()
 {
 
+
+	///
+
+	doBinomialPricer();
+	//	return 0;
+	doTrinomialPricer();
+	//return 0;
+	doAmericanFiniteDiff();
+
+	doTrinomialPricerWithInit();
+	//return 0;  
+
+
+	doAmericanImplicitFiniteDiff();
+	//return 0;
+
+	doAmericanCrankNicholson();
+	//return 0;
+
+	return 0;
+
+
+
+   //doAmericanTrinomialPricerUpAndOut();
+	//return 0;
+
+
+	doZipping();
+	//	return 0;
+
+		/*
 	try
 	{
 		doScan();
@@ -1735,37 +1506,9 @@ int main()
 	}
 	//	return 0;
 
-
-	///
-
-	doTrinomialPricerWithInit();
-	//return 0;
+	*/
 
 
-	doAmericanTrinomialPricerUpAndOut();
-	//return 0;
-
-	doAmericanImplicitFiniteDiff();
-	//return 0;
-
-
-
-	doAmericanCrankNicholson();
-	//	return 0;
-
-
-
-	doAmericanFiniteDiff();
-	//	return 0;
-
-	doTrinomialPricer();
-	//	return 0;
-
-	doZipping();
-	//	return 0;
-
-	doBinomialPricer();
-	//	return 0;
 	//
 
 }
