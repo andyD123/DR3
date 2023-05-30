@@ -56,12 +56,9 @@ Vec<INS_VEC> ApplyAdjacentDiff(const Vec<INS_VEC>& rhs1, OP& oper)
 
 
 
-
 template<typename INS_VEC, typename OP>
-auto scan16(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValue, OP& oper)
+auto scan16( INS_VEC RHS, INS_VEC runValue, OP& oper)
 {
-	INS_VEC RHS;
-	RHS.load_a(pRhs);
 
 	INS_VEC RHS1 = blend16<16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14>(RHS, runValue);
 
@@ -84,12 +81,23 @@ auto scan16(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runVal
 }
 
 
-template<typename INS_VEC, typename OP>
 
-auto scan8(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValue, OP& oper)
+template<typename INS_VEC, typename OP>
+auto scan16(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValue, OP& oper)
 {
 	INS_VEC RHS;
 	RHS.load_a(pRhs);
+	return scan16(RHS, runValue,  oper);
+
+}
+
+
+
+
+template<typename INS_VEC, typename OP>
+auto scan8( INS_VEC RHS, INS_VEC runValue, OP& oper)
+{
+
 	INS_VEC RHS1 = blend8<8, 0, 1, 2, 3, 4, 5, 6>(RHS, runValue);
 
 	auto sum_1 = oper(RHS, RHS1);
@@ -108,20 +116,43 @@ auto scan8(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValu
 
 
 template<typename INS_VEC, typename OP>
+auto scan8(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValue, OP& oper)
+{
+	INS_VEC RHS;
+	RHS.load_a(pRhs);
+	return scan8(RHS, runValue, oper);
+}
+
+
+
+template<typename INS_VEC, typename OP>
+auto scan4( INS_VEC RHS, INS_VEC runValue, OP& oper)
+{
+	INS_VEC RHS1 = blend4<4, 0, 1, 2>(RHS, runValue);
+	auto sum_1 = oper(RHS, RHS1);
+	INS_VEC RHS2 = blend4<4, 4, 0, 1>(sum_1, runValue);
+	return  oper(RHS2, sum_1);
+}
+
+
+
+template<typename INS_VEC, typename OP>
 auto scan4(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValue, OP& oper)
 {
 	INS_VEC RHS;
 	RHS.load_a(pRhs);
-
-	INS_VEC RHS1 = blend4<4, 0, 1, 2>(RHS, runValue);
-
-	auto sum_1 = oper(RHS, RHS1);
-
-	INS_VEC RHS2 = blend4<4, 4, 0, 1>(sum_1, runValue);
-
-	return  oper(RHS2, sum_1);
+	return scan4(RHS, runValue, oper);
 }
 
+
+
+
+template<typename INS_VEC, typename OP>
+auto scan2( INS_VEC RHS, INS_VEC runValue, OP& oper)
+{
+	INS_VEC RHS1 = blend2<2, 0>(RHS, runValue);
+	return  oper(RHS, RHS1);
+}
 
 
 
@@ -130,8 +161,7 @@ auto scan2(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC runValu
 {
 	INS_VEC RHS;
 	RHS.load_a(pRhs);
-	INS_VEC RHS1 = blend2<2, 0>(RHS, runValue);
-	return  oper(RHS, RHS1);
+	return scan2(RHS, runValue, oper);
 	
 }
 
@@ -155,8 +185,31 @@ auto scanN(typename InstructionTraits<INS_VEC>::FloatType*  pRhs, INS_VEC runVal
 	}
 	else  if constexpr (InstructionTraits<INS_VEC>::width == 2 )
 	{
-		//static_assert(false);
 		return scan2(pRhs, runValue, oper);
+	}
+}
+
+
+
+
+template<typename INS_VEC, typename OP>
+auto scanN(  INS_VEC RHS, INS_VEC runValue, OP& oper)
+{
+	if constexpr (InstructionTraits<INS_VEC>::width == 8)
+	{
+		return scan8(RHS, runValue, oper);
+	}
+	else if constexpr (InstructionTraits<INS_VEC>::width == 4)
+	{
+		return scan4(RHS, runValue, oper);
+	}
+	else if constexpr (InstructionTraits<INS_VEC>::width == 16)
+	{
+		return scan16(RHS, runValue, oper);
+	}
+	else  if constexpr (InstructionTraits<INS_VEC>::width == 2)
+	{
+		return scan2(RHS, runValue, oper);
 	}
 }
 
@@ -192,9 +245,6 @@ Vec<INS_VEC> ApplyScan(const Vec<INS_VEC>& rhs1, OP& oper)
 
 	constexpr int LAST_ELEM = width - 1;
 
-	
-
-
 	int i = 0;
 	for (; i < (sz - step); i += step)
 	{
@@ -213,14 +263,11 @@ Vec<INS_VEC> ApplyScan(const Vec<INS_VEC>& rhs1, OP& oper)
 		auto sv13 = oper(sv12, runValue3);
 		auto s14 = oper(sv13,runValue4);
 
-		//Res1 += contValue;
 		Res1 =oper(Res1, contValue);
 		Res2 = oper(Res2, oper(runValue1, contValue));
 		Res3 = oper(Res3, oper(sv12, contValue));
 		Res4 = oper(Res4, oper(sv13, contValue));
 
-		//runValue += s14;
-		//contValue += s14;
 
 		contValue = oper(contValue, s14);
 
@@ -245,100 +292,13 @@ Vec<INS_VEC> ApplyScan(const Vec<INS_VEC>& rhs1, OP& oper)
 
 };
 
-/////////////////////TRANSFORM SCAN  BROKEN/////////////////
-
-/*
-
-template<typename INS_VEC, typename OP, typename TRANSFORM>
-auto scan16(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC& runValue, OP& oper, typename TRANSFORM& trfrm)
-{
-	INS_VEC RHS;
-	RHS.load_a(pRhs);
-	RHS = trfrm(RHS);
-
-	INS_VEC RHS1 = blend16<16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14>(RHS, runValue);
-	auto sum_1 = oper(RHS, RHS1);
-
-	INS_VEC RHS2 = blend16<16, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13>(sum_1, runValue);
-	auto sum_2 = oper(RHS2, sum_1);
-
-	INS_VEC RHS3 = blend16<16, 16, 16, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11>(sum_2, runValue);
-	auto sum_3 = oper(RHS3, sum_2);
-
-	INS_VEC RHS4 = blend16<16, 16, 16, 16, 16, 16, 16, 16, 0, 1, 2, 3, 4, 5, 6, 7>(sum_3, runValue);
-	auto sum_4 = oper(RHS4, sum_3);
-
-	return sum_4;
-
-}
-
-
-template<typename INS_VEC, typename OP, typename TRANSFORM >
-auto scan8(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC& runValue, OP& oper ,TRANSFORM& trfrm)
-{
-	INS_VEC RHS;
-	RHS.load_a(pRhs);
-	RHS = trfrm(RHS);
-
-	INS_VEC RHS1 = blend8<8, 0, 1, 2, 3, 4, 5, 6>(RHS, runValue);
-	auto sum_1 = oper(RHS, RHS1);
-
-	INS_VEC RHS2 = blend8<8, 8, 0, 1, 2, 3, 4, 5>(sum_1, runValue);
-	auto sum_2 = oper(RHS2, sum_1);
-
-	INS_VEC RHS3 = blend8<8, 8, 8, 8, 0, 1, 2, 3>(sum_2, runValue);
-	auto sum_3 = oper(RHS3, sum_2);
-
-	return sum_3;
-
-}
-
-
-template<typename INS_VEC, typename OP, typename TRANSFORM >
-auto scan4(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC& runValue, OP& oper,  TRANSFORM& trfrm)
-{
-	INS_VEC RHS;
-	RHS = trfrm(RHS);
-
-	RHS.load_a(pRhs);
-	INS_VEC RHS1 = blend4<4, 0, 1, 2>(RHS, runValue);
-
-	auto sum_1 = oper(RHS, RHS1);
-
-	INS_VEC RHS2 = blend4<4, 4, 0, 1>(sum_1, runValue);
-
-	return  oper(RHS2, sum_1);
-}
-
-
-
-template<typename INS_VEC, typename OP, typename TRANSFORM >
-auto scanN(typename InstructionTraits<INS_VEC>::FloatType* pRhs, INS_VEC& runValue, OP& oper, typename TRANSFORM& trfrm)
-{
-	if constexpr (InstructionTraits<INS_VEC>::width == 8)
-	{
-		return scan8(pRhs, runValue, oper, trfrm);
-	}
-	else if constexpr (InstructionTraits<INS_VEC>::width == 4)
-	{
-		return scan4(pRhs, runValue, oper, trfrm);
-	}
-	else if constexpr (InstructionTraits<INS_VEC>::width == 16)
-	{
-		return scan16(pRhs, runValue, oper, trfrm);
-	}
-	else
-	{
-		//static_assert(false);
-	}
-}
-
-
-// works experimental
-// generic scan
+/////////////////////TRANSFORM SCAN /////////////////
+// generic transform scan
 template< typename INS_VEC, typename OP, typename TRANSFORM>
-Vec<INS_VEC> ApplyTransformScan(const Vec<INS_VEC>& rhs1, OP& oper, TRANSFORM& trfrm)
+Vec<INS_VEC> ApplyTransformScan(const Vec<INS_VEC>& rhs1, OP& oper, TRANSFORM& transform)
 {
+
+
 	check_vector(rhs1);
 	if (isScalar(rhs1))
 	{
@@ -356,52 +316,72 @@ Vec<INS_VEC> ApplyTransformScan(const Vec<INS_VEC>& rhs1, OP& oper, TRANSFORM& t
 
 	INS_VEC runValue = 0.0;
 
-	int sz = rhs1.paddedSize();
+	INS_VEC contValue = 0.0;
+
+	int sz = rhs1.size();
 
 
 	//https://gfxcourses.stanford.edu/cs149/fall20content/media/dataparallel/08_dataparallel.pdf
 
 	constexpr int LAST_ELEM = width - 1;
 
+	INS_VEC Res1;
+	INS_VEC Res2;
+	INS_VEC Res3;
+	INS_VEC Res4;
+
 
 	int i = 0;
 	for (; i < (sz - step); i += step)
 	{
 
-		INS_VEC Res1 = scanN(pRhs1, runValue, oper, trfrm);
-		INS_VEC Res2 = scanN(pRhs1 + width, runValue, oper, trfrm);
-		INS_VEC Res3 = scanN(pRhs1 + 2 * width, runValue, oper, trfrm);
-		INS_VEC Res4 = scanN(pRhs1 + 3 * width, runValue, oper, trfrm);
+		Res1.load_a(pRhs1 + i);
+		Res2.load_a(pRhs1 + i + width);
+		Res3.load_a(pRhs1 + i + 2 * width);
+		Res4.load_a(pRhs1 + i + 3 * width);
+
+
+		Res1 = scanN(transform(Res1), runValue, oper);
+		Res2 = scanN(transform(Res2), runValue, oper);
+		Res3 = scanN(transform(Res3), runValue, oper);
+		Res4 = scanN(transform(Res4), runValue, oper);
 
 		INS_VEC runValue1 = Res1[LAST_ELEM];
 		INS_VEC runValue2 = Res2[LAST_ELEM];
 		INS_VEC runValue3 = Res3[LAST_ELEM];
 		INS_VEC runValue4 = Res4[LAST_ELEM];
 
-		auto sv12 = runValue1 + runValue2;
-		auto sv13 = runValue1 + runValue2 + runValue3;
-		auto sv34 = runValue3 + runValue4;
+		auto sv12 = oper(runValue1, runValue2);
+		auto sv13 = oper(sv12, runValue3);
+		auto s14 = oper(sv13, runValue4);
 
-		Res2 += runValue1;
-		Res3 += sv12;
-		Res4 += sv13;
+		Res1 = oper(Res1, contValue);
+		Res2 = oper(Res2, oper(runValue1, contValue));
+		Res3 = oper(Res3, oper(sv12, contValue));
+		Res4 = oper(Res4, oper(sv13, contValue));
 
-		runValue += sv34 + sv12;
+
+		contValue = oper(contValue, s14);
 
 		Res1.store_a(pRes + i);
 		Res2.store_a(pRes + i + width);
 		Res3.store_a(pRes + i + 2 * width);
 		Res4.store_a(pRes + i + 3 * width);
 
-
 	}
-	for (int j = i; j < (sz - 1); j++)
+
+	if (i == 0) // small and need to init first element
 	{
-		result[j] = ApplyBinaryOperation1<INS_VEC, OP>(rhs1[j], rhs1[j + 1], oper);
+		i++;
+		result[0] = transform(INS_VEC(rhs1[0]))[0];
+	};
+	for (int j = i; j < sz; j++)
+	{
+		auto trans_of_rhs1_j = transform(INS_VEC(rhs1[j]))[0];
+
+		result[j] = ApplyBinaryOperation1<INS_VEC, OP>(trans_of_rhs1_j, result[j - 1], oper);
 	}
 
 	return result;
 
 };
-
-*/

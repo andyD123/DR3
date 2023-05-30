@@ -21,6 +21,7 @@
 
                                                   
 #include "../Vectorisation/VecX/zip_utils.h"
+#include "../Vectorisation/VecX/span.h"
 
 
 
@@ -91,33 +92,46 @@ void doScan()
 
 	auto sum = [](auto X, auto Y) { return  X + Y; };
 
-
 	double time = 0;
 	{
 		TimerGuard timer(time);
-
-		//a += 1.0;
 
 		VecXX result;
 		for (long l = 0; l < 1000000; ++l)
 		{
 			result = ApplyScan(a, sum);
 			//dbg = a;
-
 		}
 
 		dbg = result;
 	}
 	std::cout << "run time = " << time << "\n";
 
+
+
+	///////TRANSFORM SCAN //////
+	
+	//{
+	//	TimerGuard timer(time);
+	//	auto doubleIt= [](auto X) { return  X*2.; };
+	//	VecXX result;
+	//	for (long l = 0; l < 1000000; ++l)
+	//	{
+	//		result = ApplyTransformScan(a, sum, doubleIt);
+	//		//dbg = a;
+	//	}
+	//	dbg = result;
+	//}
+
+	//////////
+
+
 	
 	auto dbg_cpy = dbg;
 	time = 0;
 	{
 		TimerGuard timer(time);
-
-		//a += 1.0;
-
+		
 		for (long l = 0; l < 1000000; ++l)
 		{
 			std::inclusive_scan(begin(v1), end(v1), dbg.begin());
@@ -127,7 +141,7 @@ void doScan()
 
 	for (size_t i = 0; i < dbg_cpy.size(); ++i)
 	{
-		std::cout << i << "  ,  " << dbg[i] << "   , " << dbg_cpy[i] << std::endl;
+		std::cout << i << "  ,  " << dbg[i]  << "   , " << dbg_cpy[i]  << std::endl;
 	}
 
 }
@@ -559,11 +573,11 @@ double europeanTrinomialPricer1(double S, double K, double sig, double r, double
 
 	UnitarySampler<VecXX::INS> identity_sampler; //identity just 
 
-	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
-	{
-		auto optPrice = sampler.get<0>();
-		return max(optPrice, excercisePrice);
-	};
+//	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
+//	{
+//		auto optPrice = sampler.get<0>();
+//		return max(optPrice, excercisePrice);
+//	};
 
 
 	auto even_slice = odd_slice;
@@ -1411,8 +1425,9 @@ void doTrinomialPricerWithInit()
 {
 
 	//warm up
+	double res = 0.0;
 	{
-		double res = 0.0;
+		
 		
 		{
 
@@ -1431,7 +1446,7 @@ void doTrinomialPricerWithInit()
 	}
 
 
-	double res = 0.0;
+	//double res = 0.0;
 	double time = 0;
 
 
@@ -1463,12 +1478,60 @@ void doTrinomialPricerWithInit()
 }
 
 
+
+void doMatrix()
+{
+	VecXX owningVec(0.1, 16*10);
+
+	auto val = 0.0;
+	for (auto& x : owningVec)
+	{
+		x = val;
+		val++;
+	}
+
+	using MAT1 =  DR3::Layout2D<double, 8, 0>;
+
+	//auto pDat =
+	DR3::MDSpan<double,MAT1> mat(owningVec.data(), 10, 10);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			mat(i, j) = i * 100 + j;
+		}
+		
+	}
+
+	std::cout << "\n";
+	std::cout << "\n";
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+}
+
+
+
 int main()
 {
-
-
-	///
-
+/*
 	doBinomialPricer();
 	//	return 0;
 	doTrinomialPricer();
@@ -1477,7 +1540,6 @@ int main()
 
 	doTrinomialPricerWithInit();
 	//return 0;  
-
 
 	doAmericanImplicitFiniteDiff();
 	//return 0;
@@ -1495,8 +1557,13 @@ int main()
 
 	doZipping();
 	//	return 0;
+*/
+ 
+	doMatrix();
 
-		/*
+	return 0;
+
+
 	try
 	{
 		doScan();
@@ -1504,9 +1571,10 @@ int main()
 	catch (...)
 	{
 	}
-	//	return 0;
+		return 0;
 
-	*/
+	
+	
 
 
 	//

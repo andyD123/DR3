@@ -509,7 +509,6 @@
     <ClCompile Include="accumulate_example.cpp">
       <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Precise</FloatingPointModel>
     </ClCompile>
-    <ClCompile Include="AVX512Dance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vectorisation\Vectorisation.vcxproj">
