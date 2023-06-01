@@ -325,6 +325,23 @@ VecView<INS_VEC> transform(LAMBDA& lambda, const VecView<INS_VEC>& inputVec)
 
 
 
+
+////////
+//input should be const
+template<typename LAMBDA, typename INS_VEC>
+void transform(LAMBDA& lambda,  Span<INS_VEC>& inputVec, Span<INS_VEC>& outVec)
+{
+	UnitarySampler<INS_VEC> identity_sampler;
+	ApplyTransformUR_X_Impl_EX(inputVec, outVec, lambda, identity_sampler, 0, int(inputVec.paddedSize()));
+
+}
+
+
+
+
+///////////
+
+
 /*
 applies the OP to the view in and  scatter,  writes the results to the corresponding elements  of the result vector.
 */
@@ -375,6 +392,12 @@ VecView<INS_VEC>  filter(OP& condition, const Vec<INS_VEC>& lhs)
 	return ApplyFilterImpl< Vec, INS_VEC, OP>(condition, lhs);
 };
 
+
+template< typename INS_VEC, typename OP>
+VecView<INS_VEC> filter(OP& condition, const Span<INS_VEC>& lhs)
+{
+	return ApplyFilter(condition, lhs);
+}
 
 /*
 returns a view of the first N elements of the vector that satisfy the condition
@@ -461,6 +484,14 @@ typename InstructionTraits<INS_VEC>::FloatType reduce(const Vec<INS_VEC>& rhs1, 
 }
 
 
+//unroll version
+template< typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduce(const Span<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	return ApplyAccumulate2UR_X(rhs1, oper);
+	ignore(initVal);
+	ignore(singularInit);
+}
 
 //unroll version
 template< typename INS_VEC, typename OP>
@@ -528,16 +559,13 @@ template< typename INS_VEC, typename OP, typename OPT>
 typename InstructionTraits<INS_VEC>::FloatType transformReduce(const VecView<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
 	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
-	/*
-#ifdef _VC_PERF_REG_
-	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
-	ignore(initVal);
-	ignore(singularInit);
-#else
-	return ApplyTransformAccumulateUR(rhs1, operTransform, operAcc, initVal, singularInit);
-#endif
-*/
+}
 
+
+template< typename INS_VEC, typename OP, typename OPT>
+typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Span<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	return ApplyTransformAccumulate2UR_X_Impl(rhs1, operTransform, operAcc);
 }
 
 
@@ -585,9 +613,6 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(const VecView<INS
 }
 
 
-
-
-
 ///////////////////////////adjacent diff ////////////
 
 template< typename INS_VEC, typename OP>
@@ -595,10 +620,6 @@ Vec<INS_VEC> adjacentDiff(const Vec<INS_VEC>& rhs1, OP& oper)
 {
 	return  ApplyAdjacentDiff(rhs1, oper);
 };
-
-
-//////////////////////////////////
-
 
 
 //

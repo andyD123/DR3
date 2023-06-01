@@ -18,6 +18,7 @@
 #include "vec_double.h"
 #include "vec_view.h"
 #include "apply_operation.h"
+#include "span.h"
 
 namespace DRC
 {
@@ -29,6 +30,8 @@ namespace DRC
 		using VecXX = Vec<VecDouble>;
 		using VecVW = VecView<VecDouble>;
 		using VecBL = VecBool<VecDouble>;
+		using SpanXX = Span<VecDouble>;
+		
 
 	};
 
@@ -41,6 +44,7 @@ namespace DRC
 		typedef Vec<Vec2d>  VecXX;
 		typedef VecView<Vec2d>  VecVW;
 		typedef VecBool<Vec2d>	VecBL;
+		typedef Span<Vec2d>  SpanXX;
 	};
 
 
@@ -52,6 +56,7 @@ namespace DRC
 		typedef Vec<Vec4d>  VecXX;
 		typedef VecView<Vec4d>  VecVW;
 		typedef VecBool<Vec4d>	VecBL;
+		typedef Span<Vec4d>  SpanXX;
 
 	};
 
@@ -62,6 +67,7 @@ namespace DRC
 		typedef Vec<Vec8d>  VecXX;
 		typedef VecView<Vec8d>  VecVW;
 		typedef VecBool<Vec8d>	VecBL;
+		typedef Span<Vec8d>  SpanXX;
 
 	};
 
@@ -72,6 +78,7 @@ namespace DRC
 		typedef Vec<Vec16f>  VecXX;
 		typedef VecView<Vec16f>  VecVW;
 		typedef VecBool<Vec16f>	VecBL;
+		typedef Span<Vec16f>  SpanXX;
 	};
 
 	namespace VecF8F
@@ -81,6 +88,7 @@ namespace DRC
 		typedef Vec<Vec8f>  VecXX;
 		typedef VecView<Vec8f>  VecVW;
 		typedef VecBool<Vec8f>	VecBL;
+		typedef Span<Vec8f>  SpanXX;
 	};
 
 
@@ -91,6 +99,7 @@ namespace DRC
 		typedef Vec<Vec4f>  VecXX;
 		typedef VecView<Vec4f>  VecVW;
 		typedef VecBool<Vec4f>	VecBL;
+		typedef Span<Vec4f>  SpanXX;
 	};
 
 

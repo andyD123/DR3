@@ -165,6 +165,138 @@ void testSampler()
 }
 
 
+void doTransformWithASpan()
+{
+
+	auto v1 = std::vector<VecXX::SCALA_TYPE>(4000, 0.0);
+	FLOAT last = 0.0;// -1.0;
+	for (auto& x : v1)
+	{
+		x = last + 1.0;
+		last = x;
+	}
+	// getRandomShuffledVector(200);
+	VecXX a_vec(v1);
+	std::vector<FLOAT> dbg = v1;
+
+	VecXX result = a_vec;
+
+
+	//DRC::Span< VecXX::INS>
+	 SpanXX spn(a_vec.start(), 200);
+
+	 SpanXX spnPlus(a_vec.start()+200, 200);
+
+	UnitarySampler<VecXX::INS> identity_sampler;
+
+	
+	auto SQR = [](UnitarySampler<VecXX::INS>& sampler)
+	{
+		auto x = sampler.get<0>();
+		return x * x; 
+	};
+
+
+	
+
+
+	//need a ptr diff  betwee start span and start vecXX
+
+	ApplyTransformUR_X_Impl_EX(a_vec, spnPlus, SQR, identity_sampler, 0, int(spn.paddedSize()));// int impSZ = -1)`
+
+	ApplyTransformUR_X_Impl_EX(spn, spnPlus, SQR, identity_sampler, 0, int(spn.paddedSize()));// int impSZ = -1)
+
+	//trapped into using same container , ie vecxx vecxx  , not mixed so add extra type argument 
+	std::vector<double> ddbbgg = spn;
+
+	transform(SQR, spn, spnPlus);
+
+	ddbbgg  = spnPlus;
+
+
+	auto isEven = [](auto x) { return !((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) > VecXX::INS(0.)); };
+	auto evenView = filter(isEven, a_vec);
+
+	ddbbgg = evenView;
+
+	ApplyTransformUR_X_Impl_EX(spn, evenView, SQR, identity_sampler, 100, int(spn.paddedSize()));
+
+	ddbbgg = evenView;
+
+
+	VecXX anotherVector(v1);
+	VecXX resvec(v1);
+
+
+	SpanXX smallSpan(anotherVector.start() + 20, 100);
+
+	auto vwOfSpan = filter(isEven, smallSpan);
+
+	ddbbgg = vwOfSpan;
+
+	auto CUBE_IT = [](auto x) { return x * x * x; };
+
+	auto neVw = vwOfSpan;
+	transformM(CUBE_IT, neVw);// , resvec);// vwOfSpan); // broken somehow
+
+	for (auto& x : neVw)
+	{
+		std::cout << x << std::endl;
+	}
+
+	ddbbgg = neVw;
+
+	ddbbgg = vwOfSpan;
+
+	//transforming view as a result of filtering a span
+
+	vwOfSpan =transform(CUBE_IT, vwOfSpan); // broken somehow
+
+	ddbbgg = vwOfSpan;
+
+	for (auto& x : vwOfSpan)
+	{
+		std::cout << x << std::endl;
+	}
+
+
+
+	//reduce
+	auto SUM = [](auto x, auto y) {return x + y; };
+
+	//auto val =ApplyAccumulate2UR_X(spn, SUM);
+	// goes to reduce(span,lambda)
+
+	auto val = reduce(spn, SUM);
+
+
+
+	//TO DO transformReduce 
+
+	auto SQR_VAL = [](auto x) {return x * x; };
+
+	const auto& cnstSpn = spn;
+
+	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(cnstSpn, SQR_VAL, SUM);
+	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(spn, SQR_VAL, SUM);
+
+
+	auto sumSqrsXXX = transformReduce(spn, SQR_VAL, SUM);
+
+
+
+	//auto trform = ApplyUnitaryOperation(cnstSpn, SQR_VAL);
+	//return trform.getScalarValue();
+
+
+	//need to make apply unitary op work with generic vec/view so that it works with span
+
+
+
+
+}
+
+
 void doZipping()
 {
 
@@ -1490,10 +1622,10 @@ void doMatrix()
 		val++;
 	}
 
-	using MAT1 =  DR3::Layout2D<double, 8, 0>;
+	using MAT1 =  Layout2D<double, 8, 0>;
 
 	//auto pDat =
-	DR3::MDSpan<double,MAT1> mat(owningVec.data(), 10, 10);
+	MDSpan<double,MAT1> mat(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -1531,7 +1663,7 @@ void doMatrix()
 
 int main()
 {
-/*
+
 	doBinomialPricer();
 	//	return 0;
 	doTrinomialPricer();
@@ -1547,34 +1679,23 @@ int main()
 	doAmericanCrankNicholson();
 	//return 0;
 
-	return 0;
-
-
 
    //doAmericanTrinomialPricerUpAndOut();
 	//return 0;
 
-
 	doZipping();
 	//	return 0;
-*/
- 
+
+	doScan();
+	
+	doTransformWithASpan();
+//	return 0;
+
+
 	doMatrix();
-
 	return 0;
-
-
-	try
-	{
-		doScan();
-	}
-	catch (...)
-	{
-	}
-		return 0;
-
 	
-	
+
 
 
 	//

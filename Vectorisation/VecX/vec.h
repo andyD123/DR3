@@ -14,6 +14,7 @@
 #include "alloc_policy.h"
 #include "apply_operation.h"
 #include "vec_view.h"
+#include "span.h"
 
 #include <algorithm>
 #include <iterator>
@@ -206,7 +207,7 @@ public:
 	//explicit
 	operator std::vector<typename InstructionTraits<INS_VEC>::FloatType>()
 	{
-		return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(begin(), end());// begin() + size());// end());
+		return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(begin(), end());
 	}
 
 
@@ -222,6 +223,11 @@ public:
 
 
 	inline typename InstructionTraits<INS_VEC>::FloatType* start() const
+	{
+		return m_pData;
+	}
+
+	inline typename InstructionTraits<INS_VEC>::FloatType* data() 
 	{
 		return m_pData;
 	}
@@ -299,13 +305,31 @@ bool isScalar( VecView<T>& X)
 }
 
 
-template<typename T> bool isScalar(const T&)
+template<typename T> 
+bool isScalar(const T&)
 {
 	return true;
 }
 
-template<typename T> bool isScalar( T&)
+template<typename T>
+bool isScalar( T&)
 {
 	return true;
 }
 
+
+template<typename T>
+bool isScalar(const Span<T>& X)
+{
+	return false;
+}
+
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+void  getScalarValue(const VEC_TYPE<INS_VEC>& rhs1, typename InstructionTraits<INS_VEC>::FloatType& val)
+{
+
+	if (isScalar(rhs1)) 
+	{
+		val = rhs1.getScalarValue();
+	}
+}

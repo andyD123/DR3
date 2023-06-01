@@ -170,16 +170,16 @@ struct Sampled_Zipped_Reg
 
 	//TO DO
 
-	template<int M, int N>
+	template<int J, int I>
 	INS_VEC& get()
 	{
-		return std::get<N>(std::get<M>(m_sampler));
+		return std::get<J>(std::get<I>(m_sampler));
 	}
 
-	template<int M, int N>
+	template<int J, int I>
 	constexpr INS_VEC get() const
 	{
-		return  std::get<N>(std::get<M>(m_sampler));
+		return  std::get<J>(std::get<I>(m_sampler));
 	}
 
 	//these might need unroll
@@ -229,9 +229,6 @@ constexpr auto make_Zipped( T& ...args)
 	constexpr int N = sizeof...(T);
 	Zipped_Reg<INS_VEC, N> ret;
 	return ret;
-
-	
-
 }
 
 
