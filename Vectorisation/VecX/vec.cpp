@@ -12,7 +12,7 @@
 #include "vec.h"
 #include "alloc_policy.h"
 #include <algorithm>
-
+/*
 const double InstructionTraits<VecDouble>::nullValue = 0.0;
 const double InstructionTraits<VecDouble>::oneValue = 1.0;
 
@@ -33,4 +33,4 @@ const float InstructionTraits<Vec8f>::oneValue = 1.0f;
 
 const float InstructionTraits<Vec4f>::nullValue = 0.0f;
 const float InstructionTraits<Vec4f>::oneValue = 1.0f;
-
+*/

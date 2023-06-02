@@ -43,6 +43,7 @@ struct SampleElement :public RegisterElement< INS_VEC,  OFFSET, false>
 template<typename INS_VEC, int X_Minus1 =-1,int X0 = 0, int X1 = 1 >
 struct TrinomialSampler 
 {
+	const int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
@@ -82,6 +83,7 @@ struct TrinomialSampler
 template<typename INS_VEC, int X0 =0, int X1 =1>
 struct BinomialSampler
 {
+	const int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
@@ -116,6 +118,8 @@ template<typename INS_VEC, int X0 = 0>
 struct UnitarySampler
 {
 
+	const int stride() const { return 1; }
+
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
 	template <int VAL>
@@ -138,8 +142,112 @@ struct UnitarySampler
 
 };
 
-//should be variadic
+//would be nice for variadic
 
+
+template<typename INS_VEC, int X0 = 0>
+struct StridedSampler
+{
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	static constexpr int  width = InstructionTraits< INS_VEC>::width;
+	const int  m_stride;
+	const int  step;
+
+	const int stride() const
+	{
+		return m_stride;
+	}
+
+	
+	template <typename T>
+	void load2(typename T* pbase)
+	{
+		INS_VEC loaded = { *pbase, *(pbase + step) };
+		X_0.value = loaded;
+	}
+
+
+	
+	template <typename T>
+	void load4(typename T* pbase)
+	{
+		INS_VEC loaded ={ *pbase, *(pbase + step), *(pbase + 2*step),*(pbase + 3 * step) };
+		X_0.value = loaded;
+	}
+
+
+	template <typename T>
+	void load8(typename T* pbase)
+	{
+		INS_VEC loaded ={ *pbase, *(pbase + step), *(pbase + 2 * step),*(pbase + 3 * step) ,
+			*(pbase + 4 * step),*(pbase + 5 * step),*(pbase + 6 * step),*(pbase + 7 * step) };
+		
+		X_0.value = loaded;
+	}
+
+
+
+	template <typename T>
+	void load16(typename T* pbase)
+	{
+		INS_VEC loaded = { *pbase, *(pbase + step), *(pbase + 2 * step),*(pbase + 3 * step) ,
+			*(pbase + 4 * step),*(pbase + 5 * step),*(pbase + 6 * step),*(pbase + 7 * step),
+			*(pbase + 8 * step), *(pbase + 9 * step), *(pbase + 10 * step), *(pbase + 11 * step),
+			*(pbase + 12 * step), *(pbase + 13 * step), *(pbase + 14 * step), *(pbase + 15 * step) };
+
+		X_0.value = loaded;
+	}
+
+	
+	explicit StridedSampler(size_t stride) :m_stride(stride), step ( width * m_stride)
+	{
+
+	}
+
+	
+
+	
+
+	template <int VAL>
+	INS_VEC  get() {  };// cant instantiate
+
+
+	template<>
+	INS_VEC  get<X0>() { return X_0.value; };
+
+
+	inline void load(Float* pData)
+	{
+	
+		if constexpr (width == 2)
+		{
+			load2(pData);
+		}
+		if constexpr (width == 4)
+		{
+			load4(pData);
+		}
+		if constexpr (width == 8)
+		{
+			load8(pData);
+		}
+		if constexpr (width == 16)
+		{
+			load16(pData); 
+		}
+	}
+
+	//static 
+	constexpr int min() { return X0; }
+	//static
+	constexpr int max() { return X0; };// +(width - 1) * step;}
+
+
+	RegisterElement< INS_VEC, 0, false> X_0;
+
+};
 
 
 
@@ -1109,7 +1217,11 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 4 * width;
+	int stride = sampler.stride();
+	stride = (stride == 1) ? 1 : stride * width;
+	int step = 4 * width * stride;
+
+
 
 
 	SAMPLER RHS1(sampler);
@@ -1145,20 +1257,20 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 		RES = oper(RHS1);
 		RES.store(pRet + i + SV_offset);
 
-		RHS2.load(pRhs1 + i + ld_offset + width);
+		RHS2.load(pRhs1 + i + ld_offset + width * stride);
 		RES1 = oper(RHS2);
-		RES1.store(pRet + i + SV_offset + width);
+		RES1.store(pRet + i + SV_offset + width );
 
-		RHS3.load(pRhs1 + i + ld_offset + width * 2);
+		RHS3.load(pRhs1 + i + ld_offset + width * stride * 2);
 		RES2 = oper(RHS3);
-		RES2.store(pRet + i  + SV_offset + width * 2);
+		RES2.store(pRet + i  + SV_offset + width  * 2);
 
-		RHS4.load(pRhs1 + i + ld_offset + width * 3);
+		RHS4.load(pRhs1 + i + ld_offset + width * stride * 3);
 		RES3 = oper(RHS4);
 		RES3.store(pRet + i +  SV_offset +width * 3);
 	}
-
-	for (; i <= impSZ - width; i += width)
+	//
+	for (; i <= impSZ - width * stride; i += width * stride)
 	{
 		RHS1.load(pRhs1 + i + ld_offset );
 		RES = oper(RHS1);
@@ -1167,7 +1279,7 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 
 	//one register case or do it scalar ops ?
 
-	if ( i < (impSZ- width) )
+	if ( i < (impSZ- width * stride) )
 	{
 		RHS1.load(pRhs1 + i + ld_offset);
 		RES = oper(RHS1);
@@ -1177,7 +1289,7 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	//move to one register width from last valid
 	//point to calculate
 	// or zero
-	i = std::max(i_min_start, (impSZ - width));
+	i = std::max(i_min_start, (impSZ - width * stride));
 
 	RHS1.load(pRhs1 + i + ld_offset);
 	RES = oper(RHS1);
@@ -1185,7 +1297,7 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 
 	// ithink this probably needs to be a masked write so we only 
 	// overwrite valid re-calculated bits for small vectors
-
+	//
 }
 
 

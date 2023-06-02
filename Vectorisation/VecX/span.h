@@ -114,6 +114,8 @@ private:
 
 
 
+
+
 struct SpanIncrement
 {
 	long long m_start;// start
@@ -137,6 +139,116 @@ Span<T> operator += (const Span<T>& span, const SpanIncrement& inc)
 	 span.size() += inc.m_end;
 	 return span;
 }
+
+
+
+/////////////////////////////////////////
+///
+template<typename  INS_VEC>
+struct StridedSpan 
+{
+
+	using T = typename InstructionTraits<INS_VEC>::FloatType;
+
+	StridedSpan(const T&) {}
+
+	StridedSpan(T* pdata, size_t extent, size_t stride) :m_pstart(pdata), m_extent(extent), m_stride(stride){}
+
+
+	//explicit
+	operator std::vector<typename InstructionTraits<INS_VEC>::FloatType>()
+	{
+		return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(start(), start() + m_extent);
+	}
+
+	const T* begin() const
+	{
+		return m_pstart;
+	}
+
+	T* begin()
+	{
+		return m_pstart;
+	}
+
+
+	const T* end() const
+	{
+		return m_pstart + m_extent;
+	}
+
+
+	T& operator[](size_t pos)
+	{
+		return *(m_pstart + pos* m_stride);
+	}
+
+	const T& operator[](size_t pos)const
+	{
+		return *(m_pstart + pos * m_stride);
+	}
+
+	size_t size() const
+	{
+		return m_extent;
+	}
+
+	//front()  back()
+
+
+	template< size_t N>
+	StridedSpan<T> first() const
+	{
+		return StridedSpan(m_pstart, N * m_stride, m_stride);
+	}
+
+
+	template< size_t N>
+	StridedSpan<T> last() const
+	{
+		return StridedSpan(m_pstart + m_extent - N * m_stride, N * m_stride);
+	}
+
+	bool empty() const
+	{
+		return m_extent = 0;
+	}
+
+	T* start() const
+	{
+		return m_pstart;
+	}
+
+
+	// spans are user defined in length so we
+	// dont have padded size
+	// also they dont own memory so cant guarantee to alloc
+	// padding space
+	size_t paddedSize() const
+	{
+		return m_extent;
+	}
+
+
+	constexpr bool isScalar() const
+	{
+		return false;
+	}
+
+	typename InstructionTraits<INS_VEC>::FloatType getScalarValue()const
+	{
+		return InstructionTraits<INS_VEC>::nullValue;
+	}
+
+
+private:
+	T* m_pstart;
+	size_t m_extent;
+	int m_stride;
+};
+
+
+
 
 
 // Layout maps user defined index  structure to an offset

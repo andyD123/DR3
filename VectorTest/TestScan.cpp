@@ -17,6 +17,7 @@
 
 #include "../Vectorisation/VecX/dr3.h"
 #include "../Vectorisation/VecX/scan.h"
+#include "../Vectorisation/VecX/instruction_traits.h"
 
 
 #include "testNamespace.h"

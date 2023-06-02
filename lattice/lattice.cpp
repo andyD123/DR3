@@ -165,6 +165,108 @@ void testSampler()
 }
 
 
+
+
+void doStridedSpan()
+{
+
+	auto v1 = std::vector<VecXX::SCALA_TYPE>(4000, 0.0);
+	FLOAT last = 0.0;// -1.0;
+	for (auto& x : v1)
+	{
+		x = last + 1.0;
+		last = x;
+	}
+	// getRandomShuffledVector(200);
+	VecXX a_vec(v1);
+	std::vector<FLOAT> dbg = v1;
+
+	VecXX result = a_vec;
+
+	result *= 0.0;
+
+	StridedSampler<VecXX::INS> strided_sampler(2);
+
+	//sampler.load(a_vec.data());
+
+
+
+	//DRC::Span< VecXX::INS>
+	SpanXX spn(a_vec.start(), 800);
+
+	SpanXX spnPlus(result.start() , 800);
+
+	//UnitarySampler<VecXX::INS> identity_sampler;
+
+
+	auto SQR = [](StridedSampler<VecXX::INS>& sampler)
+	{
+		auto x = sampler.get<0>();
+		return x * x;
+	};
+
+
+	//need a ptr diff  betwee start span and start vecXX
+	//spnPlus *= 0;
+
+	ApplyTransformUR_X_Impl_EX(spn, spnPlus, SQR, strided_sampler, 0, int(spn.paddedSize()));// int impSZ = -1)`
+
+	std::vector<double> ddbbgg = spn;
+	ddbbgg = spnPlus;
+
+	VecXX rootvec = result;
+
+	//auto SQRT = []( VecXX::INS x) { return sqrt(x); };
+
+	auto SQRT = [](UnitarySampler<VecXX::INS>& sampler)
+	{
+		auto x = sampler.get<0>();
+		return sqrt(x);
+	};
+	
+
+	auto rooted = spnPlus;
+	transform(SQRT, spnPlus,rooted);// rootvec);
+
+	ddbbgg = rooted;
+
+
+
+	//reduce
+	auto SUM = [](auto x, auto y) {return x + y; };
+
+	//auto val =ApplyAccumulate2UR_X(spn, SUM);
+	// goes to reduce(span,lambda)
+
+	auto SUM_SPARSE = [](StridedSampler<VecXX::INS>& sampler_lhs, StridedSampler<VecXX::INS>& sampler_rhs)
+	{
+		auto x = sampler_lhs.get<0>();
+		auto y = sampler_rhs.get<0>();
+		return x + y;
+	};
+
+	//auto val = reduce(spn, SUM_SPARSE);
+
+	/*
+
+	//TO DO transformReduce 
+
+	auto SQR_VAL = [](auto x) {return x * x; };
+
+	const auto& cnstSpn = spn;
+
+	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(cnstSpn, SQR_VAL, SUM);
+	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(spn, SQR_VAL, SUM);
+
+
+	auto sumSqrsXXX = transformReduce(spn, SQR_VAL, SUM);
+
+	*/
+
+}
+
+
+
 void doTransformWithASpan()
 {
 
@@ -267,6 +369,9 @@ void doTransformWithASpan()
 	//auto val =ApplyAccumulate2UR_X(spn, SUM);
 	// goes to reduce(span,lambda)
 
+
+	// possible problem calls align load
+	// we need a more general version using unaligne dor sampled load
 	auto val = reduce(spn, SUM);
 
 
@@ -651,8 +756,6 @@ double americanTrinomialPricer(double S, double K, double sig, double r, double 
 	return odd_slice[N];
 }
 
-
-
 double europeanTrinomialPricer1(double S, double K, double sig, double r, double T, int N)
 {
 
@@ -730,9 +833,6 @@ double europeanTrinomialPricer1(double S, double K, double sig, double r, double
 
 	return odd_slice[N];
 }
-
-
-
 
 void doTrinomialPricer()
 {
@@ -1663,6 +1763,10 @@ void doMatrix()
 
 int main()
 {
+	doTransformWithASpan();
+
+	//doStridedSpan();
+	return 0;
 
 	doBinomialPricer();
 	//	return 0;

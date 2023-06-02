@@ -477,6 +477,8 @@ template<typename INS_VEC>
 struct Sampler_No_Offset
 {
 
+	const int stride() const { return 1; }
+
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
 	template <int VAL>
@@ -508,6 +510,7 @@ struct Sampler_No_Offset
 template<typename INS_VEC>
 struct Sampler_NegOffset
 {
+	const int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
@@ -534,6 +537,7 @@ struct Sampler_NegOffset
 template<typename INS_VEC>
 struct Sampler_PositiveOffset
 {
+	const int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
