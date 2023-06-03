@@ -218,11 +218,11 @@ void doStridedSpan()
 
 	//auto SQRT = []( VecXX::INS x) { return sqrt(x); };
 
-	auto SQRT = [](UnitarySampler<VecXX::INS>& sampler)
-	{
-		auto x = sampler.get<0>();
-		return sqrt(x);
-	};
+	//auto SQRT = [](UnitarySampler<VecXX::INS>& sampler)
+	//{
+	//	auto x = sampler.get<0>();
+	//	return sqrt(x);
+	//};
 	
 
 	auto SQRT2 = [](auto& x)
@@ -238,17 +238,17 @@ void doStridedSpan()
 
 
 	//reduce
-	auto SUM = [](auto x, auto y) {return x + y; };
+	//auto SUM = [](auto x, auto y) {return x + y; };
 
 	//auto val =ApplyAccumulate2UR_X(spn, SUM);
 	// goes to reduce(span,lambda)
 
-	auto SUM_SPARSE = [](StridedSampler<VecXX::INS>& sampler_lhs, StridedSampler<VecXX::INS>& sampler_rhs)
-	{
-		auto x = sampler_lhs.get<0>();
-		auto y = sampler_rhs.get<0>();
-		return x + y;
-	};
+	//auto SUM_SPARSE = [](StridedSampler<VecXX::INS>& sampler_lhs, StridedSampler<VecXX::INS>& sampler_rhs)
+	//{
+	//	auto x = sampler_lhs.get<0>();
+	//	auto y = sampler_rhs.get<0>();
+	//	return x + y;
+	//};
 
 	//auto val = reduce(spn, SUM_SPARSE);
 
@@ -373,7 +373,7 @@ void doTransformWithASpan()
 
 
 	//reduce
-	auto SUM = [](auto x, auto y) {return x + y; };
+	//auto SUM = [](auto x, auto y) {return x + y; };
 
 	//auto val =ApplyAccumulate2UR_X(spn, SUM);
 	// goes to reduce(span,lambda)
@@ -381,21 +381,21 @@ void doTransformWithASpan()
 
 	// possible problem calls align load
 	// we need a more general version using unaligne dor sampled load
-	auto val = reduce(spn, SUM);
+	//auto val = reduce(spn, SUM);
 
 
 
 	//TO DO transformReduce 
 
-	auto SQR_VAL = [](auto x) {return x * x; };
+//	auto SQR_VAL = [](auto x) {return x * x; };
 
-	const auto& cnstSpn = spn;
+//	const auto& cnstSpn = spn;
 
 	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(cnstSpn, SQR_VAL, SUM);
 	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(spn, SQR_VAL, SUM);
 
 
-	auto sumSqrsXXX = transformReduce(spn, SQR_VAL, SUM);
+//	auto sumSqrsXXX = transformReduce(spn, SQR_VAL, SUM);
 
 
 
