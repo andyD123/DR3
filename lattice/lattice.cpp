@@ -225,8 +225,13 @@ void doStridedSpan()
 	};
 	
 
+	auto SQRT2 = [](auto& x)
+	{
+		return sqrt(x);
+	};
+
 	auto rooted = spnPlus;
-	transform(SQRT, spnPlus,rooted);// rootvec);
+	transform(SQRT2, spnPlus,rooted);// rootvec);
 
 	ddbbgg = rooted;
 
@@ -299,6 +304,10 @@ void doTransformWithASpan()
 	};
 
 
+	auto SQR2 = [](auto x)
+	{
+		return x * x;
+	};
 	
 
 
@@ -311,7 +320,7 @@ void doTransformWithASpan()
 	//trapped into using same container , ie vecxx vecxx  , not mixed so add extra type argument 
 	std::vector<double> ddbbgg = spn;
 
-	transform(SQR, spn, spnPlus);
+	transform(SQR2, spn, spnPlus);
 
 	ddbbgg  = spnPlus;
 

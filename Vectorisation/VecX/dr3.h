@@ -326,16 +326,30 @@ VecView<INS_VEC> transform(LAMBDA& lambda, const VecView<INS_VEC>& inputVec)
 
 
 
-////////
+
 //input should be const
 template<typename LAMBDA, typename INS_VEC>
-void transform(LAMBDA& lambda,  Span<INS_VEC>& inputVec, Span<INS_VEC>& outVec)
+void transform(LAMBDA& lambda,   Span<INS_VEC>& inputVec, Span<INS_VEC>& outVec)
 {
 	UnitarySampler<INS_VEC> identity_sampler;
-	ApplyTransformUR_X_Impl_EX(inputVec, outVec, lambda, identity_sampler, 0, int(inputVec.paddedSize()));
+
+	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler)
+	{
+		auto x =  sampler.template get<0>();
+		return lambda(x);
+	};
+
+	ApplyTransformUR_X_Impl_EX(inputVec, outVec, wrappedLambda, identity_sampler, 0, int(inputVec.paddedSize()));
 
 }
 
+
+////////
+template<typename LAMBDA, typename INS_VEC>
+void transformM(LAMBDA& lambda, Span<INS_VEC>& inputOutputSpan)
+{
+	transform(lambda, inputOutputSpan, inputOutputSpan);
+}
 
 
 

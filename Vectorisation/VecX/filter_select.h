@@ -340,6 +340,15 @@ void ApplyUnitaryOperation(VEC_TYPE<INS_VEC>& rhs, OP& oper)
 
 
 
+template<  typename INS_VEC, typename OP>
+void ApplyUnitaryOperation(Span<INS_VEC>& rhs, OP& oper)
+{
+
+	Convertable<INS_VEC> sampler;
+	ApplyTransformUR_X_Impl_EX(rhs, rhs, oper, sampler, 0, static_cast<int>(rhs.paddedSize()));
+}
+
+
 
 template< template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
 VEC_TYPE<INS_VEC> ApplyUnitaryOperation(const VEC_TYPE<INS_VEC>& rhs, OP& oper)

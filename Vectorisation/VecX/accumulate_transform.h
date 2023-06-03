@@ -142,6 +142,20 @@ struct UnitarySampler
 
 };
 
+
+template<typename INS_VEC>
+struct Convertable : public  UnitarySampler<INS_VEC,0>
+{
+
+	//convert to ins_vec
+	operator INS_VEC ()
+	{
+		 return UnitarySampler<INS_VEC, 0>::X_0.value;
+	}
+
+};
+
+
 //would be nice for variadic
 
 
@@ -162,7 +176,7 @@ struct StridedSampler
 
 	
 	template <typename T>
-	void load2(typename T* pbase)
+	void load2( T* pbase)
 	{
 		INS_VEC loaded = { *pbase, *(pbase + step) };
 		X_0.value = loaded;
@@ -171,7 +185,7 @@ struct StridedSampler
 
 	
 	template <typename T>
-	void load4(typename T* pbase)
+	void load4( T* pbase)
 	{
 		INS_VEC loaded ={ *pbase, *(pbase + step), *(pbase + 2*step),*(pbase + 3 * step) };
 		X_0.value = loaded;
@@ -179,7 +193,7 @@ struct StridedSampler
 
 
 	template <typename T>
-	void load8(typename T* pbase)
+	void load8( T* pbase)
 	{
 		INS_VEC loaded ={ *pbase, *(pbase + step), *(pbase + 2 * step),*(pbase + 3 * step) ,
 			*(pbase + 4 * step),*(pbase + 5 * step),*(pbase + 6 * step),*(pbase + 7 * step) };
@@ -190,7 +204,7 @@ struct StridedSampler
 
 
 	template <typename T>
-	void load16(typename T* pbase)
+	void load16( T* pbase)
 	{
 		INS_VEC loaded = { *pbase, *(pbase + step), *(pbase + 2 * step),*(pbase + 3 * step) ,
 			*(pbase + 4 * step),*(pbase + 5 * step),*(pbase + 6 * step),*(pbase + 7 * step),
@@ -1289,15 +1303,26 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	//move to one register width from last valid
 	//point to calculate
 	// or zero
+	/*
 	i = std::max(i_min_start, (impSZ - width * stride));
 
 	RHS1.load(pRhs1 + i + ld_offset);
 	RES = oper(RHS1);
 	RES.store(pRet + i + SV_offset);
+	*/
+	// boken above 
+	////////////////////////////////////////////
 
-	// ithink this probably needs to be a masked write so we only 
-	// overwrite valid re-calculated bits for small vectors
-	//
+	//i = std::max(i_min_start, impSZ );
+	RHS1.load(pRhs1 + i + ld_offset);
+	RES = oper(RHS1);
+
+	int j = 0;
+	for(; i < impSZ ;++i,++j) 
+	{
+		(pRet + SV_offset)[i] = RES[j];
+	}
+
 }
 
 
