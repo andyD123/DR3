@@ -333,7 +333,7 @@ void	doTransform();
 void 	doSumSqrs();
 void    khanAccumulation();
 void	binarySelectionBetweenConst();
-void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of of operations
+void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of operations
 void    binarySelectionBetweenMiddleWeightFunction();
 void	binarySelectionBetweenHeavyWeightFunction();
 void	doCountIf(); 
@@ -353,7 +353,7 @@ int main()
 	std::cout << "\n \n \n \n testMemCpy2() \n" << std::endl;
 	testMemCpy2(); 
 
-	return 0;
+	//return 0;
 
 	//accumulate 
 	std::cout << "\n \n \n \n doMax() \n"  << std::endl;
@@ -393,9 +393,9 @@ int main()
 	doCountIf();
 
 	// experimental
-	doMinMax();
+	std::cout << "\n \n \n \n doSumSqrsMulti() sum of vals  + sum sqrs multiple transform reduce \n" << std::endl;
 	doSumSqrsMulti();
-	//return 0;
+	
 
 	
 	// use namespace DRC::VecD8D  run this and watch power consumption
@@ -587,6 +587,8 @@ void doMinMax()
 		{
 			res = *std::max_element(v1.begin(), v1.end());
 			res_min = *std::min_element(v1.begin(), v1.end());
+
+			res = 0.5 * (res + res_min);
 		}
 		}
 		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
@@ -625,6 +627,7 @@ void doMinMax()
 		  		 res = reduce(vec, mxDbl);
 	   			 double mnn = reduce(vec, minDbl);
 				 ignore(mnn);
+				 res = 0.5 * (res + mnn);
 			}
 
 		}
@@ -661,6 +664,8 @@ void doMinMax()
 			ress = reduceM(vec, mxDbl, minDbl);
 			double mmmm = std::get<0>(ress);
 			double mnn = std::get<1>(ress);
+
+			res = 0.5 * (mnn + mmmm);
 			ignore(mnn);
 			ignore(mmmm);
 		}
@@ -984,17 +989,18 @@ applies multiple transforms and reductions after the load operation
 reducing memorry traversal
 
 here we do squaring an just return a copy as transform
-and sum as the reduction, usefuk for stats to get sum of all values
+and sum as the reduction, useful for stats to get sum of all values
 and sum of all squares of values
 */
 void doSumSqrsMulti()
 {
 
-	const long TEST_LOOP_SZ = 1000;
-	const int repeatRuns = 20;
+	const long TEST_LOOP_SZ = 100;
+	const int repeatRuns = 5;
 	const int vectorStepSize = 200;
 	const int maxVectorSize = 20000;
 	const int minVectorSize = 400;
+	const int warnUp = 5;// 100;
 
 	auto zero = InstructionTraits<VecXX::INS>::nullValue;
 
@@ -1009,7 +1015,7 @@ void doSumSqrsMulti()
 		auto v1 = getRandomShuffledVector(VEC_SZ);
 
 		//warm up
-		for (long l = 0; l < 100; l++)
+		for (long l = 0; l < warnUp; l++)
 		{
 			res = inner_product(v1.cbegin(), v1.cend(), v1.cbegin(), zero);
 		}
@@ -1044,7 +1050,7 @@ void doSumSqrsMulti()
 		auto SQR = [](auto X) { return X*X; };
 
 		//warm up
-		for (long l = 0; l < 100; l++)
+		for (long l = 0; l < warnUp; l++)
 		{
 
 			res = transformReduce(t1, SQR, Sum);
@@ -1082,7 +1088,7 @@ void doSumSqrsMulti()
 		auto SQR = [](auto X) { return X * X; };
 
 		//warm up
-		for (long l = 0; l < 100; l++)
+		for (long l = 0; l < warnUp; l++)
 		{
 	
 			auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);

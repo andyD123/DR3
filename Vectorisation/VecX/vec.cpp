@@ -9,9 +9,9 @@
 * (c) Copyright 2019 Andrew Drakeford
 * Apache License version 2.0 or later.
 *****************************************************************************/
-#include "vec.h"
-#include "alloc_policy.h"
-#include <algorithm>
+//#include "vec.h"
+//#include "alloc_policy.h"
+//#include <algorithm>
 /*
 const double InstructionTraits<VecDouble>::nullValue = 0.0;
 const double InstructionTraits<VecDouble>::oneValue = 1.0;
