@@ -111,9 +111,9 @@ VecView<INS_VEC>  ApplyFilterImpl(OP& condition, const VEC_TYPE<INS_VEC>& lhs)
 	auto pIdx = vw.idxStart();
 	auto pLhs = lhs.start();
 
-	int sz = lhs.size();// should be size() which goes to m_last  element
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 1 * width;
+	long sz = static_cast<long>(lhs.size() );// should be size() which goes to m_last  element
+	const long width = InstructionTraits<INS_VEC>::width;
+	long step = 1 * width;
 	INS_VEC LHS;
 
 	int psn = 0;
@@ -367,7 +367,7 @@ VEC_TYPE<INS_VEC> ApplyUnitaryOperation(const VEC_TYPE<INS_VEC>& rhs, OP& oper)
 		VEC_TYPE<INS_VEC> result(rhs);
 		auto pRes = result.start();
 		auto pRhs = rhs.start();
-		int sz = rhs.paddedSize();
+		int sz = static_cast<int>(rhs.paddedSize());
 		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
 		return result;
 	}
@@ -376,63 +376,6 @@ VEC_TYPE<INS_VEC> ApplyUnitaryOperation(const VEC_TYPE<INS_VEC>& rhs, OP& oper)
 
 
 
-
-/*
-applies the OP to the view updating input in situ.
-*//*
-template< typename INS_VEC, typename OP>
-void ApplyUnitaryOperation(VecView<INS_VEC>& rhs, OP& oper)
-{
-	ApplyUnitaryOperation(rhs, oper);
-
-	if (rhs.isScalar())
-	{
-		auto val = rhs.getScalarValue();
-		auto scalarRes = oper(INS_VEC(val))[0];
-		VecView<INS_VEC> result;
-		result = scalarRes;
-		rhs = result;
-	}
-	else
-	{
-		auto pRhs = rhs.start();
-		int sz = rhs.paddedSize();
-		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRhs, oper);
-	}
-	
-}
-*/
-/*
-applies the OP and creates a new view.
-*/
-
-/*
-
-template< typename INS_VEC, typename OP>
-VecView<INS_VEC> ApplyUnitaryOperation(const VecView<INS_VEC>& rhs, OP& oper)
-{
-	ApplyUnitaryOperation(rhs, oper);
-
-	if (rhs.isScalar())
-	{
-		auto val = rhs.getScalarValue();
-		auto scalarRes = oper(INS_VEC(val))[0];
-		VecView<INS_VEC> result( scalarRes);
-		return result;
-	}
-	else
-	{
-		check_vector_for_filter(rhs);
-		VecView<INS_VEC> result(rhs);
-		auto pRes = result.start();
-		auto pRhs = rhs.start();
-		int sz = rhs.paddedSize();
-		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
-		return result;
-	}
-	
-}
-*/
 
 
 /*

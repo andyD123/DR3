@@ -43,7 +43,7 @@ struct SampleElement :public RegisterElement< INS_VEC,  OFFSET, false>
 template<typename INS_VEC, int X_Minus1 =-1,int X0 = 0, int X1 = 1 >
 struct TrinomialSampler 
 {
-	const int stride() const { return 1; }
+	int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
@@ -83,7 +83,7 @@ struct TrinomialSampler
 template<typename INS_VEC, int X0 =0, int X1 =1>
 struct BinomialSampler
 {
-	const int stride() const { return 1; }
+	int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
@@ -118,7 +118,7 @@ template<typename INS_VEC, int X0 = 0>
 struct UnitarySampler
 {
 
-	const int stride() const { return 1; }
+	int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
@@ -166,10 +166,10 @@ struct StridedSampler
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
 
 	static constexpr int  width = InstructionTraits< INS_VEC>::width;
-	const int  m_stride;
+	const size_t  m_stride;
 	const int  step;
 
-	const int stride() const
+	size_t stride() const
 	{
 		return m_stride;
 	}
@@ -215,7 +215,7 @@ struct StridedSampler
 	}
 
 	
-	explicit StridedSampler(size_t stride) :m_stride(stride), step ( width * m_stride)
+	explicit StridedSampler(size_t stride) :m_stride(stride), step (static_cast<int>( width * m_stride))
 	{
 
 	}
@@ -644,10 +644,10 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 		return rhs1.getScalarValue();
 	}
 
-	int sz = rhs1.size();
+	long sz = static_cast<long>(rhs1.size());
 	auto pRhs1 = rhs1.start();
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 4 * width;
+	const long width = InstructionTraits<INS_VEC>::width;
+	long step = 4 * width;
 
 	INS_VEC RHS1;
 	INS_VEC RES;
@@ -661,7 +661,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 	INS_VEC RHS4;
 	INS_VEC RES3;
 
-	int i = 0;
+	long i = 0;
 
 	if (sz >= step * 2)
 	{
@@ -674,7 +674,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 		}
 
 		i += step;
-		int rhsSZ = rhs1.size();
+		long rhsSZ = static_cast<long>(rhs1.size());
 		for (; i <= (rhsSZ - step); i += step)
 		{
 			RHS1.load_a(pRhs1 + i);
@@ -718,9 +718,9 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 	}
 
 	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
-	int min_wdth = std::min(sz, width);
+	long min_wdth = std::min(sz, width);
 	//across vectors lanes  // not assuming horizontal versoion exist
-	for (int j = 1; j < min_wdth; ++j)
+	for (long j = 1; j < min_wdth; ++j)
 	{
 		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], oper);
 	}
@@ -778,13 +778,13 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 
 	}
 
-	int sz = rhs1.size();
+	long sz = static_cast<long>(rhs1.size());
 	auto pRhs1 = rhs1.start();
-	const int width = InstructionTraits<INS_VEC>::width;
+	const long width = InstructionTraits<INS_VEC>::width;
 
 	auto zero = InstructionTraits<INS_VEC>::nullValue;
 
-	int step = 4 * width;
+	long step = 4 * width;
 
 	INS_VEC RHS1 = zero;
 	INS_VEC RES = zero;
@@ -798,7 +798,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 	INS_VEC RHS4 = zero;
 	INS_VEC RES3 = zero;
 
-	int i = 0;
+	long i = 0;
 
 	if (sz >= step * 2)
 	{
@@ -816,7 +816,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 		}
 
 		i += step;
-		int rhsSZ = rhs1.size();
+		long rhsSZ = static_cast<long>(rhs1.size());
 		for (; i <= (rhsSZ - step); i += step)
 		{
 			RHS1.load_a(pRhs1 + i);
@@ -1224,14 +1224,14 @@ template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYP
 void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& ret, OP& oper, SAMPLER& sampler, int i = 0, int impSZ = -1)
 {
 
-	impSZ = (impSZ < 0) ? rhs1.paddedSize() : impSZ;
+	impSZ = (impSZ < 0) ? static_cast<long>(rhs1.paddedSize()) : impSZ;
 
 
 	auto pRhs1 = rhs1.start();
 	auto pRet = ret.start();
 
 	const int width = InstructionTraits<INS_VEC>::width;
-	int stride = sampler.stride();
+	int stride = static_cast<int>(sampler.stride());
 	stride = (stride == 1) ? 1 : stride * width;
 	int step = 4 * width * stride;
 
@@ -1255,7 +1255,7 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
 	i = i+ std::max(0,-sampler.min());
 
-	int i_min_start = i;
+	
 	
 	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
 	// that we stay in a valid range 
@@ -1300,20 +1300,10 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 		RES.store(pRet + i + SV_offset);
 	}
 
-	//move to one register width from last valid
-	//point to calculate
-	// or zero
-	/*
-	i = std::max(i_min_start, (impSZ - width * stride));
 
-	RHS1.load(pRhs1 + i + ld_offset);
-	RES = oper(RHS1);
-	RES.store(pRet + i + SV_offset);
-	*/
-	// boken above 
-	////////////////////////////////////////////
+	
 
-	//i = std::max(i_min_start, impSZ );
+	//iterate over remaining values and store
 	RHS1.load(pRhs1 + i + ld_offset);
 	RES = oper(RHS1);
 
