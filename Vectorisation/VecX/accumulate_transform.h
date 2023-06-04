@@ -1234,11 +1234,8 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	const int width = InstructionTraits<INS_VEC>::width;
 	int stride = static_cast<int>(sampler.stride());
 
-//	stride = (stride == 1) ? 1 : stride * width;
+
 	int step = 4 * width * stride;
-//	int step = 4 *  stride;
-
-
 
 
 	SAMPLER RHS1(sampler);
@@ -1273,30 +1270,26 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	{
 		RHS1.load(pRhs1 + i+ ld_offset);
 		RES = oper(RHS1);
-		//RES.store(pRet + i + SV_offset);
 		RES.store(pRet + K + SV_offset);
 
 		RHS2.load(pRhs1 + i + ld_offset + width * stride);
 		RES1 = oper(RHS2);
-		//RES1.store(pRet + i + SV_offset + width );
 		RES1.store(pRet + K + SV_offset + width);
 
 		RHS3.load(pRhs1 + i + ld_offset + width * stride * 2);
 		RES2 = oper(RHS3);
-		//RES2.store(pRet + i  + SV_offset + width  * 2);
 		RES2.store(pRet + K + SV_offset + width * 2);
 
 		RHS4.load(pRhs1 + i + ld_offset + width * stride * 3);
 		RES3 = oper(RHS4);
-		//RES3.store(pRet + i +  SV_offset +width * 3);
 		RES3.store(pRet + K + SV_offset + width * 3);
 	}
-	//
+	
+
 	for (; i <= impSZ - width * stride; i += width * stride, K+=width)
 	{
 		RHS1.load(pRhs1 + i + ld_offset );
 		RES = oper(RHS1);
-		//RES.store(pRet + i  + SV_offset);
 		RES.store(pRet + K + SV_offset);
 	}
 
@@ -1306,10 +1299,8 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	{
 		RHS1.load(pRhs1 + i + ld_offset);
 		RES = oper(RHS1);
-		//RES.store(pRet + i + SV_offset);
 		RES.store(pRet + K + SV_offset);
 	}
-
 
 	
 

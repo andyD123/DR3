@@ -143,7 +143,7 @@ Span<T> operator += (const Span<T>& span, const SpanIncrement& inc)
 
 
 /////////////////////////////////////////
-///
+/// under development //////////////
 template<typename  INS_VEC>
 struct StridedSpan 
 {
@@ -152,7 +152,7 @@ struct StridedSpan
 
 	StridedSpan(const T&) {}
 
-	StridedSpan(T* pdata, size_t extent, size_t stride) :m_pstart(pdata), m_extent(extent), m_stride(stride){}
+	StridedSpan(T* pdata, size_t extent, int stride) :m_pstart(pdata), m_extent(extent), m_stride(stride){}
 
 
 	//explicit
@@ -355,6 +355,3 @@ private:
 };
 
 
-
-
-//};

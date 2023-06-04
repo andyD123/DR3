@@ -510,3 +510,171 @@ TEST(TestSpan, strided_transform_withOffset)
 	}
 
 }
+
+
+
+
+TEST(TestSpan, strided_transform_2)
+{
+
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		int stride = 8;
+		//int SZ = 320;
+		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+		const VecXX testV(v);
+
+		StrdSpanXX test(testV.begin(), SZ, stride);
+
+		auto mySquareItLambda = [](auto x) {return x * x;  };
+
+		auto sameVal = [](auto x) {return x;  };
+
+
+		auto testSquare = test;
+
+		std::vector<double> std_vec_in = test;
+
+
+		VecXX outVec(v);
+		outVec *= 0.;
+		SpanXX result(outVec.begin(), SZ);
+
+		transform(sameVal, test, result);
+
+		std::vector<Numeric> dbug = result;
+
+		std::vector<Numeric> expected;
+
+		for (const auto& x : test)
+		{
+			int testVal = static_cast<int>(x);
+			if (testVal % stride == 0)
+				expected.emplace_back(x);
+		}
+
+
+		for (int i = 0; i < expected.size(); ++i)
+		{
+			EXPECT_NUMERIC_EQ(result[i], expected[i]);
+		}
+
+
+	}
+
+}
+
+
+
+TEST(TestSpan, strided_transform_withOffset_2)
+{
+
+	int stride = 8;
+
+	for (int offset = 0; offset < 66; offset++)
+	{
+
+		for (int SZ = 3; SZ < 125; SZ++)
+		{
+
+			std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+			int i = 0;
+
+			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+			const VecXX testV(v);
+
+			StrdSpanXX test(testV.begin() + offset, SZ, stride);
+
+			auto mySquareItLambda = [](auto x) {return x * x;  };
+
+			auto sameVal = [](auto x) {return x;  };
+
+
+			auto testSquare = test;
+
+			std::vector<double> std_vec_in = test;
+
+
+			VecXX outVec(v);
+			outVec *= 0.;
+			SpanXX result(outVec.begin(), SZ);
+
+			transform(sameVal, test, result);
+
+			std::vector<Numeric> dbug = result;
+
+			std::vector<Numeric> expected;
+
+			for (const auto& x : test)
+			{
+				int testVal = static_cast<int>(x);
+				if (testVal % stride == offset % stride)
+					expected.emplace_back(x);
+			}
+
+
+
+			for (int i = 0; i < expected.size(); ++i)
+			{
+				EXPECT_NUMERIC_EQ(result[i], expected[i]);
+			}
+
+
+		}
+	}
+
+}
+
+
+/*
+TEST(TestSpan, strided_transform_reduce)
+{
+
+	//for (int SZ = 3; SZ < 125; SZ++)
+
+	{
+		int stride = 8;
+		int SZ = 320;
+		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+		const VecXX testV(v);
+
+		//StrdSpanXX test(testV.begin(), SZ, stride);
+		SpanXX test(testV.begin(), SZ);// , stride);
+
+		auto mySquareItLambda = [](auto x) {return x * x;  };
+
+		auto sameVal = [](auto x) {return x;  };
+
+
+		auto testSquare = test;
+
+		std::vector<double> std_vec_in = test;
+
+
+
+		//SpanXX testSpan(testV.begin(), SZ);
+
+		auto SUM = [](auto x, auto y) { return x + y; };
+		auto SQR = [](auto x) { return x * x; };
+
+		auto result = transformReduce(test, SQR, SUM);
+		double expected = 0.;
+
+		for (const auto& X : test)
+		{
+			expected += X * X;
+		}
+
+
+
+	}
+
+}
+
+*/
