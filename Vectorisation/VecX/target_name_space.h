@@ -57,6 +57,7 @@ namespace DRC
 		typedef VecView<Vec4d>  VecVW;
 		typedef VecBool<Vec4d>	VecBL;
 		typedef Span<Vec4d>  SpanXX;
+		typedef StridedSpan<Vec4d>   StrdSpanXX;
 
 	};
 
@@ -68,6 +69,7 @@ namespace DRC
 		typedef VecView<Vec8d>  VecVW;
 		typedef VecBool<Vec8d>	VecBL;
 		typedef Span<Vec8d>  SpanXX;
+		typedef StridedSpan<Vec8d>   StrdSpanXX;
 
 	};
 

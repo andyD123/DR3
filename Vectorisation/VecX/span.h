@@ -224,6 +224,7 @@ struct StridedSpan
 	// dont have padded size
 	// also they dont own memory so cant guarantee to alloc
 	// padding space
+	// does this apply to strided spans ????
 	size_t paddedSize() const
 	{
 		return m_extent;
@@ -240,6 +241,10 @@ struct StridedSpan
 		return InstructionTraits<INS_VEC>::nullValue;
 	}
 
+	int stride() const 
+	{
+		return m_stride;
+	}
 
 private:
 	T* m_pstart;

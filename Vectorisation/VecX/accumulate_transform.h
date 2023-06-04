@@ -215,8 +215,9 @@ struct StridedSampler
 	}
 
 	
-	explicit StridedSampler(size_t stride) :m_stride(stride), step (static_cast<int>( width * m_stride))
+	explicit StridedSampler(size_t stride) :m_stride(stride), step (static_cast<int>(  m_stride))
 	{
+		if ((width > stride) || (stride % width > 0)) throw std::exception("bad stride size for width");
 
 	}
 
@@ -1232,8 +1233,10 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 
 	const int width = InstructionTraits<INS_VEC>::width;
 	int stride = static_cast<int>(sampler.stride());
-	stride = (stride == 1) ? 1 : stride * width;
+
+//	stride = (stride == 1) ? 1 : stride * width;
 	int step = 4 * width * stride;
+//	int step = 4 *  stride;
 
 
 
@@ -1265,30 +1268,36 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	int SV_offset = 0;
 
 	int rhsSZ = impSZ - step;
-	for (; i < rhsSZ; i += step)
+	int K = 0;
+	for (; i < rhsSZ; i += step, K+=4*width)
 	{
 		RHS1.load(pRhs1 + i+ ld_offset);
 		RES = oper(RHS1);
-		RES.store(pRet + i + SV_offset);
+		//RES.store(pRet + i + SV_offset);
+		RES.store(pRet + K + SV_offset);
 
 		RHS2.load(pRhs1 + i + ld_offset + width * stride);
 		RES1 = oper(RHS2);
-		RES1.store(pRet + i + SV_offset + width );
+		//RES1.store(pRet + i + SV_offset + width );
+		RES1.store(pRet + K + SV_offset + width);
 
 		RHS3.load(pRhs1 + i + ld_offset + width * stride * 2);
 		RES2 = oper(RHS3);
-		RES2.store(pRet + i  + SV_offset + width  * 2);
+		//RES2.store(pRet + i  + SV_offset + width  * 2);
+		RES2.store(pRet + K + SV_offset + width * 2);
 
 		RHS4.load(pRhs1 + i + ld_offset + width * stride * 3);
 		RES3 = oper(RHS4);
-		RES3.store(pRet + i +  SV_offset +width * 3);
+		//RES3.store(pRet + i +  SV_offset +width * 3);
+		RES3.store(pRet + K + SV_offset + width * 3);
 	}
 	//
-	for (; i <= impSZ - width * stride; i += width * stride)
+	for (; i <= impSZ - width * stride; i += width * stride, K+=width)
 	{
 		RHS1.load(pRhs1 + i + ld_offset );
 		RES = oper(RHS1);
-		RES.store(pRet + i  + SV_offset);
+		//RES.store(pRet + i  + SV_offset);
+		RES.store(pRet + K + SV_offset);
 	}
 
 	//one register case or do it scalar ops ?
@@ -1297,20 +1306,39 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	{
 		RHS1.load(pRhs1 + i + ld_offset);
 		RES = oper(RHS1);
-		RES.store(pRet + i + SV_offset);
+		//RES.store(pRet + i + SV_offset);
+		RES.store(pRet + K + SV_offset);
 	}
 
 
 	
 
 	//iterate over remaining values and store
-	RHS1.load(pRhs1 + i + ld_offset);
-	RES = oper(RHS1);
-
-	int j = 0;
-	for(; i < impSZ ;++i,++j) 
+	if (stride == 1)
 	{
-		(pRet + SV_offset)[i] = RES[j];
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1);
+
+		int j = 0;
+		for (; i < impSZ; ++i, ++j)
+		{
+			(pRet + SV_offset)[i] = RES[j];
+		}
+	}
+	else //load each element at a  time
+	{
+	
+		int j = 0;
+		for (; i < impSZ;  ++j)
+		{
+
+			RHS1.X_0.value = pRhs1[i + ld_offset];
+			RES = oper(RHS1);
+			(pRet + SV_offset)[K] = RES[0];
+			i += stride;
+			K++;
+		}
+
 	}
 
 }

@@ -325,6 +325,22 @@ VecView<INS_VEC> transform(LAMBDA& lambda, const VecView<INS_VEC>& inputVec)
 
 
 
+//input should be const
+template<typename LAMBDA, typename INS_VEC>
+void transform(LAMBDA& lambda, StridedSpan<INS_VEC>& inputVec, Span<INS_VEC>& outVec)
+{
+		
+	StridedSampler<INS_VEC> strided_sampler(inputVec.stride());
+
+	auto wrappedLambda = [&](StridedSampler<INS_VEC>& sampler)
+	{
+		auto x = sampler.template get<0>();
+		return lambda(x);
+	};
+
+	ApplyTransformUR_X_Impl_EX(inputVec, outVec, wrappedLambda, strided_sampler, 0, int(inputVec.paddedSize()));
+
+}
 
 
 //input should be const

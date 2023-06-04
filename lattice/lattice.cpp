@@ -1772,9 +1772,9 @@ void doMatrix()
 
 int main()
 {
-	doTransformWithASpan();
+	//doTransformWithASpan();
 
-	//doStridedSpan();
+	doStridedSpan();
 	return 0;
 
 	doBinomialPricer();
