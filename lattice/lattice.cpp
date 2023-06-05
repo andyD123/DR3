@@ -155,9 +155,9 @@ void testSampler()
 
 	zzz.load(&sampleData[1]);
 
-	auto x = zzz.get<-1>();
-	auto y = zzz.get<0>();
-	auto z = zzz.get<1>();
+	auto x = zzz.X_Minus_1.value;////get<-1>();
+	auto y = zzz.X_0.value;//get<0>();
+	auto z = zzz.X_1.value;//get<1>();
 
 	ignore(x);
 	ignore(y);
@@ -657,9 +657,11 @@ double europeanTrinomialPricer(double S, double K, double sig, double r, double 
 
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
-		auto X1 = sampler.get<1>();
-		auto X0 = sampler.get<0>();
-		auto X_1 = sampler.get<-1>();
+
+		auto X1 = sampler.X_Minus_1.value;
+		auto X0 = sampler.X_0.value;
+		auto X_1 = sampler.X_1.value;
+
 		return disc * (X1 * pu + X0 * pm + X_1 * pd);
 	};
 
@@ -711,13 +713,15 @@ double americanTrinomialPricer(double S, double K, double sig, double r, double 
 	VecXX::INS disc = exp(-r * Dt);
 	TrinomialSampler<VecXX::INS> sampler;
 
+
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
-		auto X1 = sampler.get<1>();
-		auto X0 = sampler.get<0>();
-		auto X_1 = sampler.get<-1>();
+		auto X1 = sampler.X_Minus_1.value;
+		auto X0 = sampler.X_0.value;
+		auto X_1 = sampler.X_1.value;
 		return disc * (X1 * pu + X0 * pm + X_1 * pd);
 	};
+
 
 	//call
 	auto payOffFunc = [=](auto X) { return select(X > K, X - K, 0.0); };
@@ -770,7 +774,6 @@ double europeanTrinomialPricer1(double S, double K, double sig, double r, double
 
 	double y = 0.0;// 0.03; //div yield
 
-
 	VecXX terminalAssetPrices(1.0, 2 * N + 1);
 
 	double Dt = T / N;
@@ -791,9 +794,9 @@ double europeanTrinomialPricer1(double S, double K, double sig, double r, double
 
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
-		auto X1 = sampler.get<1>();
-		auto X0 = sampler.get<0>();
-		auto X_1 = sampler.get<-1>();
+		const auto& X1 = sampler.X_1.value;
+		const auto& X0 = sampler.X_0.value;
+		const auto& X_1 = sampler.X_Minus_1.value;
 		return disc * (X1 * pu + X0 * pm + X_1 * pd);
 	};
 
@@ -889,14 +892,14 @@ double americanFiniteDiffPricer(double S, double K, double sig, double r, double
 	// of X[i+1], X[i] and  x[i-1]
 	// under the hood these do unaligned loads into registers so taht we can still
 	// apply the vectorised 
+
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
-		auto X1 = sampler.get<1>();
-		auto X0 = sampler.get<0>();
-		auto X_1 = sampler.get<-1>();
+		const auto& X1 = sampler.X_1.value;
+		const auto& X0 = sampler.X_0.value;
+		const auto& X_1 = sampler.X_Minus_1.value;
 		return  (X1 * pu + X0 * pm + X_1 * pd);
 	};
-
 
 	//Pay off functions
 	//call
@@ -1012,9 +1015,7 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 	}
 
 	//option value at maturity
-
 	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
-
 
 	auto american = [](auto X, auto Y) { return select(X > Y, X, Y); };
 
@@ -1458,9 +1459,11 @@ double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r,
 
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
-		auto X1 = sampler.get<1>();
-		auto X0 = sampler.get<0>();
-		auto X_1 = sampler.get<-1>();
+
+		auto X1 = sampler.X_Minus_1.value;
+		auto X0 = sampler.X_0.value;
+		auto X_1 = sampler.X_1.value;
+
 		return disc * (X1 * pu + X0 * pm + X_1 * pd);
 	};
 
@@ -1567,9 +1570,9 @@ double euroTrinomialPricerWithInit(double S, double K, double sig, double r, dou
 
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
-		auto X1 = sampler.get<1>();
-		auto X0 = sampler.get<0>();
-		auto X_1 = sampler.get<-1>();
+		const auto& X1 = sampler.X_1.value;
+		const auto& X0 = sampler.X_0.value;
+		const auto& X_1 = sampler.X_Minus_1.value;
 		return disc * (X1 * pu + X0 * pm + X_1 * pd);
 	};
 
@@ -1668,10 +1671,7 @@ void doTrinomialPricerWithInit()
 	//warm up
 	double res = 0.0;
 	{
-		
-		
 		{
-
 			double S = 100.;
 			double K = 100.;
 			double vol = 0.2;

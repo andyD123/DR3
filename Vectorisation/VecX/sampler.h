@@ -19,7 +19,7 @@
 
 
 
-
+/*
 
 template<typename INS_VEC, int OFFSET>
 struct SampleElement :public RegisterElement< INS_VEC, OFFSET, false>
@@ -35,6 +35,59 @@ struct SampleElement :public RegisterElement< INS_VEC, OFFSET, false>
 
 };
 
+*/
+
+template<typename INS_VEC, int X_Minus1 = -1, int X0 = 0, int X1 = 1 >
+struct TrinomialSampler :public std::tuple< RegisterElement< INS_VEC, X_Minus1,false>,
+											RegisterElement< INS_VEC, X0,false>,
+											RegisterElement< INS_VEC, X1,false> >
+{
+	int stride() const { return 1; }
+
+	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+
+	using TypeXMinus1 = RegisterElement< INS_VEC, X_Minus1,false>;
+	using TypeX0 = RegisterElement< INS_VEC, X0,false>;
+	using TypeX1 = RegisterElement< INS_VEC, X1,false>;
+
+
+	TypeX1& X_1;// = std::get<2>(*this);
+	TypeX0& X_0;// = std::get<1>(*this);
+	TypeXMinus1& X_Minus_1;// = std::get<0>(*this);
+
+
+	TrinomialSampler() :
+		X_1(std::get<2>(*this)),
+		X_0(std::get<1>(*this)),
+		X_Minus_1(std::get<0>(*this))
+	{
+
+	}
+
+	enum class  DIR { DOWN = 0, MID = 1, UP = 2 };
+
+
+	inline void load(Float* pData)
+	{
+		X_1.load_u(pData);
+		X_0.load_u(pData);
+		X_Minus_1.load_u(pData);
+	}
+
+	static constexpr int max() { return std::max(X_Minus1, std::max(X0, X1)); }
+	static constexpr int min() { return std::min(X_Minus1, std::min(X0, X1)); }
+
+
+};
+
+template<typename INS_VEC, int ITEM, int X_Minus1 = -1, int X0 = 0, int X1 = 1 >
+INS_VEC get(TrinomialSampler< INS_VEC, X_Minus1, X0, X1>& sampler)
+{
+	return get<ITEM>(sampler);
+}
+
+
+/*
 template<typename INS_VEC, int X_Minus1 = -1, int X0 = 0, int X1 = 1 >
 struct TrinomialSampler
 {
@@ -73,6 +126,8 @@ struct TrinomialSampler
 
 };
 
+
+*/
 
 
 template<typename INS_VEC, int X0 = 0, int X1 = 1>
