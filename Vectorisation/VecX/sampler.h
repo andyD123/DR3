@@ -18,22 +18,13 @@
 #include <tuple>
 
 
-
 /*
+Samplers introduce multiple variables corresponding to offset  values  into the lambda
+ eg  X[i-1] x[0] X[i+1]  they use unaligned loads.
 
-template<typename INS_VEC, int OFFSET>
-struct SampleElement :public RegisterElement< INS_VEC, OFFSET, false>
-{
+ would be nice for variadic form
 
-	template <int VAL>
-	INS_VEC  get() {};// cant instantiate
-
-
-	template<>
-	INS_VEC  get<OFFSET>() { return ::m_offsetData1; };
-
-
-};
+ the template integers are the offsets 
 
 */
 
@@ -45,15 +36,14 @@ struct TrinomialSampler :public std::tuple< RegisterElement< INS_VEC, X_Minus1,f
 	int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
-
 	using TypeXMinus1 = RegisterElement< INS_VEC, X_Minus1,false>;
 	using TypeX0 = RegisterElement< INS_VEC, X0,false>;
 	using TypeX1 = RegisterElement< INS_VEC, X1,false>;
 
 
-	TypeX1& X_1;// = std::get<2>(*this);
-	TypeX0& X_0;// = std::get<1>(*this);
-	TypeXMinus1& X_Minus_1;// = std::get<0>(*this);
+	TypeX1& X_1;
+	TypeX0& X_0;
+	TypeXMinus1& X_Minus_1;
 
 
 	TrinomialSampler() :
@@ -66,7 +56,6 @@ struct TrinomialSampler :public std::tuple< RegisterElement< INS_VEC, X_Minus1,f
 
 	enum class  DIR { DOWN = 0, MID = 1, UP = 2 };
 
-
 	inline void load(Float* pData)
 	{
 		X_1.load_u(pData);
@@ -76,7 +65,6 @@ struct TrinomialSampler :public std::tuple< RegisterElement< INS_VEC, X_Minus1,f
 
 	static constexpr int max() { return std::max(X_Minus1, std::max(X0, X1)); }
 	static constexpr int min() { return std::min(X_Minus1, std::min(X0, X1)); }
-
 
 };
 
@@ -87,66 +75,27 @@ INS_VEC get(TrinomialSampler< INS_VEC, X_Minus1, X0, X1>& sampler)
 }
 
 
-/*
-template<typename INS_VEC, int X_Minus1 = -1, int X0 = 0, int X1 = 1 >
-struct TrinomialSampler
-{
-	int stride() const { return 1; }
-
-	using Float = typename InstructionTraits< INS_VEC>::FloatType;
-
-	template <int VAL>
-	INS_VEC  get() {};// cant instantiate
-
-	template<>
-	INS_VEC  get<X1>() { return X_1.value; };
-
-	template<>
-	INS_VEC  get<X0>() { return X_0.value; };
-
-	template<>
-	INS_VEC  get<X_Minus1>() { return X_Minus_1.value; };
-
-
-	inline void load(Float* pData)
-	{
-		X_1.load_u(pData);
-		X_0.load_u(pData);
-		X_Minus_1.load_u(pData);
-	}
-
-	static constexpr int max() { return std::max(X_Minus1, std::max(X0, X1)); }
-	static constexpr int min() { return std::min(X_Minus1, std::min(X0, X1)); }
-
-
-	RegisterElement< INS_VEC, X1, false> X_1;
-	RegisterElement< INS_VEC, X0, false> X_0;
-	RegisterElement< INS_VEC, X_Minus1, false> X_Minus_1;
-
-
-};
-
-
-*/
 
 
 template<typename INS_VEC, int X0 = 0, int X1 = 1>
-struct BinomialSampler
+struct BinomialSampler :public std::tuple< 
+	RegisterElement< INS_VEC, X0, false>,
+	RegisterElement< INS_VEC, X1, false> >
 {
 	int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+	using TypeX0 = RegisterElement< INS_VEC, X0, false>;
+	using TypeX1 = RegisterElement< INS_VEC, X1, false>;
 
-	template <int VAL>
-	INS_VEC  get() {  };// cant instantiate
-
-	template<>
-	INS_VEC  get<X1>() { return X_1.value; };
-
-	template<>
-	INS_VEC  get<X0>() { return X_0.value; };
-
-
+	TypeX1& X_1;
+	TypeX0& X_0;
+	
+	BinomialSampler() :
+		X_1(std::get<1>(*this)),
+		X_0(std::get<0>(*this))
+	{
+	}
 
 	inline void load(Float* pData)
 	{
@@ -157,27 +106,23 @@ struct BinomialSampler
 	static constexpr int max() { return std::max(X0, X1); }
 	static constexpr int min() { return std::min(X0, X1); }
 
-
-	RegisterElement< INS_VEC, 1, false> X_1;
-	RegisterElement< INS_VEC, 0, false> X_0;
-
 };
 
 
 template<typename INS_VEC, int X0 = 0>
-struct UnitarySampler
+struct UnitarySampler : public std::tuple< RegisterElement< INS_VEC, X0, false> >
 {
-
 	int stride() const { return 1; }
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
+	using TypeX0 = RegisterElement< INS_VEC, X0, false>;
+	TypeX0& X_0;
 
-	template <int VAL>
-	INS_VEC  get() {  };// cant instantiate
+	UnitarySampler() :
+		X_0(std::get<0>(*this))
+	{
 
-
-	template<>
-	INS_VEC  get<X0>() { return X_0.value; };
+	}
 
 
 	inline void load(Float* pData)
@@ -188,11 +133,13 @@ struct UnitarySampler
 	static constexpr int max() { return X0; }
 	static constexpr int min() { return X0; }
 
-	RegisterElement< INS_VEC, 0, false> X_0;
-
 };
 
 
+/*
+used for wrapping and sampler and making its loaded register available via 
+conversion
+*/
 template<typename INS_VEC>
 struct Convertable : public  UnitarySampler<INS_VEC, 0>
 {
@@ -206,22 +153,37 @@ struct Convertable : public  UnitarySampler<INS_VEC, 0>
 };
 
 
-//would be nice for variadic
 
+
+/*
+ fills a SIMD register with values spread at a fixed stride length from each other
+ as in the case with a matrix
+
+*/
 
 template<typename INS_VEC, int X0 = 0>
-struct StridedSampler
+struct StridedSampler : public std::tuple< RegisterElement< INS_VEC, X0, false> >
 {
 
 	using Float = typename InstructionTraits< INS_VEC>::FloatType;
-
+	using TypeX0 = RegisterElement< INS_VEC, X0, false>;
+	
+	TypeX0& X_0;
 	static constexpr int  width = InstructionTraits< INS_VEC>::width;
+
 	const size_t  m_stride;
 	const int  step;
 
 	size_t stride() const
 	{
 		return m_stride;
+	}
+
+
+	explicit StridedSampler(size_t stride) : X_0(std::get<0>(*this)),m_stride(stride), step(static_cast<int>(m_stride))
+	{
+		if ((width > stride) || (stride % width > 0)) throw std::exception("bad stride size for width");
+
 	}
 
 
@@ -232,15 +194,12 @@ struct StridedSampler
 		X_0.value = loaded;
 	}
 
-
-
 	template <typename T>
 	void load4(T* pbase)
 	{
 		INS_VEC loaded = { *pbase, *(pbase + step), *(pbase + 2 * step),*(pbase + 3 * step) };
 		X_0.value = loaded;
 	}
-
 
 	template <typename T>
 	void load8(T* pbase)
@@ -250,8 +209,6 @@ struct StridedSampler
 
 		X_0.value = loaded;
 	}
-
-
 
 	template <typename T>
 	void load16(T* pbase)
@@ -263,21 +220,6 @@ struct StridedSampler
 
 		X_0.value = loaded;
 	}
-
-
-	explicit StridedSampler(size_t stride) :m_stride(stride), step(static_cast<int>(m_stride))
-	{
-		if ((width > stride) || (stride % width > 0)) throw std::exception("bad stride size for width");
-
-	}
-
-	template <int VAL>
-	INS_VEC  get() {  };// cant instantiate
-
-
-	template<>
-	INS_VEC  get<X0>() { return X_0.value; };
-
 
 	inline void load(Float* pData)
 	{
@@ -300,13 +242,7 @@ struct StridedSampler
 		}
 	}
 
-	//static 
 	constexpr int min() { return X0; }
-	//static
-	constexpr int max() { return X0; };// +(width - 1) * step;}
-
-
-	RegisterElement< INS_VEC, 0, false> X_0;
+	constexpr int max() { return X0; };
 
 };
-

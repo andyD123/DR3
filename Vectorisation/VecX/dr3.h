@@ -334,7 +334,7 @@ void transform(LAMBDA& lambda, StridedSpan<INS_VEC>& inputVec, Span<INS_VEC>& ou
 
 	auto wrappedLambda = [&](StridedSampler<INS_VEC>& sampler)
 	{
-		auto x = sampler.template get<0>();
+		auto x = sampler.X_0.value; 
 		return lambda(x);
 	};
 
@@ -351,7 +351,7 @@ void transform(LAMBDA& lambda,   Span<INS_VEC>& inputVec, Span<INS_VEC>& outVec)
 
 	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler)
 	{
-		auto x =  sampler.template get<0>();
+		auto x = sampler.X_0.value;
 		return lambda(x);
 	};
 
