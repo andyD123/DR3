@@ -1774,8 +1774,8 @@ int main()
 {
 	//doTransformWithASpan();
 
-	doStridedSpan();
-	return 0;
+	//doStridedSpan();
+	//return 0;
 
 	doBinomialPricer();
 	//	return 0;

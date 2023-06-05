@@ -338,7 +338,7 @@ void transform(LAMBDA& lambda, StridedSpan<INS_VEC>& inputVec, Span<INS_VEC>& ou
 		return lambda(x);
 	};
 
-	ApplyTransformUR_X_Impl_EX(inputVec, outVec, wrappedLambda, strided_sampler, 0, int(inputVec.paddedSize()));
+	ApplyTransformUR_X_Impl_EX_STRD(inputVec, outVec, wrappedLambda, strided_sampler, 0, int(inputVec.paddedSize()));
 
 }
 
