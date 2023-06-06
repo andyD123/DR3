@@ -1519,9 +1519,10 @@ double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r,
 		j -= 2;
 	}
 
+    ignore(applyEarlyExcercise);
+
 	return odd_slice[N];
 
-	ignore(applyEarlyExcercise);
 }
 
 
@@ -1659,9 +1660,10 @@ double euroTrinomialPricerWithInit(double S, double K, double sig, double r, dou
 		j -= 2;
 	}
 
+    ignore(applyEarlyExcercise);
+
 	return odd_slice[N];
 
-	ignore(applyEarlyExcercise);
 }
 
 

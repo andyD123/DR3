@@ -583,17 +583,20 @@ void doMinMax()
 
 
 		{   TimerGuard timer(time);
-		for (long l = 0; l < TEST_LOOP_SZ; l++)
-		{
-			res = *std::max_element(v1.begin(), v1.end());
-			res_min = *std::min_element(v1.begin(), v1.end());
+            for (long l = 0; l < TEST_LOOP_SZ; l++)
+            {
+                res = *std::max_element(v1.begin(), v1.end());
+                res_min = *std::min_element(v1.begin(), v1.end());
 
-			res = 0.5 * (res + res_min);
+                res = 0.5 * (res + res_min);
+            }
 		}
-		}
+
+        ignore(res_min);
+
 		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
 
-		ignore(res_min);
+
 	};
 
 
@@ -978,8 +981,6 @@ void doSumSqrs()
 		std::cout << "STL inner product sum sqrs , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 inner product sum sqrs , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
 
-
-
 }
 
 
@@ -1030,9 +1031,9 @@ void doSumSqrsMulti()
 		}
 		}
 
+        ignore(res2);
 		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
 
-		ignore(res2);
 	};
 
 	auto DR3_inner_prod = [&](int SZ, long TEST_LOOP_SZ)
@@ -1067,9 +1068,9 @@ void doSumSqrsMulti()
 		}
 		}
 
-		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
+        ignore(res2);
 
-		ignore(res2);
+		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
 
 	};
 
@@ -1090,7 +1091,6 @@ void doSumSqrsMulti()
 		//warm up
 		for (long l = 0; l < warnUp; l++)
 		{
-	
 			auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);
 			//auto total 
 			res2 = std::get<0>(tpl);
@@ -1100,20 +1100,20 @@ void doSumSqrsMulti()
 
 
 		{   TimerGuard timer(time);
-		for (long l = 0; l < TEST_LOOP_SZ; l++)
-		{
+            for (long l = 0; l < TEST_LOOP_SZ; l++)
+            {
 
-			auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);
-			res2 = std::get<0>(tpl);
-			auto res0 = std::get<1>(tpl);
-			ignore(res0);
-	
+                auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);
+                res2 = std::get<0>(tpl);
+                auto res0 = std::get<1>(tpl);
+                ignore(res0);
+
+            }
 		}
-		}
+
+        ignore(res2);
 
 		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
-
-		ignore(res2);
 
 	};
 
