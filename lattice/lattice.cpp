@@ -155,9 +155,9 @@ void testSampler()
 
 	zzz.load(&sampleData[1]);
 
-	auto x = zzz.X_Minus_1.value;////get<-1>();
-	auto y = zzz.X_0.value;//get<0>();
-	auto z = zzz.X_1.value;//get<1>();
+	auto x = zzz.X_Minus_1.value;
+	auto y = zzz.X_0.value;
+	auto z = zzz.X_1.value;
 
 	ignore(x);
 	ignore(y);
@@ -201,7 +201,7 @@ void doStridedSpan()
 
 	auto SQR = [](StridedSampler<VecXX::INS>& sampler)
 	{
-		auto x = sampler.get<0>();
+		auto x = sampler.X_0.value;//get<0>();
 		return x * x;
 	};
 
@@ -299,7 +299,7 @@ void doTransformWithASpan()
 	
 	auto SQR = [](UnitarySampler<VecXX::INS>& sampler)
 	{
-		auto x = sampler.get<0>();
+		auto x = sampler.X_0.value; // get<0>();
 		return x * x; 
 	};
 
@@ -497,7 +497,7 @@ void doZipping()
 	//	using reg = Zipped_Reg < VecXX::INS, 3 >;
 
 		//auto zz = Access::down;
-	auto yy = myReg.get<int(Access::up)>();
+	auto yy = myReg.get((int)Access::up);
 	ignore(yy);
 
 
@@ -573,8 +573,8 @@ double europeanBinomialPricer(double S, double K, double sig, double r, double T
 
 	auto binomialRollBack = [=](BinomialSampler<VecXX::INS>& sampler)
 	{
-		auto X1 = sampler.get<1>();
-		auto X0 = sampler.get<0>();
+		const auto& X1 = sampler.X_1.value;
+		const auto& X0 = sampler.X_0.value;
 		return disc * (X1 * pu + X0 * oneMinusP);
 	};
 
@@ -745,7 +745,7 @@ double americanTrinomialPricer(double S, double K, double sig, double r, double 
 
 	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
 	{
-		auto optPrice = sampler.get<0>();
+		auto optPrice = sampler.X_0.value; //.get<0>();
 		return max(optPrice, excercisePrice);
 	};
 
@@ -925,7 +925,7 @@ double americanFiniteDiffPricer(double S, double K, double sig, double r, double
 	//this is the american part of the option excercise
 	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
 	{
-		auto optPrice = sampler.get<0>();
+		auto optPrice = sampler.X_0.value; //.get<0>();
 		return max(optPrice, excercisePrice);
 	};
 
@@ -1489,14 +1489,14 @@ double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r,
 
 	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
 	{
-		auto optPrice = sampler.get<0>();
+		auto optPrice = sampler.X_0.value; //.get<0>();
 		return max(optPrice, excercisePrice);
 	};
 
 
 	auto applyBarrier = [=](UnitarySampler<VecXX::INS>& sampler, auto stockPrice)
 	{
-		auto optPrice = sampler.get<0>();
+		auto optPrice = sampler.X_0.value;//.get<0>();
 		return select(stockPrice < H, optPrice, rebate);
 	};
 
@@ -1599,7 +1599,7 @@ double euroTrinomialPricerWithInit(double S, double K, double sig, double r, dou
 
 	auto applyEarlyExcercise = [=](UnitarySampler<VecXX::INS>& sampler, auto excercisePrice)
 	{
-		auto optPrice = sampler.get<0>();
+		auto optPrice = sampler.X_0.value; //.get<0>();
 		return max(optPrice, excercisePrice);
 	};
 
@@ -1707,8 +1707,6 @@ void doTrinomialPricerWithInit()
 		{
 			res = euroTrinomialPricerWithInit(S, K, vol, rate, T, N);
 		}
-
-
 	}
 
 	auto expected = blackScholes(S, K, T, rate, vol);

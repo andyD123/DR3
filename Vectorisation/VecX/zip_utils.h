@@ -103,7 +103,13 @@ struct  Named_Zip_iter : public Zipped_ITR< INS_VEC,N>, public  NAMED_INDEX
 
 
 
+/*
+an array of registers values corresponding to a set of values all  sharing the same index
+eg physical quantities at the same spatial or temporal location.  
 
+Zip iterator creates one of these values to feed into a lambda for calculations with multiple 
+parameters.
+*/
 template <typename INS_VEC, const int N>
 struct Zipped_Reg
 {
@@ -112,19 +118,18 @@ struct Zipped_Reg
 	 std::array<INS_VEC, N> m_registers;
 
 
-	//std::get  ?
+	 inline INS_VEC& get( int M)
+	 {
+		 return m_registers[M];
+	 }
 
-	template<int M>
-	INS_VEC& get()
-	{
-		return std::get<M>(m_registers);
-	}
 
-	template<int M>
-	constexpr INS_VEC get() const
-	{
-		return  std::get<M>(m_registers);
-	}
+	 inline constexpr INS_VEC get( int M) const
+	 {
+		 return m_registers[M];
+	 }
+
+
 
 	//these might need unroll
 	void load(Zipped_ITR<INS_VEC, N>& it)
@@ -145,67 +150,11 @@ struct Zipped_Reg
 			reg.store(it.m_itrs[i]);
 		}
 	}
-
 };
 
 
 
 
-
-
-/**/
-
-template <typename  SAMPLER, typename INS_VEC,  int N, int M>
-struct Sampled_Zipped_Reg
-{
-	//align to do
-
-	std::array< SAMPLER, N> m_sampler;
-
-
-	//st//d::array< SAMPLE<INS_VEC> , N> m_registers;
-
-
-
-
-	//TO DO
-
-	template<int J, int I>
-	INS_VEC& get()
-	{
-		return std::get<J>(std::get<I>(m_sampler));
-	}
-
-	template<int J, int I>
-	constexpr INS_VEC get() const
-	{
-		return  std::get<J>(std::get<I>(m_sampler));
-	}
-
-	//these might need unroll
-	void load(Zipped_ITR<INS_VEC, N>& it)
-	{
-		for (size_t i = 0; i < N; ++i)
-		{
-			auto& reg = m_sampler[i];
-			reg.load(it.m_itrs[i]);
-		}
-	}
-
-
-	//dont store sampler
-	void store(Zipped_ITR<INS_VEC, N>& it)
-	{
-		
-		//for (size_t i = 0; i < N; ++i)
-		//{
-		//	auto& reg = m_sampler[i];
-		//	//reg.store(it.m_itrs[i]);
-		//}
-		
-	}
-
-};
 
 
 
@@ -247,7 +196,7 @@ constexpr auto make_Zipped_itr(typename T& ...args)
 template < typename INS_VEC, typename  ...T>
 constexpr auto make_Zipped_itr(  T& ...args)
 {
-//	using FT = typename InstructionTraits<INS_VEC>::FloatType;
+
 
 	constexpr int N = sizeof...(T);
 	Zipped_ITR<INS_VEC, N > zpd;
@@ -280,7 +229,7 @@ constexpr auto make_Zipped_itr(  T& ...args)
 template < typename INS_VEC, typename  ...T>
  auto make_Zipped_itr_ref(T& ...args)
 {
-//	using FT = typename InstructionTraits<INS_VEC>::FloatType;
+
 
 	constexpr int N = sizeof...(T);
 	Zipped_ITR<INS_VEC, N > zpd;
@@ -581,3 +530,64 @@ void ApplyTransformUR_X_Impl_EX(SAMPLER& sampler,Zipped_ITR< INS_VEC, N> in, Zip
 
 }
 
+
+
+////////////////
+// Zipped and sampled 2 Do
+
+/*
+
+template <typename  SAMPLER, typename INS_VEC, int N, int M>
+struct Sampled_Zipped_Reg
+{
+	//align to do
+
+	std::array< SAMPLER, N> m_sampler;
+
+
+	//st//d::array< SAMPLE<INS_VEC> , N> m_registers;
+
+
+
+
+	//TO DO
+
+	template<int J, int I>
+	INS_VEC& get()
+	{
+		return std::get<J>(std::get<I>(m_sampler));
+	}
+
+	template<int J, int I>
+	constexpr INS_VEC get() const
+	{
+		return  std::get<J>(std::get<I>(m_sampler));
+	}
+
+	//these might need unroll
+	void load(Zipped_ITR<INS_VEC, N>& it)
+	{
+		for (size_t i = 0; i < N; ++i)
+		{
+			auto& reg = m_sampler[i];
+			reg.load(it.m_itrs[i]);
+		}
+	}
+
+
+	//dont store sampler
+	void store(Zipped_ITR<INS_VEC, N>& it)
+	{
+
+		//for (size_t i = 0; i < N; ++i)
+		//{
+		//	auto& reg = m_sampler[i];
+		//	//reg.store(it.m_itrs[i]);
+		//}
+
+	}
+
+};
+
+
+*/
