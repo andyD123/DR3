@@ -337,6 +337,7 @@ struct MDSpan :public Layout
 		return m_pAlignedStart;
 	}
 
+    /*
 
 	size_t extent(size_t sz) const
 	{
@@ -348,6 +349,7 @@ struct MDSpan :public Layout
 	{
 		return ::Layout.empty();
 	}
+    */
 
 private:
 	T* m_pAlignedStart;

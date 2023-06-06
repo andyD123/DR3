@@ -409,7 +409,7 @@ void  transform(OP& oper, Zipped_ITR< INS_VEC, N> in, Zipped_ITR< INS_VEC, M>& o
 
 
 
-
+/*
 // experimental 
 // we combine the sampler with constant inputs from in
 template<  typename INS_VEC,  int M, int N, typename OP, typename SAMPLER >
@@ -470,38 +470,38 @@ void ApplyTransformUR_X_Impl_EX(SAMPLER& sampler,Zipped_ITR< INS_VEC, N> in, Zip
 		out.inc(1);
 
 
-		/*
-		RHS2.load(pRhs1 + i + ld_offset + width);
-		RES1 = oper(RHS2);
-		RES1.store(pRet + i + SV_offset + width);
 
-		RHS3.load(pRhs1 + i + ld_offset + width * 2);
-		RES2 = oper(RHS3);
-		RES2.store(pRet + i + SV_offset + width * 2);
+		//RHS2.load(pRhs1 + i + ld_offset + width);
+		//RES1 = oper(RHS2);
+		//RES1.store(pRet + i + SV_offset + width);
 
-		RHS4.load(pRhs1 + i + ld_offset + width * 3);
-		RES3 = oper(RHS4);
-		RES3.store(pRet + i + SV_offset + width * 3);
-		*/
+		//RHS3.load(pRhs1 + i + ld_offset + width * 2);
+		//RES2 = oper(RHS3);
+		//RES2.store(pRet + i + SV_offset + width * 2);
+
+		//RHS4.load(pRhs1 + i + ld_offset + width * 3);
+		//RES3 = oper(RHS4);
+		//RES3.store(pRet + i + SV_offset + width * 3);
+
 	}
-	/*
-	for (; i <= impSZ - width; i += width)
-	{
-		RHS1.load(pRhs1 + i + ld_offset);
-		RES = oper(RHS1);
-		RES.store(pRet + i + SV_offset);
-	}
-	*/
+
+	//for (; i <= impSZ - width; i += width)
+	//{
+	//	RHS1.load(pRhs1 + i + ld_offset);
+	//	RES = oper(RHS1);
+	//	RES.store(pRet + i + SV_offset);
+	//}
+
 
 	
 
 	if (i < (impSZ - width))
 	{
-		/*
-		RHS1.load(pRhs1 + i )//+ ld_offset);
-		RES = oper(RHS1);
-		RES.store(pRet + i);// +SV_offset);
-		*/
+
+		//RHS1.load(pRhs1 + i )//+ ld_offset);
+		//RES = oper(RHS1);
+		//RES.store(pRet + i);// +SV_offset);
+
 
 		IN.load(in);
 		oper(IN, OUT);
@@ -513,11 +513,11 @@ void ApplyTransformUR_X_Impl_EX(SAMPLER& sampler,Zipped_ITR< INS_VEC, N> in, Zip
 	//move to one register width from last valid
 	//point to calculate
 	i = impSZ - width;
-/*
-	RHS1.load(pRhs1 + i);// +ld_offset);
-	RES = oper(RHS1);
-	RES.store(pRet + i);// +SV_offset);
-*/
+
+	//RHS1.load(pRhs1 + i);// +ld_offset);
+	//RES = oper(RHS1);
+	//RES.store(pRet + i);// +SV_offset);
+
 
 	IN.setOffset(i);
 	OUT.setOffset(i);
@@ -529,7 +529,7 @@ void ApplyTransformUR_X_Impl_EX(SAMPLER& sampler,Zipped_ITR< INS_VEC, N> in, Zip
 	out.inc(1);
 
 }
-
+*/
 
 
 ////////////////

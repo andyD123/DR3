@@ -182,7 +182,7 @@ struct StridedSampler : public std::tuple< RegisterElement< INS_VEC, X0, false> 
 
 	explicit StridedSampler(size_t stride) : X_0(std::get<0>(*this)),m_stride(stride), step(static_cast<int>(m_stride))
 	{
-		if ((width > stride) || (stride % width > 0)) throw std::exception("bad stride size for width");
+		if ((width > stride) || (stride % width > 0)) throw std::runtime_error("bad stride size for width");
 
 	}
 
