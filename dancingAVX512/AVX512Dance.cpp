@@ -33,7 +33,7 @@ struct RunResults
 class TimerGuard
 {
 	double& m_runTime;
-	std::chrono::system_clock::time_point  m_startTme;
+	std::chrono::high_resolution_clock::time_point  m_startTme;
 
 public:
 	TimerGuard(double& runTime) : m_runTime(runTime), m_startTme(std::chrono::high_resolution_clock::now()) { runTime = 0.; }
