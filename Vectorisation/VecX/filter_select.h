@@ -45,6 +45,15 @@ inline unsigned int getIndex(const Span<INS_VEC>& lhs, int i, int j)
 }
 
 
+template <typename INS_VEC>
+inline unsigned int getIndex(const StridedSpan<INS_VEC>& lhs, int i, int j)
+{
+	const long stride = lhs.stride();
+	return static_cast<unsigned int>(i  + j* stride);
+}
+
+
+
 /*
 common implementation for filtering a vec or a view using a vector of pre calulated boolean condition values
 */
@@ -142,6 +151,56 @@ VecView<INS_VEC>  ApplyFilterImpl(OP& condition, const VEC_TYPE<INS_VEC>& lhs)
 	vw.setSizeAndPad(psn);
 	return vw;
 };
+
+
+template< template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename SAMPLER  >
+VecView<INS_VEC>  ApplyFilterImpl_EXt_STRD(OP& condition, const VEC_TYPE<INS_VEC>& lhs, SAMPLER& sampler )
+{
+	check_vector(lhs);
+
+	VecView<INS_VEC> vw(static_cast<size_t>(lhs.size()));
+	auto pRes = vw.start();
+	auto pIdx = vw.idxStart();
+	auto pLhs = lhs.start();
+
+	long sz = static_cast<long>(lhs.size());// should be size() which goes to m_last  element
+	const long width = InstructionTraits<INS_VEC>::width;
+	int stride = static_cast<int>(sampler.stride());
+
+	long step = stride * width;
+	//INS_VEC LHS;
+	SAMPLER LHS(sampler);
+
+	int psn = 0;
+	int WDTH = std::min(sz, width);
+	for (int i = 0; i < sz; i += step)
+	{
+		LHS.load(pLhs + i);
+		using boolVType = typename InstructionTraits<INS_VEC>::BoolType;
+		boolVType		 COND;
+
+		COND = condition(LHS);
+		if (horizontal_or(COND))
+		{
+			for (int j = 0; j < WDTH && ((i + j) < sz); j++)
+			{
+				if (COND[j])
+				{
+					auto idx = getIndex<INS_VEC>(lhs, i, j);
+					pIdx[psn] = idx;
+					pRes[psn] = pLhs[idx];// pLhs[i + j];
+					++psn;
+				}
+			}
+		}
+	}
+
+	vw.setSizeAndPad(psn);
+	return vw;
+};
+
+
+
 
 /*
 applys filter  boloean lammda  (condition) to a  values held in VectorView  if result is true values

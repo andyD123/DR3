@@ -428,6 +428,22 @@ VecView<INS_VEC> filter(OP& condition, const Span<INS_VEC>& lhs)
 	return ApplyFilter(condition, lhs);
 }
 
+
+template< typename INS_VEC, typename OP>
+VecView<INS_VEC> filter(OP& condition, const StridedSpan<INS_VEC>& lhs)
+{
+
+	StridedSampler<INS_VEC> strided_sampler(lhs.stride());
+	auto wrappedLambda = [&](StridedSampler<INS_VEC>& sampler)
+	{
+		auto x = sampler.X_0.value;
+		return condition(x);
+	};
+
+	return ApplyFilterImpl_EXt_STRD(wrappedLambda, lhs, strided_sampler);
+}
+
+
 /*
 returns a view of the first N elements of the vector that satisfy the condition
 */

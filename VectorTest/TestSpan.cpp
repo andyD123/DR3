@@ -241,6 +241,8 @@ TEST(TestSpan, filter_shifting_start)
 
 			std::vector<double> expected;
 
+			expected = testSpan;
+
 			for (const auto& X : testSpan)
 			{
 				if ((2.0 * std::floor(X * 0.5) - X) > -0.0001)
@@ -269,6 +271,7 @@ TEST(TestSpan, filter_shifting_start)
 
 TEST(TestSpan, reduce)
 {
+	//this appears to work on skylake, but loads are not unaligned
 
 	for (int SZ = 3; SZ < 125; SZ++)
 	{
@@ -520,7 +523,7 @@ TEST(TestSpan, strided_transform_2)
 	for (int SZ = 3; SZ < 125; SZ++)
 	{
 		int stride = 8;
-		//int SZ = 320;
+
 		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
 		int i = 0;
 
@@ -615,8 +618,6 @@ TEST(TestSpan, strided_transform_withOffset_2)
 					expected.emplace_back(x);
 			}
 
-
-
 			for (int i = 0; i < expected.size(); ++i)
 			{
 				EXPECT_NUMERIC_EQ(result[i], expected[i]);
@@ -629,7 +630,67 @@ TEST(TestSpan, strided_transform_withOffset_2)
 }
 
 
-/*
+
+TEST(TestSpan, strided_filter)
+{
+
+	int stride = 8;
+
+	//int SZ = 120;
+
+
+	int offset = 1;
+
+
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		std::vector<Numeric>  v(160*stride, asNumber(0.));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+		const VecXX testV(v);
+
+		StrdSpanXX testSpan(testV.begin()+ offset, SZ, stride);
+
+		std::vector<double> expected;
+
+		auto  SZ_MAX =std:: min(v.size(), static_cast<size_t>(SZ * stride));
+
+		for (size_t jj = offset; jj < SZ_MAX; jj+=stride)
+		{
+			const auto & X = testV[jj];
+
+			if ((2.0 * std::floor(X * 0.5) - X) > -0.0001)
+			{
+				expected.emplace_back(X);
+			}
+		}
+
+		auto isEven = [](auto x) { return !((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) > VecXX::INS(0.)); };
+		auto evenView = filter(isEven, testSpan);
+
+		std::vector<double> dbgSpan = testSpan;
+		std::vector<double> dbgVw = evenView;
+
+
+		for (int i = 0; i < evenView.size(); ++i)
+		{
+			EXPECT_NUMERIC_EQ(expected[i], evenView[i]);
+		}
+
+	}
+
+
+
+
+
+
+}
+
+
+
+
+/* 
 TEST(TestSpan, strided_transform_reduce)
 {
 
@@ -677,4 +738,52 @@ TEST(TestSpan, strided_transform_reduce)
 
 }
 
+
+TEST(TestSpan, strided_reduce)
+{
+
+	//for (int SZ = 3; SZ < 125; SZ++)
+
+	{
+		int stride = 8;
+		int SZ = 320;
+		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+		const VecXX testV(v);
+
+		//StrdSpanXX test(testV.begin(), SZ, stride);
+		SpanXX test(testV.begin(), SZ);// , stride);
+
+		auto mySquareItLambda = [](auto x) {return x * x;  };
+
+		auto sameVal = [](auto x) {return x;  };
+
+
+		auto testSquare = test;
+
+		std::vector<double> std_vec_in = test;
+
+
+		//SpanXX testSpan(testV.begin(), SZ);
+
+		auto SUM = [](auto x, auto y) { return x + y; };
+		//auto SQR = [](auto x) { return x * x; };
+
+		auto result = reduce(test,  SUM);
+		double expected = 0.;
+
+		for (const auto& X : test)
+		{
+			expected += X * X;
+		}
+
+
+
+	}
+
+}
+
 */
+
