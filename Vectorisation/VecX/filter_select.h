@@ -168,12 +168,13 @@ VecView<INS_VEC>  ApplyFilterImpl_EXt_STRD(OP& condition, const VEC_TYPE<INS_VEC
 	int stride = static_cast<int>(sampler.stride());
 
 	long step = stride * width;
-	//INS_VEC LHS;
+	
 	SAMPLER LHS(sampler);
 
 	int psn = 0;
 	int WDTH = std::min(sz, width);
-	for (int i = 0; i < sz; i += step)
+	int i = 0;
+	for (; i <= (sz- step); i += step)
 	{
 		LHS.load(pLhs + i);
 		using boolVType = typename InstructionTraits<INS_VEC>::BoolType;
@@ -182,18 +183,42 @@ VecView<INS_VEC>  ApplyFilterImpl_EXt_STRD(OP& condition, const VEC_TYPE<INS_VEC
 		COND = condition(LHS);
 		if (horizontal_or(COND))
 		{
-			for (int j = 0; j < WDTH && ((i + j) < sz); j++)
+			for (int j = 0; j < WDTH && ((i + j*stride) < sz); j++)
 			{
 				if (COND[j])
 				{
 					auto idx = getIndex<INS_VEC>(lhs, i, j);
 					pIdx[psn] = idx;
-					pRes[psn] = pLhs[idx];// pLhs[i + j];
+					pRes[psn] = pLhs[idx];
 					++psn;
 				}
 			}
 		}
 	}
+
+
+	for (; i < sz; i += step)
+	{
+		using Float = typename InstructionTraits<INS_VEC>::FloatType;
+		using boolVType = typename InstructionTraits<INS_VEC>::BoolType;
+		boolVType		 COND;
+
+		for(int j = 0; ((i + j * stride) < sz); i+=stride)
+		{	
+			LHS.X_0.value = pLhs[i];
+			COND = condition(LHS);
+			if (COND[0])
+			{
+				auto idx = getIndex<INS_VEC>(lhs, i, j);
+				pIdx[psn] = idx;
+				pRes[psn] = pLhs[idx];
+				++psn;
+			}
+		}
+		
+	}
+
+
 
 	vw.setSizeAndPad(psn);
 	return vw;

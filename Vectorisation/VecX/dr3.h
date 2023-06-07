@@ -440,6 +440,8 @@ VecView<INS_VEC> filter(OP& condition, const StridedSpan<INS_VEC>& lhs)
 		return condition(x);
 	};
 
+	assert(lhs.stride() % InstructionTraits<INS_VEC>::width == 0);
+
 	return ApplyFilterImpl_EXt_STRD(wrappedLambda, lhs, strided_sampler);
 }
 

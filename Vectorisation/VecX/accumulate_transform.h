@@ -531,7 +531,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 	{
 		auto trform = ApplyUnitaryOperation(rhs1, operTransform);
 		return trform.getScalarValue();
-
 	}
 
 	long sz = static_cast<long>(rhs1.size());
