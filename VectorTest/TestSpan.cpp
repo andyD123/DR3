@@ -183,6 +183,7 @@ TEST(TestSpan, transforM_shifting_start)
 
 }
 
+
 TEST(TestSpan, filter)
 {
 
@@ -225,6 +226,7 @@ TEST(TestSpan, filter)
 
 }
 
+
 TEST(TestSpan, filter_shifting_start)
 {
 	for (int start = 0; start < 37; start++)
@@ -241,11 +243,16 @@ TEST(TestSpan, filter_shifting_start)
 
 			std::vector<double> expected;
 
+			std::vector<double> inspan = testSpan;
+
 			expected = testSpan;
+			expected.clear();
+
+			auto isEvenScalar = [](auto x) { return !(((x - 2.0 * floor(x * 0.5)) > 0.)); };
 
 			for (const auto& X : testSpan)
 			{
-				if ((2.0 * std::floor(X * 0.5) - X) > -0.0001)
+				if ( isEvenScalar(X) )   
 				{
 					expected.emplace_back(X);
 				}
@@ -268,6 +275,7 @@ TEST(TestSpan, filter_shifting_start)
 	}
 
 }
+
 
 TEST(TestSpan, reduce)
 {
@@ -405,8 +413,6 @@ TEST(TestSpan, transform_reduce_shifting_start)
 TEST(TestSpan, strided_transform)
 {
 
-	//for (int SZ = 3; SZ < 125; SZ++)
-	
 	{
 		int stride = 8;
 		int SZ = 320;
@@ -451,8 +457,6 @@ TEST(TestSpan, strided_transform)
 		{
 			EXPECT_NUMERIC_EQ(result[i], expected[i] );
 		}
-
-
 	}
 
 }
@@ -460,7 +464,6 @@ TEST(TestSpan, strided_transform)
 
 TEST(TestSpan, strided_transform_withOffset)
 {
-
 
 	{
 		int offset = 1;
@@ -564,8 +567,6 @@ TEST(TestSpan, strided_transform_2)
 		{
 			EXPECT_NUMERIC_EQ(result[i], expected[i]);
 		}
-
-
 	}
 
 }
@@ -636,61 +637,314 @@ TEST(TestSpan, strided_filter)
 
 	int stride = 8;
 
-	//int SZ = 120;
+
+	int offset = 0;
 
 
-	int offset = 1;
-
-
+	//span size
 	for (int SZ = 3; SZ < 125; SZ++)
 	{
-		std::vector<Numeric>  v(160*stride, asNumber(0.));
-		int i = 0;
 
-		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
-		const VecXX testV(v);
 
-		StrdSpanXX testSpan(testV.begin()+ offset, SZ, stride);
+			std::vector<Numeric>  v(160 * stride, asNumber(0.));
+			int i = 0;
 
-		std::vector<double> expected;
+			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+			const VecXX testV(v);
 
-		auto  SZ_MAX =std:: min(v.size(), static_cast<size_t>(SZ * stride));
+			StrdSpanXX testSpan(testV.begin() + offset, SZ, stride);
 
-		for (size_t jj = offset; jj < SZ_MAX; jj+=stride)
-		{
-			const auto & X = testV[jj];
+			std::vector<double> expected;
 
-			if ((2.0 * std::floor(X * 0.5) - X) > -0.0001)
+			auto  SZ_MAX = std::min(v.size(), static_cast<size_t>(SZ * stride));
+
+			for (size_t jj = offset; jj < (SZ+ offset); jj += stride)
 			{
-				expected.emplace_back(X);
+				const auto& X = testV[jj];
+
+				if ((2.0 * std::floor(X * 0.5) - X) > -0.0001)
+				{
+					expected.emplace_back(X);
+				}
 			}
-		}
 
-		auto isEven = [](auto x) { return !((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) > VecXX::INS(0.)); };
-		auto evenView = filter(isEven, testSpan);
+			auto isEven = [](auto x) { return !((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) > VecXX::INS(0.)); };
+			auto evenView = filter(isEven, testSpan);
 
-		std::vector<double> dbgSpan = testSpan;
-		std::vector<double> dbgVw = evenView;
+			std::vector<double> dbgSpan = testSpan;
+			std::vector<double> dbgVw = evenView;
 
 
-		for (int i = 0; i < evenView.size(); ++i)
-		{
-			EXPECT_NUMERIC_EQ(expected[i], evenView[i]);
-		}
+			for (int i = 0; i < evenView.size(); ++i)
+			{
+				EXPECT_NUMERIC_EQ(expected[i], evenView[i]);
+			}
 
 	}
 
 
+}
 
 
+TEST(TestSpan, strided_filter_vary_offsets)
+{
 
+	int stride = 8; // stride  is multiple of width of instruction  set  i/e we assume padded and stride =  INT * width
+
+	for (int offset = 0; offset < 45; ++offset) //offset
+	{
+		for (int SZ =1; SZ < 125; SZ++) //span size 
+		{
+
+			std::vector<Numeric>  v(160 * stride, asNumber(0.));
+			int i = 0;
+
+			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+			const VecXX testV(v);
+
+			StrdSpanXX testSpan(testV.begin() + offset, SZ, stride);
+
+			std::vector<double> expected;
+
+			auto  SZ_MAX = std::min(v.size(), static_cast<size_t>(SZ * stride));
+
+			for (size_t jj = offset; jj < (SZ + offset); jj += stride)
+			{
+				const auto& X = testV[jj];
+
+				if ((2.0 * std::floor(X * 0.5) - X) > -0.0001)
+				{
+					expected.emplace_back(X);
+				}
+			}
+
+			auto isEven = [](auto x) { return !((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) > VecXX::INS(0.)); };
+			auto evenView = filter(isEven, testSpan);
+
+			std::vector<double> dbgSpan = testSpan;
+			std::vector<double> dbgVw = evenView;
+
+
+			EXPECT_NUMERIC_EQ(static_cast<int>(expected.size()), evenView.size());
+
+			for (int i = 0; i < evenView.size(); ++i)
+			{
+				EXPECT_NUMERIC_EQ(expected[i], evenView[i]);
+			}
+			
+		}
+
+	}
 
 }
 
 
 
 
-/* 
+
+TEST(TestSpan, strided_reduce)
+{
+	int offset = 0;
+
+	
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		int stride = 8;
+		
+		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+		const VecXX testV(v);
+
+		StrdSpanXX test(testV.begin(), SZ, stride);
+		
+		auto testSquare = test;
+
+		std::vector<double> std_vec_in = test;
+
+
+		auto SUM = [](auto x, auto y) { return x + y; };
+		
+
+		auto result = reduce(test,  SUM);
+		double expected = 0.;
+
+		for (int i = 0; i < SZ;i+= stride)
+		{
+			expected += v[i + offset];
+		}
+
+		EXPECT_NUMERIC_EQ(expected, result);
+
+	}
+
+}
+
+
+
+
+TEST(TestSpan, strided_reduce_large)
+{
+	int offset = 0;
+
+	int SZ = 4003;
+	{
+		int stride = 8;
+		
+		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+		const VecXX testV(v);
+
+		StrdSpanXX test(testV.begin(), SZ, stride);
+
+		auto SUM = [](auto x, auto y) { return x + y; };
+		auto result = reduce(test, SUM);
+		double expected = 0.;
+
+		for (int i = 0; i < SZ; i += stride)
+		{
+			expected += v[i + offset];
+		}
+
+		EXPECT_NUMERIC_EQ(expected, result);
+	}
+}
+
+
+
+void testStridedSpanReduce(int offset, int startSZ, int endSZ)
+{
+	for (int SZ = startSZ; SZ <= endSZ; SZ++)
+	{
+		int stride = 8;
+
+		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+		const VecXX testV(v);
+
+		StrdSpanXX test(testV.begin() + offset, SZ, stride);
+
+		auto SUM = [](auto x, auto y) { return x + y; };
+		auto result = reduce(test, SUM);
+		double expected = 0.;
+
+		for (int i = 0; i < SZ; i += stride)
+		{
+			expected += v[i + offset];
+		}
+
+		EXPECT_NUMERIC_EQ(expected, result);
+	}
+
+}
+
+
+TEST(TestSpan, strided_reduce_large_2)
+{
+	
+	int offset = 1;
+
+	for (int offset = 0; offset < 31; offset++)
+	{
+
+		testStridedSpanReduce( offset, 3, 33);
+
+		testStridedSpanReduce( offset, 250, 303 );
+
+		testStridedSpanReduce( offset,600 , 649);
+	}
+
+	/*
+
+	{
+		for (int SZ = 3; SZ < 33; SZ++)
+		{
+			int stride = 8;
+
+			std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+			int i = 0;
+
+			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+			const VecXX testV(v);
+
+			StrdSpanXX test(testV.begin() + offset, SZ, stride);
+
+			auto SUM = [](auto x, auto y) { return x + y; };
+			auto result = reduce(test, SUM);
+			double expected = 0.;
+
+			for (int i = 0; i < SZ; i += stride)
+			{
+				expected += v[i + offset];
+			}
+
+			EXPECT_NUMERIC_EQ(expected, result);
+		}
+
+
+
+		for (int SZ = 250; SZ < 303; SZ++)
+		{
+			int stride = 8;
+
+			std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+			int i = 0;
+
+			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+			const VecXX testV(v);
+
+			StrdSpanXX test(testV.begin()+ offset, SZ, stride);
+
+			auto SUM = [](auto x, auto y) { return x + y; };
+			auto result = reduce(test, SUM);
+			double expected = 0.;
+
+			for (int i = 0; i < SZ; i += stride)
+			{
+				expected += v[i + offset];
+			}
+
+			EXPECT_NUMERIC_EQ(expected, result);
+		}
+
+
+		for (int SZ = 600; SZ < 649; SZ++)
+		{
+			int stride = 8;
+
+			std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+			int i = 0;
+
+			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+			const VecXX testV(v);
+
+			StrdSpanXX test(testV.begin() + offset, SZ, stride);
+
+			auto SUM = [](auto x, auto y) { return x + y; };
+			auto result = reduce(test, SUM);
+			double expected = 0.;
+
+			for (int i = 0; i < SZ; i += stride)
+			{
+				expected += v[i + offset];
+			}
+
+			EXPECT_NUMERIC_EQ(expected, result);
+		}
+	}
+
+	*/
+
+}
+
+
+
+/*
 TEST(TestSpan, strided_transform_reduce)
 {
 
@@ -737,53 +991,4 @@ TEST(TestSpan, strided_transform_reduce)
 	}
 
 }
-
-
-TEST(TestSpan, strided_reduce)
-{
-
-	//for (int SZ = 3; SZ < 125; SZ++)
-
-	{
-		int stride = 8;
-		int SZ = 320;
-		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
-		int i = 0;
-
-		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
-		const VecXX testV(v);
-
-		//StrdSpanXX test(testV.begin(), SZ, stride);
-		SpanXX test(testV.begin(), SZ);// , stride);
-
-		auto mySquareItLambda = [](auto x) {return x * x;  };
-
-		auto sameVal = [](auto x) {return x;  };
-
-
-		auto testSquare = test;
-
-		std::vector<double> std_vec_in = test;
-
-
-		//SpanXX testSpan(testV.begin(), SZ);
-
-		auto SUM = [](auto x, auto y) { return x + y; };
-		//auto SQR = [](auto x) { return x * x; };
-
-		auto result = reduce(test,  SUM);
-		double expected = 0.;
-
-		for (const auto& X : test)
-		{
-			expected += X * X;
-		}
-
-
-
-	}
-
-}
-
 */
-

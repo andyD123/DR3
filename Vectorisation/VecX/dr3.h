@@ -540,6 +540,40 @@ typename InstructionTraits<INS_VEC>::FloatType reduce(const Span<INS_VEC>& rhs1,
 	ignore(singularInit);
 }
 
+
+//experimental unroll version strided span reduce
+template< typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduce(const StridedSpan<INS_VEC>& input, OP& lambda, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+
+	StridedSampler<INS_VEC> strided_sampler(input.stride());
+
+	auto stridesampler = [&](INS_VEC accRes, StridedSampler<INS_VEC> sampler)
+	{
+		auto x = sampler.X_0.value;
+		return lambda(accRes, x);
+	};
+
+	auto wrapper = [&](INS_VEC lhs, INS_VEC rhs)
+	{
+		return lambda(lhs, rhs);
+	};
+
+
+	//auto wrappedLambda 
+	const auto&  overloaded_lambda = makeOverloaded<decltype(stridesampler), decltype(wrapper)> (stridesampler, wrapper);
+		
+
+		
+	//see lambda story for this impl
+	
+	return ApplyAccumulate2UR_X_EX_STRD(input, overloaded_lambda, strided_sampler, 0, int(input.paddedSize()));
+
+	ignore(initVal);
+	ignore(singularInit);
+}
+
+
 //unroll version
 template< typename INS_VEC, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType reduce(const VecView<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
