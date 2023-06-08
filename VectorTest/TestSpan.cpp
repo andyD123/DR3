@@ -943,6 +943,46 @@ TEST(TestSpan, strided_reduce_large_2)
 }
 
 
+TEST(TestSpan, strided_transform_reduce)
+{
+	int offset = 0;
+
+
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		int stride = 8;
+
+		std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+		const VecXX testV(v);
+
+		StrdSpanXX test(testV.begin(), SZ, stride);
+
+		auto testSquare = test;
+
+		std::vector<double> std_vec_in = test;
+
+		auto SQR = [](auto x) { return x * x; };
+		auto SUM = [](auto x, auto y) { return x + y; };
+
+
+		auto result = transformReduce(test, SUM, SQR);
+		double expected = 0.;
+
+		for (int i = 0; i < SZ; i += stride)
+		{
+			expected += v[i + offset] * v[i + offset];
+		}
+
+		EXPECT_NUMERIC_EQ(expected, result);
+
+	}
+
+}
+
+
 
 /*
 TEST(TestSpan, strided_transform_reduce)
