@@ -4,6 +4,16 @@
 #include "../Vectorisation/VecX/error_utils.h"
 #include <vector>
 #include <chrono>
+#include <map>
+#include <iostream>
+
+#include <algorithm>
+#include <random>
+#include <numeric>
+#include <iterator>
+#include <iomanip>  
+#include <cstring>
+
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
@@ -53,14 +63,14 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 }
 
 
-double getErr(const  std::vector<double>& t)
+static double getErr(const  std::vector<double>& t)
 {
 	ignore(t);
 	return 2e-11;
 }
 
 
-float getErr(const  std::vector<float>& t)
+static float getErr(const  std::vector<float>& t)
 {
 	ignore(t);
 	return 1.0;
@@ -107,7 +117,7 @@ bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std
 
 }
 
-bool valuesAreEqual(double x, double y, double tol = 1e-14)
+static bool valuesAreEqual(double x, double y, double tol = 1e-14)
 {
 
 	auto err1 = fabs((x - y) / (fabs(x) + fabs(y)));
@@ -116,7 +126,7 @@ bool valuesAreEqual(double x, double y, double tol = 1e-14)
 }
 
 
-auto getRandomShuffledVector(int SZ, int instance_number = 0)
+static auto getRandomShuffledVector(int SZ, int instance_number = 0)
 {
 	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
 
@@ -156,10 +166,10 @@ auto getRandomShuffledVector(int SZ, int instance_number = 0)
 
 
 
-auto numOps = [](int TEST_LOOP_SZ, int SZ) { return  static_cast<int>(double(TEST_LOOP_SZ) * double(SZ)); };
+static auto numOps = [](int TEST_LOOP_SZ, int SZ) { return  static_cast<int>(double(TEST_LOOP_SZ) * double(SZ)); };
 
 
-double getnull(double)
+static double getnull(double)
 {
 	return 0.0;
 }
