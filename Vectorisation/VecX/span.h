@@ -158,7 +158,16 @@ struct StridedSpan
 	//explicit
 	operator std::vector<typename InstructionTraits<INS_VEC>::FloatType>()
 	{
-		return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(start(), start() + m_extent);
+		//return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(start(), start() + m_extent);
+		using Float = typename InstructionTraits<INS_VEC>::FloatType;
+		std::vector<Float> ret;
+		ret.reserve((m_extent + 1) / m_stride);
+
+		for (Float* it = start(); it < start() + m_extent; it += m_stride)
+		{
+			ret.emplace_back(*it);
+		}
+		return ret;
 	}
 
 	const T* begin() const
@@ -255,7 +264,8 @@ private:
 
 
 
-
+constexpr int ROW_LAYOUT = 0;
+constexpr int COL_LAYOUT = 1;
 // Layout maps user defined index  structure to an offset
 
 template<typename T, size_t SIMD_SZ, size_t aligned_extent =0>
@@ -266,31 +276,53 @@ struct Layout2D
 	size_t numSIMDS;
 	size_t m_rows;
 	size_t m_cols;
+	size_t m_extent;
+
+	bool isRowOrder;
+
+	T* dataRef() 
+	{ 
+		return m_pAlignedStart;
+	}
 	
 	Layout2D(T* pdata, size_t  rows, size_t cols):m_pAlignedStart(pdata),m_rows(rows),m_cols(cols)
 	{
 		if constexpr  (aligned_extent == 0)
 		{
-			numSIMDS = 1 + static_cast<int>(m_rows / SIMD_SZ);
+			isRowOrder = true;
+			numSIMDS = static_cast<int>(m_rows / SIMD_SZ);
+			if (m_rows % SIMD_SZ > 0) numSIMDS++;
+			m_SimdSize = numSIMDS * SIMD_SZ;
+			m_extent = m_SimdSize * m_cols;
 		}
 		else
 		{
-			numSIMDS = 1 + static_cast<int>(m_cols / SIMD_SZ);
+			isRowOrder = false;
+			numSIMDS =  static_cast<int>(m_cols / SIMD_SZ);
+			if (m_cols % SIMD_SZ > 0) numSIMDS++;
+
+			m_SimdSize = numSIMDS * SIMD_SZ;
+			m_extent = m_SimdSize * m_rows;
+
 		}
-		m_SimdSize = numSIMDS * SIMD_SZ;
+
+		
 	}
 
 	inline size_t stride(size_t extent) const
 	{
-
+		
 		if constexpr (aligned_extent == 0)
 		{
-			return (aligned_extent == extent) ? SIMD_SZ : SIMD_SZ * m_cols;
+			//return (aligned_extent == extent) ? SIMD_SZ : SIMD_SZ * m_cols;
+			return 1;
 		}
 		else
 		{
-			return (aligned_extent == extent) ? SIMD_SZ : SIMD_SZ * m_rows;
+			//return (aligned_extent == extent) ? SIMD_SZ : SIMD_SZ * m_rows;
+			return m_extent;
 		}
+		
 		
 	}
 
@@ -317,7 +349,10 @@ struct Layout2D
 		return *(m_pAlignedStart + getArrayPos(row, col));
 	}
 
+
+
 };
+
 
 
 //light version
@@ -355,5 +390,24 @@ private:
 	T* m_pAlignedStart;
 
 };
+
+
+
+
+template<typename INS_VEC>
+Span<INS_VEC>  getSpan(Layout2D< typename InstructionTraits<INS_VEC>::FloatType, InstructionTraits<INS_VEC>::width >& layout, size_t pos)
+{
+	return Span<INS_VEC>(layout.dataRef() + layout.getArrayPos(pos,0), layout.isRowOrder? layout.m_rows : layout.m_cols);
+}
+
+
+
+template<typename INS_VEC>
+StridedSpan<INS_VEC>  getStridedSpan(Layout2D< typename InstructionTraits<INS_VEC>::FloatType, InstructionTraits<INS_VEC>::width >& layout, size_t extnt_id, size_t pos)
+{
+
+
+	return StridedSpan<INS_VEC>(layout.dataRef() + layout.getArrayPos(0,pos), layout.m_extent -pos, layout.isRowOrder ? layout.m_SimdSize : layout.m_cols);
+}
 
 

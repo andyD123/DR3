@@ -1054,8 +1054,6 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	}
 
 
-
-
 	//iterate over remaining values and store
 	RHS1.load(pRhs1 + i + ld_offset);
 	RES = oper(RHS1);
@@ -1067,6 +1065,175 @@ void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& 
 	}
 
 }
+
+
+
+// experimental  binary version for use with spans
+template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYPE_RET, typename INS_VEC, typename OP, typename SAMPLER >
+void ApplyTransformUR_X_Impl_EX_BN(VEC_TYPE<INS_VEC>& lhs1, VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& ret, OP& oper, SAMPLER& sampler_lhs, SAMPLER& sampler, int i = 0, int impSZ = -1)
+{
+
+	//TO DO SOME CHECKING on sizes etc
+	//TAKING rhs as corect size in this initial go
+
+	//NB strides can be different onleft and right too  2 DO
+
+	impSZ = (impSZ < 0) ? static_cast<long>(rhs1.paddedSize()) : impSZ;
+
+	auto pLhs1 = lhs1.start();
+	auto pRhs1 = rhs1.start();
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int stride = static_cast<int>(sampler.stride());
+	stride = (stride == 1) ? 1 : stride * width;
+	int step = 4 * width * stride;
+
+
+
+	SAMPLER LHS1(sampler_lhs);
+	SAMPLER RHS1(sampler);
+	INS_VEC RES;
+
+	SAMPLER LHS2(sampler_lhs);
+	SAMPLER RHS2(sampler);
+	INS_VEC RES1;
+
+	SAMPLER LHS3(sampler_lhs);
+	SAMPLER RHS3(sampler);
+	INS_VEC RES2;
+
+	SAMPLER LHS4(sampler_lhs);
+	SAMPLER RHS4(sampler);
+	INS_VEC RES3;
+
+	//we can only get a starting position bigger than  zero when we access points in the 
+	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
+	i = i + std::max(0, -sampler.min());
+
+
+
+	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
+	// that we stay in a valid range 
+	impSZ = impSZ - std::max(0, sampler.max());
+
+	int ld_offset = 0;
+	int SV_offset = 0;
+
+	int rhsSZ = impSZ - step;
+	for (; i < rhsSZ; i += step)
+	{
+		LHS1.load(pLhs1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(LHS1,RHS1);
+		RES.store(pRet + i + SV_offset);
+
+		LHS2.load(pLhs1 + i + ld_offset + width * stride);
+		RHS2.load(pRhs1 + i + ld_offset + width * stride);
+		RES1 = oper(LHS2,RHS2);
+		RES1.store(pRet + i + SV_offset + width);
+
+		LHS3.load(pLhs1 + i + ld_offset + width * stride * 2);
+		RHS3.load(pRhs1 + i + ld_offset + width * stride * 2);
+		RES2 = oper(LHS3,RHS3);
+		RES2.store(pRet + i + SV_offset + width * 2);
+
+		LHS4.load(pLhs1 + i + ld_offset + width * stride * 3);
+		RHS4.load(pRhs1 + i + ld_offset + width * stride * 3);
+		RES3 = oper(LHS4,RHS4);
+		RES3.store(pRet + i + SV_offset + width * 3);
+	}
+	//
+	for (; i <= impSZ - width * stride; i += width * stride)
+	{
+		LHS1.load(pLhs1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(LHS1,RHS1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//one register case or do it scalar ops ?
+	//
+
+	if (i < (impSZ - width * stride))
+	{
+		LHS1.load(pLhs1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(LHS1,RHS1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//in the case that all input ranges are al.igned  and padded and that 
+	//spans cone from inside these ranges and the sampler is prevented 
+	// from going out of these ranges then this is fine.
+
+
+	// These mighty not be padded
+	// 
+	/*
+	//iterate over remaining values and store
+	RHS1.load(pRhs1 + i + ld_offset);
+	RES = oper(RHS1);
+
+	int j = 0;
+	for (; i < impSZ; ++i, ++j)
+	{
+		(pRet + SV_offset)[i] = RES[j];
+	}
+
+	*/
+
+	//iterate over remaining values and store
+	/*
+	if (stride == 1) // and on last element
+	{
+		LHS1.load(pLhs1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(LHS1,RHS1);
+
+		int j = 0;
+		for (; i < impSZ; ++i, ++j)
+		{
+			(pRet + SV_offset)[i] = RES[j];
+		}
+	}
+	else //load each element at a  time
+	*/
+	{
+		//wrong 
+		/*
+		int K = 0;
+		int j = 0;
+		for (; i < impSZ; ++j)
+		{
+			LHS1.X_0.value = pLhs1[i + ld_offset];
+			RHS1.X_0.value = pRhs1[i + ld_offset];
+			RES = oper(LHS,RHS1);
+			(pRet + i+ SV_offset)[K] = RES[0];
+			i += stride;
+			K++;
+		}
+		*/
+
+
+		//int j = 0;
+		for (; i < impSZ; ++i)
+		{
+			LHS1.X_0.value = pLhs1[i + ld_offset];
+			RHS1.X_0.value = pRhs1[i + ld_offset];
+			RES = oper(LHS1, RHS1);
+			(pRet + i + SV_offset)[0] = RES[0];
+			//i++;
+			
+			
+		}
+
+
+	}
+
+}
+
+
 
 // experimental 
 template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYPE_RET,typename INS_VEC, typename OP, typename SAMPLER >
@@ -1184,7 +1351,8 @@ void ApplyTransformUR_X_Impl_EX_STRD(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_V
 
 
 
-// experimental binary transform
+// experimental binary transform  // need to check handling remainders ie not whole registers left at end of loop 
+// since might get unpadded cases
 //assumed to be unaligned
 template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYPE_AUX, template <class> typename VEC_TYPE_RET,typename INS_VEC, typename OP, typename SAMPLER >
 void ApplyTransformUR_X_Impl_EX(const VEC_TYPE<INS_VEC>& rhs1,const VEC_TYPE_AUX<INS_VEC>& aux, VEC_TYPE_RET<INS_VEC>& ret, OP& oper, SAMPLER& sampler, int i = 0, int impSZ = -1)
@@ -1271,7 +1439,7 @@ void ApplyTransformUR_X_Impl_EX(const VEC_TYPE<INS_VEC>& rhs1,const VEC_TYPE_AUX
 	}
 
 	//move to one register width from last valid
-	//point to calculate
+	//point to calculate // fine if both are padded and using aligned so probably an error
 	i = impSZ - width;
 	AUX1.load(pAux1 + i + ld_offset);
 	RHS1.load(pRhs1 + i + ld_offset);

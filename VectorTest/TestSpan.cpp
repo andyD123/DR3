@@ -184,6 +184,9 @@ TEST(TestSpan, transforM_shifting_start)
 }
 
 
+
+
+
 TEST(TestSpan, filter)
 {
 
@@ -859,87 +862,6 @@ TEST(TestSpan, strided_reduce_large_2)
 		testStridedSpanReduce( offset,600 , 649);
 	}
 
-	/*
-
-	{
-		for (int SZ = 3; SZ < 33; SZ++)
-		{
-			int stride = 8;
-
-			std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
-			int i = 0;
-
-			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
-			const VecXX testV(v);
-
-			StrdSpanXX test(testV.begin() + offset, SZ, stride);
-
-			auto SUM = [](auto x, auto y) { return x + y; };
-			auto result = reduce(test, SUM);
-			double expected = 0.;
-
-			for (int i = 0; i < SZ; i += stride)
-			{
-				expected += v[i + offset];
-			}
-
-			EXPECT_NUMERIC_EQ(expected, result);
-		}
-
-
-
-		for (int SZ = 250; SZ < 303; SZ++)
-		{
-			int stride = 8;
-
-			std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
-			int i = 0;
-
-			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
-			const VecXX testV(v);
-
-			StrdSpanXX test(testV.begin()+ offset, SZ, stride);
-
-			auto SUM = [](auto x, auto y) { return x + y; };
-			auto result = reduce(test, SUM);
-			double expected = 0.;
-
-			for (int i = 0; i < SZ; i += stride)
-			{
-				expected += v[i + offset];
-			}
-
-			EXPECT_NUMERIC_EQ(expected, result);
-		}
-
-
-		for (int SZ = 600; SZ < 649; SZ++)
-		{
-			int stride = 8;
-
-			std::vector<Numeric>  v(SZ + 300, asNumber(0.0));
-			int i = 0;
-
-			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
-			const VecXX testV(v);
-
-			StrdSpanXX test(testV.begin() + offset, SZ, stride);
-
-			auto SUM = [](auto x, auto y) { return x + y; };
-			auto result = reduce(test, SUM);
-			double expected = 0.;
-
-			for (int i = 0; i < SZ; i += stride)
-			{
-				expected += v[i + offset];
-			}
-
-			EXPECT_NUMERIC_EQ(expected, result);
-		}
-	}
-
-	*/
-
 }
 
 
@@ -1002,8 +924,103 @@ TEST(TestSpan, strided_transform_reduce)
 	testTransformReduceStrided(600, 650, 0, 31);
 
 
+}
 
 
+
+TEST(TestSpan, binary_transform_simple)
+{
+	
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		std::vector<Numeric>  v(SZ, asNumber(6.66));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(1.0 + i); ++i; }
+		const VecXX testV(v);
+
+		VecXX testY =  testV * 2.0;
+		testY += 1.0;
+
+		SpanXX spn1(testV.begin(), SZ);
+
+		SpanXX spn2(testY.begin(), SZ);
+
+		VecXX testV2(SZ, 0.0);
+
+		SpanXX outSpan(testV2.begin(), SZ);
+
+		auto DIV = [](auto x, auto y) {return x / y;  };
+
+		std::vector<double> std_vec_in = spn1;
+		std::vector<double> std_vec_in2 = spn2;
+
+		transform(DIV, spn1, spn2, outSpan);
+
+		for (int i = 1; i < spn2.size(); ++i)
+		{
+			EXPECT_NUMERIC_EQ(outSpan[i], spn1[i] / spn2[i]);
+		}
+
+	}
+
+}
+
+
+
+
+
+TEST(TestSpan, basic_2D_SPAN)
+{
+
+	//create a vector of 1D data 160 in length
+	VecXX owningVec(0.1, 16 * 10);
+
+	auto val = 0.0;
+	for (auto& x : owningVec)
+	{
+		x = val;
+		val++;
+	}
+
+
+
+	using MAT1 = Layout2D<double, 8, 0>;
+
+	//auto pDat =
+	MDSpan<double, MAT1> mat(owningVec.data(), 10, 10);
+
+	/*
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			mat(i, j) = i * 100 + j;
+		}
+
+	}
+
+	std::cout << "\n";
+	std::cout << "\n";
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+	*/
 }
 
 

@@ -292,7 +292,7 @@ void doTrinomialPricerWithInit()
 int main()
 {
 	//return 0;
-
+/*
 	doBinomialPricer();
 	//	return 0;
 	doTrinomialPricer();
@@ -318,7 +318,7 @@ int main()
 	doTransformWithASpan();
 
 	doStridedSpan();
-
+*/
 	doMatrix();
 	return 0;
 	

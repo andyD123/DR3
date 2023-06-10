@@ -488,40 +488,213 @@ void doMatrix()
 		val++;
 	}
 
-	using MAT1 = Layout2D<double, 8, 0>;
+	using MAT1 = Layout2D<double, 8, 0>; //row order  pad/simd size = 8
 
 	//auto pDat =
-	MDSpan<double, MAT1> mat(owningVec.data(), 10, 10);
+	MDSpan<double, MAT1> mat8(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
 		for (int j = 0; j < 10; ++j)
 		{
-			std::cout << mat(i, j) << ",";
+			std::cout << mat8(i, j) << ",";
 		}
 		std::cout << "\n";
 	}
 
-	for (int i = 0; i < 10; ++i)
-	{
-		for (int j = 0; j < 10; ++j)
-		{
-			mat(i, j) = i * 100 + j;
-		}
 
-	}
+	std::cout << "  8 \n  \n \n  \n ";
+		
 
-	std::cout << "\n";
-	std::cout << "\n";
+	using MAT4 = Layout2D<double, 4, 0>; //row order  pad/simd size = 8
+
+//auto pDat =
+	MDSpan<double, MAT4> mat4(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
 		for (int j = 0; j < 10; ++j)
 		{
-			std::cout << mat(i, j) << ",";
+			std::cout << mat4(i, j) << ",";
 		}
 		std::cout << "\n";
 	}
+
+
+	std::cout << " 4 \n  \n \n  \n ";
+
+
+	using MAT2 = Layout2D<double, 2, 0>; //row order  pad/simd size = 8
+
+//auto pDat =
+	MDSpan<double, MAT2> mat2(owningVec.data(), 10, 10);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat2(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+
+
+	std::cout << "2 \n  \n \n  \n ";
+
+
+	using MAT16 = Layout2D<double, 16, 0>; //row order  pad/simd size = 8
+
+//auto pDat =
+	MDSpan<double, MAT16> mat16(owningVec.data(), 10, 10);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat16(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+	std::cout << "16 \n  \n \n  \n ";
+
+
+	////////////////////////
+
+
+	using MAT11 = Layout2D<double, 8, 1>; //row order  pad/simd size = 8
+
+//auto pDat =
+	MDSpan<double, MAT11> mat1_8(owningVec.data(), 10, 10);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat1_8(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+
+	std::cout << "col  8 \n  \n \n  \n ";
+
+
+	using MAT14 = Layout2D<double, 4, 1>; //row order  pad/simd size = 8
+
+//auto pDat =
+	MDSpan<double, MAT14> mat1_4(owningVec.data(), 10, 10);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat1_4(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+
+	std::cout << "col 4 \n  \n \n  \n ";
+
+
+	using MAT12 = Layout2D<double, 2,1>; //row order  pad/simd size = 8
+
+//auto pDat =
+	MDSpan<double, MAT12> mat1_2(owningVec.data(), 10, 10);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat1_2(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+
+
+	std::cout << "col 2 \n  \n \n  \n ";
+
+
+	using MAT116 = Layout2D<double, 16, 1>; //row order  pad/simd size = 8
+
+//auto pDat =
+	MDSpan<double, MAT116> mat116(owningVec.data(), 10, 10);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << mat116(i, j) << ",";
+		}
+		std::cout << "\n";
+	}
+
+	std::cout << "col 16 \n  \n \n  \n ";
+
+
+
+
+
+	
+	{
+
+		MDSpan<double, MAT1> mat(owningVec.data(), 10, 10);
+
+
+		for (int i = 0; i < 10; ++i)
+		{
+			for (int j = 0; j < 10; ++j)
+			{
+				mat(i, j) = i * 100 + j;
+			}
+
+		}
+
+		std::cout << "\n";
+		std::cout << "\n";
+
+		for (int i = 0; i < 10; ++i)
+		{
+			for (int j = 0; j < 10; ++j)
+			{
+				std::cout << mat(i, j) << ",";
+			}
+			std::cout << "\n";
+		}
+
+
+		Span< VecXX::INS>  spn = getSpan<VecXX::INS>(mat, 0);
+
+		std::vector<double> vdbg = spn;
+
+		Span< VecXX::INS>  spn2 = getSpan<VecXX::INS>(mat, 1);
+
+		std::vector<double> vdbg2 = spn2;
+
+		auto add = [](auto x, auto y) {return x + y; };
+		double sum = reduce(spn, add);
+
+		for (int k = 0; k < 10; k++)
+		{
+			auto  strd_spn = getStridedSpan<VecXX::INS>(mat, 1, k);
+
+			std::vector<double> vdbg_strd = strd_spn;
+
+			double sum1 = reduce(strd_spn, add);
+		}
+
+		//auto x = sum1;
+
+		// TO DO
+		//VecXX dotProductResult(0., spn.size());
+
+		//dotProductResult = transformReduce()
+
+	}
+
 
 }
 
