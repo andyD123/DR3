@@ -368,7 +368,7 @@ void transform(LAMBDA& lambda, Span<INS_VEC>& inputVec, Span<INS_VEC>& inputVec2
 	UnitarySampler<INS_VEC> identity_sampler_lhs;
 	UnitarySampler<INS_VEC> identity_sampler_rhs;
 
-	int iterate_size = std::min(inputVec.size(), inputVec2.size());
+	int iterate_size = static_cast<int>(std::min(inputVec.size(), inputVec2.size()));
 	//assert(iterate_size <= outVec.size());
 
 	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler_lhs, UnitarySampler<INS_VEC>& sampler_rhs)

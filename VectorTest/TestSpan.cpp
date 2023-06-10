@@ -946,7 +946,7 @@ TEST(TestSpan, binary_transform_simple)
 
 		SpanXX spn2(testY.begin(), SZ);
 
-		VecXX testV2(SZ, 0.0);
+		VecXX testV2(0.0, SZ);
 
 		SpanXX outSpan(testV2.begin(), SZ);
 
@@ -957,6 +957,8 @@ TEST(TestSpan, binary_transform_simple)
 
 		transform(DIV, spn1, spn2, outSpan);
 
+		std::vector<double> outDbg = outSpan;
+
 		for (int i = 1; i < spn2.size(); ++i)
 		{
 			EXPECT_NUMERIC_EQ(outSpan[i], spn1[i] / spn2[i]);
@@ -965,6 +967,100 @@ TEST(TestSpan, binary_transform_simple)
 	}
 
 }
+
+
+
+TEST(TestSpan, binary_transform_simple_with_offset)
+{
+	
+
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		for (int offset = 0; offset < SZ; offset++)
+		{
+
+			std::vector<Numeric>  v(SZ * 2, asNumber(6.66));
+			int i = 0;
+
+			for (auto& x : v) { x = asNumber(1.0 + i); ++i; }
+			const VecXX testV(v);
+
+			VecXX testY = testV * 2.0;
+			testY += 1.0;
+
+			SpanXX spn1(testV.begin() + offset, SZ);
+
+			SpanXX spn2(testY.begin() + offset, SZ);
+
+			VecXX testV2(0.0, SZ * 2);
+
+			SpanXX outSpan(testV2.begin(), SZ);
+
+			auto DIV = [](auto x, auto y) {return x / y;  };
+
+			//std::vector<double> std_vec_in = spn1;
+			//std::vector<double> std_vec_in2 = spn2;
+
+			transform(DIV, spn1, spn2, outSpan);
+
+			//std::vector<double> outDbg = outSpan;
+
+			for (int i = 1; i < spn2.size(); ++i)
+			{
+				EXPECT_NUMERIC_EQ(outSpan[i ], spn1[i ] / spn2[i ]);
+			}
+		}
+
+	}
+
+
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		//int offset = 0;
+		for (int offset = 0; offset < SZ - 5; offset++)
+		{
+			//int offset2 = 0;
+			for (int offset2 = 0; offset2 < 5; offset2++)
+			{
+
+				std::vector<Numeric>  v(SZ * 2, asNumber(6.66));
+				int i = 0;
+
+				for (auto& x : v) { x = asNumber(1.0 + i); ++i; }
+				const VecXX testV(v);
+
+				VecXX testY = testV * 2.0;
+				testY += 1.0;
+
+				SpanXX spn1(testV.begin() + offset + offset2, SZ);
+
+				SpanXX spn2(testY.begin() + offset, SZ);
+
+				VecXX testV2(0.0, SZ * 2);
+
+				SpanXX outSpan(testV2.begin(), SZ);
+
+				auto DIV = [](auto x, auto y) {return x / y;  };
+
+				std::vector<double> std_vec_in = spn1;
+				std::vector<double> std_vec_in2 = spn2;
+
+				transform(DIV, spn1, spn2, outSpan);
+
+				std::vector<double> outDbg = outSpan;
+
+				for (int i = 1; i < spn2.size(); ++i)
+				{
+					EXPECT_NUMERIC_EQ(outSpan[i], spn1[i ] / spn2[i]);
+				}
+			}
+		}
+		
+	}
+
+}
+
+
 
 
 
