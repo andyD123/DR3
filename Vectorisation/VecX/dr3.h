@@ -733,6 +733,45 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Span<INS_VE
 }
 
 
+template< typename INS_VEC, typename OP, typename OPT>
+typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Span<INS_VEC>& lhs, const Span<INS_VEC>& rhs, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	////////////////////////////////
+
+	UnitarySampler<INS_VEC> identity_sampler_lhs;
+	UnitarySampler<INS_VEC> identity_sampler_rhs;
+
+	int iterate_size = static_cast<int>(std::min(lhs.size(), rhs.size()));
+	//assert(iterate_size <= outVec.size());
+
+	//transform
+	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler_lhs, UnitarySampler<INS_VEC>& sampler_rhs)
+	{
+		INS_VEC& lhs = sampler_lhs.X_0.value;
+		INS_VEC& rhs = sampler_rhs.X_0.value;
+		return operTransform(lhs, rhs);
+	};
+
+
+	auto wrappedLambdaDirect = [&](INS_VEC& lhs, INS_VEC& rhs)
+	{
+		return operTransform(lhs, rhs);
+	};
+
+	auto accumulate_wrapper = [&](INS_VEC lhs, INS_VEC rhs)
+	{
+		return operAcc(lhs, rhs);
+	};
+
+
+	const auto& overloaded_wrappedTransformLambda = makeOverloaded<decltype(wrappedLambdaDirect), decltype(wrappedLambda)>(wrappedLambdaDirect, wrappedLambda);
+
+
+	return ApplyTransformAccumulate2UR_X_ImplBin_EX(lhs, rhs, overloaded_wrappedTransformLambda, accumulate_wrapper, identity_sampler_lhs, identity_sampler_rhs,0, iterate_size);
+}
+
+
+
 
 //////experimental unrolled  double transform accumulation
 template< typename INS_VEC, typename TF1, typename RED1,  typename TF2,  typename RED2>

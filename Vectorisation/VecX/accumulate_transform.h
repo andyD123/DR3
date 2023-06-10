@@ -1235,6 +1235,8 @@ void ApplyTransformUR_X_Impl_EX_BN(VEC_TYPE<INS_VEC>& lhs1, VEC_TYPE<INS_VEC>& r
 
 
 
+
+
 // experimental 
 template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYPE_RET,typename INS_VEC, typename OP, typename SAMPLER >
 void ApplyTransformUR_X_Impl_EX_STRD(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& ret, OP& oper, SAMPLER& sampler, int i = 0, int impSZ = -1)
@@ -1445,6 +1447,153 @@ void ApplyTransformUR_X_Impl_EX(const VEC_TYPE<INS_VEC>& rhs1,const VEC_TYPE_AUX
 	RHS1.load(pRhs1 + i + ld_offset);
 	RES = oper(RHS1, AUX1);
 	RES.store(pRet + i + SV_offset);
+
+}
+
+
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OPT, typename OP, typename SAMPLER>
+typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_ImplBin_EX(const VEC_TYPE<INS_VEC>& lhs1, const VEC_TYPE<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc,
+	SAMPLER& sampler_lhs, SAMPLER& sampler_rhs, int i = 0, int impSZ = -1)
+{
+
+	check_pair(lhs1, rhs1);
+	auto zero = InstructionTraits<INS_VEC>::nullValue;
+	//to do cover case of scalars
+//	if (isScalar(rhs1) && isScalar(lhs1))
+//	{
+//		return ApplyBinaryOperation1<INS_VEC, OP>(operTransform(lhs1.getScalarValue(), rhs1.getScalarValue()), zero, operAcc);
+//	}
+
+
+	auto pRhs1 = rhs1.start();
+	auto pLhs1 = lhs1.start();
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	int sz = rhs1.size();
+	Vec<INS_VEC> ret(sz);
+
+	SAMPLER LHS1(sampler_lhs);
+	LHS1.X_0.value = zero;
+	SAMPLER RHS1(sampler_rhs);
+	RHS1.X_0.value = zero;
+	INS_VEC RES = zero;
+
+	SAMPLER LHS2(sampler_lhs);
+	LHS2.X_0.value = zero;
+	SAMPLER RHS2(sampler_rhs);
+	RHS2.X_0.value = zero;
+	INS_VEC RES1 = zero;
+
+	SAMPLER LHS3(sampler_lhs);
+	LHS3.X_0.value = zero;
+	SAMPLER RHS3(sampler_rhs);
+	RHS3.X_0.value = zero;
+	INS_VEC RES2 = zero;
+
+	SAMPLER LHS4(sampler_lhs);
+	LHS4.X_0.value = zero;
+	SAMPLER RHS4(sampler_rhs);
+	RHS4.X_0.value = zero;
+	INS_VEC RES3 = zero;
+
+//	int i = 0;
+
+	if (sz >= step * 2)
+	{
+		//initialise first set of registers
+		{
+			RHS1.load(pRhs1 + i);
+			RHS2.load(pRhs1 + i + width);
+			RHS3.load(pRhs1 + i + width * 2);
+			RHS4.load(pRhs1 + i + width * 3);
+
+			LHS1.load(pLhs1 + i);
+			LHS2.load(pLhs1 + i + width);
+			LHS3.load(pLhs1 + i + width * 2);
+			LHS4.load(pLhs1 + i + width * 3);
+
+			RES = operTransform(LHS1, RHS1);
+			RES1 = operTransform(LHS2, RHS2);
+			RES2 = operTransform(LHS3, RHS3);
+			RES3 = operTransform(LHS4, RHS4);
+		}
+
+		i += step;
+		//int rhsSZ = rhs1.size();
+		int impSZ = rhs1.paddedSize();
+		//int rhsSZ = sz - step;
+		int rhsSZ = impSZ - step;
+
+		//for (; i <= (rhsSZ - step); i += step)
+		for (; i <= (impSZ - step); i += step)
+		{
+			LHS1.load(pLhs1 + i);
+			RHS1.load(pRhs1 + i);
+			RES = operAcc(RES, operTransform(LHS1, RHS1));
+
+			LHS2.load(pLhs1 + i + width);
+			RHS2.load(pRhs1 + i + width);
+			RES1 = operAcc(RES1, operTransform(LHS2, RHS2));
+
+			LHS3.load(pLhs1 + i + width * 2);
+			RHS3.load(pRhs1 + i + width * 2);
+			RES2 = operAcc(RES2, operTransform(LHS3, RHS3));
+
+			LHS4.load(pLhs1 + i + width * 3);
+			RHS4.load(pRhs1 + i + width * 3);
+			RES3 = operAcc(RES3, operTransform(LHS4, RHS4));
+
+		}
+
+		// odd bits
+		//for (; i <= rhsSZ - width; i += width)
+		for (; i <= impSZ - width; i += width)
+		{
+			LHS1.load(pLhs1 + i);
+			RHS1.load(pRhs1 + i);
+			RES = operAcc(RES, operTransform(LHS1, RHS1));
+		}
+
+		RES = operAcc(RES, RES1);
+		RES2 = operAcc(RES2, RES3);
+		RES = operAcc(RES, RES2);
+
+	}
+	else
+	{
+		LHS1.load(pLhs1);
+		RHS1.load(pRhs1);
+		RES = operTransform(LHS1, RHS1);
+
+		i += width;
+		// odd bits
+		for (; i <= sz - width; i += width)
+		{
+			LHS1.load(pLhs1 + i);
+			RHS1.load(pRhs1 + i);
+			RES = operAcc(RES, operTransform(LHS1, RHS1));
+		}
+
+	}
+
+	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
+	int min_wdth = std::min(sz, width);
+	//across vectors lanes  // not assuming horizontal versoion exist
+	for (int j = 1; j < min_wdth; ++j)
+	{
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], operAcc);
+	}
+
+	//end bits for vecs not filling padding
+	for (; i < rhs1.size(); ++i)
+	{
+		//need to transform before aggregate
+		typename InstructionTraits<INS_VEC>::FloatType trfmResult = operTransform(INS_VEC(pLhs1[i]), INS_VEC(pRhs1[i]))[0];
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, trfmResult, operAcc);
+	}
+	return result;
+
 
 }
 
