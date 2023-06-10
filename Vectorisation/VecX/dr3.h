@@ -361,7 +361,7 @@ void transform(LAMBDA& lambda,   Span<INS_VEC>& inputVec, Span<INS_VEC>& outVec)
 
 //////////////////// binary with overload //////////
 
-//input both should be const
+//input both should be const ?
 template<typename LAMBDA, typename INS_VEC>
 void transform(LAMBDA& lambda, Span<INS_VEC>& inputVec, Span<INS_VEC>& inputVec2, Span<INS_VEC>& outVec)
 {
@@ -378,66 +378,38 @@ void transform(LAMBDA& lambda, Span<INS_VEC>& inputVec, Span<INS_VEC>& inputVec2
 		return lambda(lhs,rhs);
 	};
 
-	//ApplyTransformUR_X_Impl_EX(inputVec, inputVec2, outVec, wrappedLambda, identity_sampler, 0, iterate_size));
-
 	ApplyTransformUR_X_Impl_EX_BN(inputVec, inputVec2, outVec, wrappedLambda, identity_sampler_lhs, identity_sampler_rhs,0, iterate_size);
-
-	
 
 }
 
-/*
+
 
 template<typename LAMBDA, typename INS_VEC>
 void transform(LAMBDA& lambda, Span<INS_VEC>& inputVec, Vec<INS_VEC>& inputVec2, Span<INS_VEC>& outVec)
 {
-	UnitarySampler<INS_VEC> identity_sampler;
-
-	int iterate_size = std::min(inputVec.size(), inputVec2.size());
-	assert(iterate_size <= outVec.size());
-
-	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler)
-	{
-		auto x = sampler.X_0.value;
-		return lambda(x);
-	};
-
-	ApplyTransformUR_X_Impl_EX(inputVec, inputVec2, outVec, wrappedLambda, identity_sampler, 0, iterate_size));
+	
+	Span<INS_VEC> spnVector(inputVec2.data(), inputVec2.size());
+	transform(lambda, inputVec, spnVector, outVec);
 
 }
 
 
 template<typename LAMBDA, typename INS_VEC>
-void transform(LAMBDA& lambda, Vec<INS_VEC>& inputVec,  Span<INS_VEC>&  inputVec2, Span<INS_VEC>& outVec)
+void transform(LAMBDA& lambda, Vec<INS_VEC>& inputVec,  Span<INS_VEC>&  inputSpan, Span<INS_VEC>& outVec)
 {
-	UnitarySampler<INS_VEC> identity_sampler;
-
-	int iterate_size = std::min(inputVec.size(), inputVec2.size());
-	assert(iterate_size <= outVec.size());
-
-	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler)
-	{
-		auto x = sampler.X_0.value;
-		return lambda(x);
-	};
-
-	ApplyTransformUR_X_Impl_EX(inputVec, inputVec2, outVec, wrappedLambda, identity_sampler, 0, iterate_size));
+	Span<INS_VEC> spnVector(inputVec.data(), inputVec.size());
+	transform(lambda, spnVector, inputSpan, outVec);
 
 }
 
-*/
 
 ///////////////////////////////////////////////////
 
-////////
 template<typename LAMBDA, typename INS_VEC>
 void transformM(LAMBDA& lambda, Span<INS_VEC>& inputOutputSpan)
 {
 	transform(lambda, inputOutputSpan, inputOutputSpan);
 }
-
-
-
 
 
 /*

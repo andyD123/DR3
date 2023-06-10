@@ -405,8 +405,6 @@ Span<INS_VEC>  getSpan(Layout2D< typename InstructionTraits<INS_VEC>::FloatType,
 template<typename INS_VEC>
 StridedSpan<INS_VEC>  getStridedSpan(Layout2D< typename InstructionTraits<INS_VEC>::FloatType, InstructionTraits<INS_VEC>::width >& layout, size_t extnt_id, size_t pos)
 {
-
-
 	return StridedSpan<INS_VEC>(layout.dataRef() + layout.getArrayPos(0,pos), layout.m_extent -pos, layout.isRowOrder ? layout.m_SimdSize : layout.m_cols);
 }
 

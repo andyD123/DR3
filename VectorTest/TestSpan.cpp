@@ -1064,6 +1064,91 @@ TEST(TestSpan, binary_transform_simple_with_offset)
 
 
 
+TEST(TestSpan, binary_transform_simple_with_vector)
+{
+
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		std::vector<Numeric>  v(SZ, asNumber(6.66));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(1.0 + i); ++i; }
+		const VecXX testV(v);
+
+		VecXX testY = testV * 2.0;
+		testY += 1.0;
+
+		SpanXX spn1(testV.begin(), SZ);
+
+		SpanXX spn2(testY.begin(), SZ);
+
+		VecXX testV2(0.0, SZ);
+
+		SpanXX outSpan(testV2.begin(), SZ);
+
+		auto DIV = [](auto x, auto y) {return x / y;  };
+
+		std::vector<double> std_vec_in = spn1;
+		std::vector<double> std_vec_in2 = spn2;
+
+		//transform(DIV, spn1, spn2, outSpan);
+		transform(DIV, spn1, testY, outSpan);
+
+		std::vector<double> outDbg = outSpan;
+
+		for (int i = 1; i < spn2.size(); ++i)
+		{
+			EXPECT_NUMERIC_EQ(outSpan[i], spn1[i] / testY[i]);
+		}
+
+	}
+
+
+	for (int SZ = 3; SZ < 125; SZ++)
+	{
+		std::vector<Numeric>  v(SZ, asNumber(6.66));
+		int i = 0;
+
+		for (auto& x : v) { x = asNumber(1.0 + i); ++i; }
+		const VecXX testV(v);
+
+		VecXX testY = testV * 2.0;
+		testY += 1.0;
+
+		SpanXX spn2(testY.begin(), SZ);
+
+		VecXX testV2(0.0, SZ);
+
+		SpanXX outSpan(testV2.begin(), SZ);
+
+		auto DIV = [](auto x, auto y) {return x / y;  };
+
+		std::vector<double> std_vec_in = testY;
+		std::vector<double> std_vec_in2 = spn2;
+
+		transform(DIV, testY, spn2, outSpan);
+		
+		std::vector<double> outDbg = outSpan;
+
+		for (int i = 1; i < spn2.size(); ++i)
+		{
+			EXPECT_NUMERIC_EQ(outSpan[i], testY[i] / spn2[i]);
+		}
+
+		// check that its also  written to testV2
+		for (int i = 1; i < spn2.size(); ++i)
+		{
+			EXPECT_NUMERIC_EQ(testV2[i], testY[i] / spn2[i]);
+		}
+
+	}
+
+
+}
+
+
+
+
 
 
 TEST(TestSpan, basic_2D_SPAN)
