@@ -379,19 +379,11 @@ TEST(TestSpan, transform_reduce)
 
 TEST(TestSpan, transform_reduce_binary)
 {
-	//int SZ = 65;
-	//for (int SZ = 3; SZ < 125; SZ++)
-	//for (int SZ = 3; SZ < 65; SZ++)
-	//for (int SZ = 3; SZ < 35; SZ++)
-//	for (int SZ = 25; SZ < 30; SZ++)
-	//for (int SZ = 17; SZ < 25; SZ++)
-	//for (int SZ = 3; SZ < 17; SZ++) // OK
-	for (int SZ = 32; SZ < 33; SZ++)
-	//for (int SZ = 3; SZ < 30; SZ++)
+	
+	for (int SZ = 3; SZ < 125; SZ++)
 	{
 		std::vector<Numeric>  v(SZ, asNumber(6.66));
 		int i = 0;
-
 		for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
 		const VecXX testV(v);
 
@@ -405,15 +397,46 @@ TEST(TestSpan, transform_reduce_binary)
 		auto result = transformReduce(testSpan, testSpan2, MULT, SUM);
 		double expected = 0.;
 
-
 		for (int i = 0; i < SZ; ++i)
 		{
-			expected += testSpan[i] * testSpan2[i];
+			expected += testV[i] * testV[i];
 		}
 
 		EXPECT_NUMERIC_EQ(expected, result);
 
 	}
+
+	// with offsets
+	for (int offset = 0; offset < 20; ++offset)
+	{
+		for (int SZ = 3; SZ < 125; SZ++)
+		{
+			std::vector<Numeric>  v(SZ+30, asNumber(6.66));
+			int i = 0;
+			for (auto& x : v) { x = asNumber(0.0 + i); ++i; }
+			const VecXX testV(v);
+
+			SpanXX testSpan(testV.begin()+ offset, SZ);
+
+			SpanXX testSpan2(testV.begin(), SZ);
+
+			auto SUM = [](auto x, auto y) { return x + y; };
+			auto MULT = [](auto x, auto y) { return x * y; };
+
+			auto result = transformReduce(testSpan, testSpan2, MULT, SUM);
+			double expected = 0.;
+
+			for (int i = 0; i < SZ; ++i)
+			{
+				expected += testV[i+ offset] * testV[i];
+			}
+
+			EXPECT_NUMERIC_EQ(expected, result);
+
+		}
+	}
+
+
 
 }
 

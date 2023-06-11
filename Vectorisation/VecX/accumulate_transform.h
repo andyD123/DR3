@@ -1453,7 +1453,7 @@ void ApplyTransformUR_X_Impl_EX(const VEC_TYPE<INS_VEC>& rhs1,const VEC_TYPE_AUX
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OPT, typename OP, typename SAMPLER>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_ImplBin_EX(const VEC_TYPE<INS_VEC>& lhs1, const VEC_TYPE<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc,
-	SAMPLER& sampler_lhs, SAMPLER& sampler_rhs, int i = 0, int impSZ = -1)
+	SAMPLER sampler_lhs, SAMPLER sampler_rhs, int i = 0, int impSZ = -1)
 {
 
 	check_pair(lhs1, rhs1);
@@ -1473,27 +1473,27 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 	int sz = rhs1.size();
 	Vec<INS_VEC> ret(sz);
 
-	SAMPLER LHS1(sampler_lhs);
+	SAMPLER LHS1;// (sampler_lhs);
 	LHS1.X_0.value = zero;
-	SAMPLER RHS1(sampler_rhs);
+	SAMPLER RHS1;// (sampler_rhs);
 	RHS1.X_0.value = zero;
 	INS_VEC RES = zero;
 
-	SAMPLER LHS2(sampler_lhs);
+	SAMPLER LHS2;// (sampler_lhs);
 	LHS2.X_0.value = zero;
-	SAMPLER RHS2(sampler_rhs);
+	SAMPLER RHS2;// (sampler_rhs);
 	RHS2.X_0.value = zero;
 	INS_VEC RES1 = zero;
 
-	SAMPLER LHS3(sampler_lhs);
+	SAMPLER LHS3;// (sampler_lhs);
 	LHS3.X_0.value = zero;
-	SAMPLER RHS3(sampler_rhs);
+	SAMPLER RHS3;// (sampler_rhs);
 	RHS3.X_0.value = zero;
 	INS_VEC RES2 = zero;
 
-	SAMPLER LHS4(sampler_lhs);
+	SAMPLER LHS4;// (sampler_lhs);
 	LHS4.X_0.value = zero;
-	SAMPLER RHS4(sampler_rhs);
+	SAMPLER RHS4;// (sampler_rhs);
 	RHS4.X_0.value = zero;
 	INS_VEC RES3 = zero;
 

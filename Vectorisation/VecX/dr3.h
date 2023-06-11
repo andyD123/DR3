@@ -745,10 +745,10 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Span<INS_VE
 	//assert(iterate_size <= outVec.size());
 
 	//transform
-	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler_lhs, UnitarySampler<INS_VEC>& sampler_rhs)
+	auto wrappedLambda = [&](UnitarySampler<INS_VEC> sampler_lhs, UnitarySampler<INS_VEC> sampler_rhs)
 	{
-		INS_VEC& lhs = sampler_lhs.X_0.value;
-		INS_VEC& rhs = sampler_rhs.X_0.value;
+		INS_VEC lhs = sampler_lhs.X_0.value;
+		INS_VEC rhs = sampler_rhs.X_0.value;
 		return operTransform(lhs, rhs);
 	};
 
