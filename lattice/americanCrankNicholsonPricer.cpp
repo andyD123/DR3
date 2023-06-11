@@ -1,12 +1,4 @@
 #include "../Vectorisation/VecX/dr3.h"
-#include "../Vectorisation/VecX/accumulate_transform.h"
-#include "../Vectorisation/VecX/error_utils.h"
-
-
-#include "../Vectorisation/VecX/zip_utils.h"
-#include "../Vectorisation/VecX/span.h"
-
-
 #include "utils.h"
 #include "pricers.h"
 

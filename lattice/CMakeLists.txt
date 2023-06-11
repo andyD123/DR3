@@ -1,6 +1,7 @@
 add_executable(lattice lattice.cpp
   americanCrankNicholsonPricer.cpp
   americanFinitDiffPricer.cpp
+  americanImplicitFiniteDiff.cpp
   americanTrinomialPricer.cpp
   americanTrinomialPricerUpAndOut.cpp
   europeanBinomialPricer.cpp
