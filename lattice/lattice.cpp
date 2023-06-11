@@ -31,7 +31,7 @@
 
 /*
 * 
-Some initial implementations of  lattice models taken from the psudo code in clewlow and strickland
+Some initial implementations of  lattice models taken from the pseudo code in clewlow and strickland
 https://www.amazon.co.uk/Implementing-Derivative-Models-Clewlow-1998-04-29/dp/B01K0S2UMC/ref=sr_1_1?crid=1X6ARB2YR7JAG&keywords=strickland+and+clewlow&qid=1685036394&sprefix=stricklamd+and+clewlow%2Caps%2C57&sr=8-1
 
 to see how easy to code up with SIMD lambdas 
@@ -39,7 +39,7 @@ to see how easy to code up with SIMD lambdas
 Sampler makes it easy to vectorise offset relationships  eg f ( X[i], x[i+1]) )
 
 There is a need for iterating over multiple vexx  quantities at the same time so we need to introduce
-so sort of zip iteration
+some sort of zip iteration
 
 
 We need a vectorised scan function  or something similar to achieve some sort of  vectorisation in tri diagonal solvers
@@ -109,17 +109,14 @@ void doBinomialPricer()
 	double vol = 0.2;
 	double rate = 0.06;
 	double T = 1;
+    int N = 30000;
 	{
 		TimerGuard timer(time);
-
-		int N = 30000;
-
 		res = europeanBinomialPricer(S, K, vol, rate, T, N);
-
 	}
 	auto expected = blackScholes(S, K, T, rate, vol);
-	std::cout << std::setprecision(12) << "binomial price " << res << "expected =" <<   expected.getScalarValue()  << "\n";
-	std::cout << " takes secs" << time << "\n";
+	std::cout << std::setprecision(12) << "binomial price " << res << " expected = " <<   expected.getScalarValue()  ;
+	std::cout << "steps = "<< N  <<"  takes secs " << time << "\n";
 }
 
 
@@ -128,22 +125,23 @@ void doTrinomialPricer()
 
 	double res = 0.0;
 	double time = 0;
-	{
-		TimerGuard timer(time);
 
-		double S = 100.;
-		double K = 100.;
-		double vol = 0.2;
-		double rate = 0.06;
-		double T = 1;
-		int N = 60000;// 500;
-		//res = americanTrinomialPricer(S, K, vol, rate, T, N);
-		res = europeanTrinomialPricer1(S, K, vol, rate, T, N);
+    double S = 100.;
+    double K = 100.;
+    double vol = 0.2;
+    double rate = 0.06;
+    double T = 1;
+    int N = 60000;// 500;
+    {
+        TimerGuard timer(time);
 
+        //res = americanTrinomialPricer(S, K, vol, rate, T, N);
+        res = europeanTrinomialPricer1(S, K, vol, rate, T, N);
+    }
 
-	}
-	std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << "trinomial takes secs" << time << "\n";
+    auto expected = blackScholes(S, K, T, rate, vol);
+    std::cout << std::setprecision(12) << "trinomial price " << res << " expected = " <<   expected.getScalarValue()  ;
+    std::cout << "steps = "<< N  <<"  takes secs " << time << "\n";
 }
 
 
@@ -151,22 +149,21 @@ void doAmericanFiniteDiff()
 {
 	double time = 0;
 	double res = 0.0;
-	{
-		TimerGuard timer(time);
 
-		std::cout << std::setprecision(12) << " start \n";
-		double S = 100.;
-		double K = 100.;
-		double vol = 0.2;
-		double rate = 0.06;
-		double T = 1;
-		int N = 60000;
+    double S = 100.;
+    double K = 100.;
+    double vol = 0.2;
+    double rate = 0.06;
+    double T = 1;
+    int N = 60000;
+    {
+        TimerGuard timer(time);
 		res = americanFiniteDiffPricer(S, K, vol, rate, T, N);
-
-
 	}
-	std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << "finite dif takes secs" << time << "\n";
+
+    auto expected = blackScholes(S, K, T, rate, vol);
+    std::cout << std::setprecision(12) << "americanFiniteDiff price " << res << " expected = " <<   expected.getScalarValue()  ;
+    std::cout << "steps = "<< N  <<" takes secs " << time << "\n";
 }
 
 
@@ -174,21 +171,19 @@ void doAmericanImplicitFiniteDiff()
 {
 	double time = 0;
 	double res = 0.0;
-	{
-		TimerGuard timer(time);
-
-		std::cout << std::setprecision(12) << " start \n";
-		double S = 100.;
-		double K = 100.;
-		double vol = 0.2;
-		double rate = 0.06;
-		double T = 1;
-		int N = 30000;
-		//res = americanImplicitFiniteDiffPricer(S, K, vol, rate, T, N);		
-		res = americanImplicitFiniteDiffPricerFast(S, K, vol, rate, T, N);
+    double S = 100.;
+    double K = 100.;
+    double vol = 0.2;
+    double rate = 0.06;
+    double T = 1;
+    int N = 30000;
+    {
+        TimerGuard timer(time);
+        res = americanImplicitFiniteDiffPricerFast(S, K, vol, rate, T, N);
 	}
-	std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << "americanImplicitFiniteDiffPricerFast takes secs" << time << "\n";
+    auto expected = blackScholes(S, K, T, rate, vol);
+    std::cout << std::setprecision(12) << "americanImplicitFiniteDiffPricer price " << res << " expected = " <<   expected.getScalarValue()  ;
+    std::cout << "steps = "<< N  <<" takes secs " << time << "\n";
 }
 
 
@@ -196,20 +191,22 @@ void doAmericanCrankNicholson()
 {
 	double time = 0;
 	double res = 0.0;
-	{
-		TimerGuard timer(time);
-
-		std::cout << std::setprecision(12) << " start \n";
-		double S = 100.;
-		double K = 100.;
-		double vol = 0.2;
-		double rate = 0.06;
-		double T = 1;
-		int N = 10000;
+    double S = 100.;
+    double K = 100.;
+    double vol = 0.2;
+    double rate = 0.06;
+    double T = 1;
+    int N = 10000;
+    {
+        TimerGuard timer(time);
 		res = americanCrankNicholsonPricer(S, K, vol, rate, T, N);
 	}
-	std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << " takes secs" << time << "\n";
+
+    auto expected = blackScholes(S, K, T, rate, vol);
+    std::cout << std::setprecision(12) << "americanCrankNicholsonPricer price " << res << " expected = " <<   expected.getScalarValue()  ;
+    std::cout << "steps = "<< N  <<" takes secs " << time << "\n";
+
+
 }
 
 void doAmericanTrinomialPricerUpAndOut()
@@ -217,99 +214,65 @@ void doAmericanTrinomialPricerUpAndOut()
 
 	double res = 0.0;
 	double time = 0;
-	{
-		TimerGuard timer(time);
-
-		double S = 100.;
-		double K = 100.;
-		double vol = 0.2;
-		double rate = 0.06;
-		double T = 1;
-		int N = 1000;// 500;
-		double H = 3.;
-		double rebate = 0.0;
+    double S = 100.;
+    double K = 100.;
+    double vol = 0.2;
+    double rate = 0.06;
+    double T = 1;
+    int N = 1000;// 500;
+    double H = 3.;
+    double rebate = 0.0;
+    {
+        TimerGuard timer(time);
 		res = americanTrinomialPricerUpAndOut(S, K, vol, rate, T, H, rebate, N);
-
-
 	}
-	std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << " takes secs" << time << "\n";
+    auto expected = blackScholes(S, K, T, rate, vol);
+    std::cout << std::setprecision(12) << "americanTrinomialPricerUpAndOut price " << res << " expected = " <<   expected.getScalarValue()  ;
+    std::cout << "steps = "<< N  <<" takes secs " << time << "\n";
 }
 
 
 void doTrinomialPricerWithInit()
 {
-
-	//warm up
 	double res = 0.0;
-	{
-		{
-			double S = 100.;
-			double K = 100.;
-			double vol = 0.2;
-			double rate = 0.06;
-			double T = 1;
-			int N = 300;// 500;
-
-			for (int k = 0; k < 100; k++)
-			{
-				res = euroTrinomialPricerWithInit(S, K, vol, rate, T, N);
-			}
-		}
-	}
-
-
-	//double res = 0.0;
 	double time = 0;
-
-
 	double S = 100.;
 	double K = 100.;
 	double vol = 0.2;
 	double rate = 0.06;
 	double T = 1;
 
-	{
-		TimerGuard timer(time);
+    int N = 3000;// 500;
 
+    for (int k = 0; k < 100; k++)
+    {
+        TimerGuard timer(time);
+        res = euroTrinomialPricerWithInit(S, K, vol, rate, T, N);
+    }
 
-		int N = 3000;// 500;
-
-		for (int k = 0; k < 100; k++)
-		{
-			res = euroTrinomialPricerWithInit(S, K, vol, rate, T, N);
-		}
-	}
-
-	auto expected = blackScholes(S, K, T, rate, vol);
-	std::cout << std::setprecision(12) << "price " << res << "   expected =" << expected.getScalarValue() << "\n";
-
-	//std::cout << std::setprecision(12) << "price " << res << "\n";
-	std::cout << " takes secs" << time << "\n";
+    auto expected = blackScholes(S, K, T, rate, vol);
+    std::cout << std::setprecision(12) << "euroTrinomialPricerWithInit price " << res << " expected = " <<   expected.getScalarValue()  ;
+    std::cout << "steps = "<< N  <<" takes secs " << time << "\n";
 }
 
 
 int main()
 {
-	//return 0;
-/*
 	doBinomialPricer();
-	//	return 0;
+
 	doTrinomialPricer();
-	//return 0;
+
 	doAmericanFiniteDiff();
 
 	doTrinomialPricerWithInit();
-	//return 0;  
 
 	doAmericanImplicitFiniteDiff();
-	//return 0;
 
 	doAmericanCrankNicholson();
-	//return 0;
 
 	doAmericanTrinomialPricerUpAndOut();
 
+    /*
 	//lattice bits
 	doZipping();
 
@@ -318,13 +281,11 @@ int main()
 	doTransformWithASpan();
 
 	doStridedSpan();
-*/
+
 	doMatrix();
+*/
 	return 0;
 	
-
-
-
 	//
 
 }
