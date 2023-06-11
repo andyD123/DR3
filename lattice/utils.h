@@ -208,7 +208,7 @@ public:
 };
 
 
-auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
+static auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
 {
 
 	RunResults results;
@@ -232,7 +232,7 @@ auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int 
 };
 
 
-auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
+static auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
 {
 
 	RunResultsVec results;
@@ -260,7 +260,7 @@ auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, i
 
 
 
-auto performanceStats = [](const Mapped_Performance_Results& raw_results)
+static auto performanceStats = [](const Mapped_Performance_Results& raw_results)
 {
 
 	Mapped_Stats stats;
