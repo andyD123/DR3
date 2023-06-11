@@ -1,4 +1,13 @@
-add_executable(lattice lattice.cpp)
+add_executable(lattice lattice.cpp
+  americanCrankNicholsonPricer.cpp
+  americanFinitDiffPricer.cpp
+  americanTrinomialPricer.cpp
+  americanTrinomialPricerUpAndOut.cpp
+  europeanBinomialPricer.cpp
+  euroTrinomial.cpp
+  euroTrinomialPricerWithInit.cpp
+  lattice_tools.cpp
+  )
 
 target_link_libraries(lattice PUBLIC Vectorisation)
 
