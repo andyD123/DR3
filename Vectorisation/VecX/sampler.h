@@ -54,6 +54,23 @@ struct TrinomialSampler :public std::tuple< RegisterElement< INS_VEC, X_Minus1,f
 
 	}
 
+
+
+	TrinomialSampler(const TrinomialSampler& other) :
+		std::tuple< RegisterElement< INS_VEC, X_Minus1, false>,
+		RegisterElement< INS_VEC, X0, false>,
+		RegisterElement< INS_VEC, X1, false> >(other),
+		X_1(std::get<2>(*this)),
+		X_0(std::get<1>(*this)),
+		X_Minus_1(std::get<0>(*this))
+	{
+
+	}
+
+	TrinomialSampler(TrinomialSampler&& other) = delete;
+	TrinomialSampler& operator=(TrinomialSampler&& other) = delete;
+	TrinomialSampler& operator=(TrinomialSampler& other) = delete;
+
 	enum class  DIR { DOWN = 0, MID = 1, UP = 2 };
 
 	inline void load(Float* pData)
@@ -97,6 +114,21 @@ struct BinomialSampler :public std::tuple<
 	{
 	}
 
+
+	BinomialSampler(const BinomialSampler& other) :
+		std::tuple< 		RegisterElement< INS_VEC, X0, false>,
+							RegisterElement< INS_VEC, X1, false> >(other),
+		X_1(std::get<1>(*this)),
+		X_0(std::get<0>(*this))
+	{
+
+	}
+
+	BinomialSampler(BinomialSampler&& other) = delete;
+	BinomialSampler& operator=(BinomialSampler&& other) = delete;
+	BinomialSampler& operator=(BinomialSampler& other) = delete;
+
+
 	inline void load(Float* pData)
 	{
 		X_1.load_u(pData);
@@ -123,6 +155,18 @@ struct UnitarySampler : public std::tuple< RegisterElement< INS_VEC, X0, false> 
 	{
 
 	}
+
+	UnitarySampler(const UnitarySampler& other) :
+		std::tuple< RegisterElement< INS_VEC, X0, false>  >(other),
+		X_0(std::get<0>(*this))
+	{
+
+	}
+
+	UnitarySampler(UnitarySampler&& other) = delete;
+	UnitarySampler& operator=(UnitarySampler&& other) = delete;
+	UnitarySampler& operator=(UnitarySampler& other) = delete;
+
 
 
 	inline void load(Float* pData)
@@ -152,7 +196,10 @@ struct Convertable : public  UnitarySampler<INS_VEC, 0>
 
 };
 
-
+/*
+* lambda overload utilities
+* 
+ */
 template <typename CALL_1, typename CALL_2>
 struct Overloaded :public CALL_1,  CALL_2
 {
@@ -169,7 +216,7 @@ Overloaded< CALL_1,  CALL_2> makeOverloaded(CALL_1& c1,  CALL_2& c2)
 {
 	return Overloaded< CALL_1, CALL_2>(c1, c2);
 };
-
+//////////////////////////////////
 
 
 /*
@@ -195,6 +242,20 @@ struct StridedSampler : public std::tuple< RegisterElement< INS_VEC, X0, false> 
 	{
 		return m_stride;
 	}
+
+
+
+	StridedSampler(const StridedSampler& other) :
+		std::tuple< RegisterElement< INS_VEC, X0, false>  >(other),
+		X_0(std::get<0>(*this)), m_stride(other.m_stride), step(other.step)
+	{
+
+	}
+
+	StridedSampler(StridedSampler&& other) = delete;
+	StridedSampler& operator=(StridedSampler&& other) = delete;
+	StridedSampler& operator=(StridedSampler& other) = delete;
+
 
 
 	explicit StridedSampler(size_t stride) : X_0(std::get<0>(*this)),m_stride(stride), step(static_cast<int>(m_stride))
