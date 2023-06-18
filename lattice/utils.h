@@ -17,9 +17,9 @@
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-//using namespace DRC::VecD4D;	//avx2   double
+using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-using namespace DRC::VecD8D;  //avx512 double
+//using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
 
 using FLOAT = typename InstructionTraits<VecXX::INS>::FloatType;
@@ -62,6 +62,7 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 
 }
 
+/*
 
 static double getErr(const  std::vector<double>& t)
 {
@@ -75,7 +76,7 @@ static float getErr(const  std::vector<float>& t)
 	ignore(t);
 	return 1.0;
 }
-
+*/
 
 template<typename T>
 bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3, const std::vector<T>& input, T ERR = 1e-13)
@@ -117,6 +118,7 @@ bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std
 
 }
 
+/*
 static bool valuesAreEqual(double x, double y, double tol = 1e-14)
 {
 
@@ -124,6 +126,7 @@ static bool valuesAreEqual(double x, double y, double tol = 1e-14)
 
 	return (err1 > tol) ? false : true;
 }
+*/
 
 
 static auto getRandomShuffledVector(int SZ, int instance_number = 0)
@@ -151,7 +154,7 @@ static auto getRandomShuffledVector(int SZ, int instance_number = 0)
 	else
 	{
 		std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
-		for (int i = 0; i < SZ; i++) { v[i] += /*FloatType(SZ / 2)*/ +i; }
+		for (int i = 0; i < SZ; i++) { v[i] +=  i; }
 		std::random_device rd;
 		std::mt19937 g(rd());
 		std::shuffle(begin(v), end(v), g);
@@ -169,10 +172,12 @@ static auto getRandomShuffledVector(int SZ, int instance_number = 0)
 static auto numOps = [](int TEST_LOOP_SZ, int SZ) { return  static_cast<int>(double(TEST_LOOP_SZ) * double(SZ)); };
 
 
+/*
 static double getnull(double)
 {
 	return 0.0;
 }
+*/
 
 using Calc_Values = std::map<int, FLOAT>;
 using Calc_Values_V = std::map<int, std::vector<FLOAT> >;

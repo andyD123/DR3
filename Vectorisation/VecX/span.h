@@ -393,19 +393,18 @@ private:
 
 
 
-
-template<typename INS_VEC>
-Span<INS_VEC>  getSpan(Layout2D< typename InstructionTraits<INS_VEC>::FloatType, InstructionTraits<INS_VEC>::width >& layout, size_t pos)
+template<typename INS_VEC, size_t SIMD_SZ = InstructionTraits<INS_VEC>::width, size_t EXTENT = 0>
+StridedSpan<INS_VEC>  getStridedSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType,   Layout2D< typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout, size_t  extent, size_t pos)
 {
-	return Span<INS_VEC>(layout.dataRef() + layout.getArrayPos(pos,0), layout.isRowOrder? layout.m_rows : layout.m_cols);
+	return StridedSpan<INS_VEC>(layout.dataRef() + layout.getArrayPos(0, pos), layout.m_extent - pos, layout.isRowOrder ? layout.m_SimdSize : layout.m_cols);
 }
 
 
 
-template<typename INS_VEC>
-StridedSpan<INS_VEC>  getStridedSpan(Layout2D< typename InstructionTraits<INS_VEC>::FloatType, InstructionTraits<INS_VEC>::width >& layout, size_t extnt_id, size_t pos)
+template<typename INS_VEC,size_t SIMD_SZ = InstructionTraits<INS_VEC>::width,size_t EXTENT =0>
+Span<INS_VEC>  getSpan( MDSpan<typename InstructionTraits<INS_VEC>::FloatType,   Layout2D< typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout, size_t pos)
 {
-	return StridedSpan<INS_VEC>(layout.dataRef() + layout.getArrayPos(0,pos), layout.m_extent -pos, layout.isRowOrder ? layout.m_SimdSize : layout.m_cols);
+	return Span<INS_VEC>(layout.dataRef() + layout.getArrayPos(pos, 0), layout.isRowOrder ? layout.m_rows : layout.m_cols);
 }
 
 
