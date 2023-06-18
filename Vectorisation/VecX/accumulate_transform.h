@@ -491,6 +491,158 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 }
 
 
+
+
+
+
+
+
+
+//experimental pairwise unrolled version  avx512
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(const VEC_TYPE<INS_VEC>& rhs1, OP& oper)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
+	{
+		return rhs1.getScalarValue();
+	}
+
+	long sz = static_cast<long>(rhs1.size());
+	auto pRhs = rhs1.start();
+	const long width = InstructionTraits<INS_VEC>::width;
+
+	using Float = typename InstructionTraits<INS_VEC>::FloatType;
+
+	long step = 4 * width;
+
+	INS_VEC RHS0;
+	INS_VEC RES0;
+
+	INS_VEC RHS1;
+	INS_VEC RES1;
+
+	INS_VEC RHS2;
+	INS_VEC RES2;
+
+	INS_VEC RHS3;
+	
+	
+	auto accum_4 = [&](Float* pRhs1, size_t extent)
+	{
+		if (extent = 4 * width)
+		{
+			RHS0.load_a(pRhs1 );
+			RHS1.load_a(pRhs1 + width);
+			RHS2.load_a(pRhs1 + width * 2);
+			RHS3.load_a(pRhs1 + width * 3);
+
+			RES0 = oper(RHS0, RHS1);
+			RES1 = oper(RHS2, RHS3);
+
+			RES2 = oper(RES0, RES1);
+			return RES2;
+
+		}
+		else if (extent = 2 * width)
+		{
+			RHS0.load_a(pRhs1 );
+			RHS1.load_a(pRhs1  + width);
+
+			RES0 = oper(RHS0, RHS1);
+			
+			return RES0;
+		}
+		
+		//else if (extent = width)
+		//{
+		//	INS_VEC AGG = 0.0;
+		//	INS_VEC RES = scan8(pRhs1, AGG, oper);
+		//	return RES;
+		//}
+		
+	};
+
+	/*
+	INS_VEC val = accum_recurse(pRhs, sz, accum_recurse);
+	INS_VEC AGG = 0.0;
+	INS_VEC RES = scan8(val, AGG, oper);
+	return RES[7];
+	*/
+
+    
+	INS_VEC ZERO = 0.0;//
+	INS_VEC val = 0.0;
+
+	INS_VEC RES = 0.0;
+
+	size_t working_Size = sz;
+
+	size_t RemainSZ = 31;
+	size_t remainder = working_Size & RemainSZ;
+
+	while (remainder >= InstructionTraits< INS_VEC>::width)
+	{ 	
+		val.load(pRhs);
+		RES = oper(RES, val);
+
+		remainder -= InstructionTraits< INS_VEC>::width;
+		pRhs+= InstructionTraits< INS_VEC>::width;
+	}
+
+	auto whole_reg_sum = scanN(RES, ZERO, oper)[InstructionTraits< INS_VEC>::width - 1];
+
+	
+	//RES += val;
+	if (remainder > 0)
+	{	
+		val = 0.0;
+		val.load_partial(remainder, pRhs);
+		INS_VEC ZERO = 0.0;
+		RES = scanN(val, ZERO, oper);
+		whole_reg_sum += RES[remainder];
+		pRhs += remainder;
+	}
+
+
+	
+	auto accum_recurse = [&](Float* pRhs1, size_t extent, auto&& self)
+	{
+		if (extent == 4 * width)
+		{
+			return  accum_4(pRhs1, extent);
+		}
+
+		// split  maybe use << for division and bitwise  for size test
+		INS_VEC LHS2 = self(pRhs1, extent / 2, self);
+		INS_VEC RHS2 = self(pRhs1 + extent / 2, extent / 2, self);
+		return oper(LHS2, RHS2);
+
+	};
+
+
+	//working_Size
+	INS_VEC  accumulations_of_all_blocks = 0.0;
+	size_t current_block_SZ = RemainSZ + 1;
+	while (working_Size >= current_block_SZ)
+	{
+
+		if (working_Size & current_block_SZ)
+		{
+			accumulations_of_all_blocks += accum_recurse(pRhs, current_block_SZ, accum_recurse);
+		}
+
+		current_block_SZ *= 2;
+	}
+
+	auto accum_over_all_blocks = scanN(accumulations_of_all_blocks, ZERO, oper)[InstructionTraits< INS_VEC>::width - 1];
+
+	return accum_over_all_blocks + whole_reg_sum;
+
+}
+
+
+
 template< typename INS_VEC,  typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate(const Vec<INS_VEC>& rhs1, OPT& operTransform,  OP& operAcc,  typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
@@ -521,6 +673,15 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulateUR(const 
 	int sz = rhs1.size();
 	return  Unroll_TransformAccumulate<INS_VEC, OP, OPT>::apply_4(sz, pRhs, operAcc, operTransform, initVal, singularInit);
 }
+
+
+
+
+
+
+
+
+
 
 
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OPT, typename OP>
@@ -800,6 +961,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 
 
 }
+
+
 
 
 template< typename INS_VEC, typename OPT, typename OP>
