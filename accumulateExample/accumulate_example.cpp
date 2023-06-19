@@ -1234,6 +1234,44 @@ void khanAccumulation()
 
 
 
+	auto DR3_pairwise_reduce = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double relative_error = 0.;
+	//	auto NULL_Vec = VecXX::INS(0.0);
+	//	const auto zero = InstructionTraits<VecXX::INS>::nullValue;
+		//lambdas
+
+		auto sum_it = [](auto x, auto y) { return x + y; };
+
+
+		double time = 0.;
+		volatile  double res = 0.;
+		VecXX t1(VecXX::scalar(1.0 / 6.0), VEC_SZ);
+
+		//warm up
+		for (long l = 0; l < 100; l++)
+		{				
+			res = ApplyAccumulate2UR_X_pairwise(t1, sum_it);
+		}
+
+
+		{   TimerGuard timer(time);
+
+			for (long l = 0; l < TEST_LOOP_SZ; l++)
+			{
+				res = ApplyAccumulate2UR_X_pairwise(t1, sum_it);
+			}
+		}
+
+		relative_error = (VEC_SZ / 6. - res) / res;
+		return std::make_pair(relative_error, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+
+	};
+
+
+
+
+
 	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_run, TEST_LOOP_SZ);
 	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
 
@@ -1242,12 +1280,20 @@ void khanAccumulation()
 	auto stats_DR3_inner_prod = performanceStats(dr3_raw_results.m_raw_results);
 
 
+	auto dr3_pairwise_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_pairwise_reduce, TEST_LOOP_SZ);
+	auto stats_DR3_pairwise  = performanceStats(dr3_pairwise_raw_results.m_raw_results);
+
+
+
+
 	//print out results
 	for (const auto& elem : stats_inner_prod)
 	{
+		auto  valDr3_pair_wise = dr3_pairwise_raw_results.m_calc_results[elem.first];
 		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
 		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
-		std::cout << "STL accumulate , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second <<"relative err"<< valStl << "\t \t DR3 khan accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second << ", relative err " << valDr3 << "\n";
+		std::cout << "STL accumulate , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "relative err" << valStl << "\t \t DR3 khan accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second << ", relative err " << valDr3;//  \\ << \\ "\n";
+		std::cout  << "\t \t DR3 pairwise accumulate , size " << elem.first << " , " << stats_DR3_pairwise[elem.first].first << ", +- ," << stats_DR3_pairwise[elem.first].second << ", relative err " << valDr3_pair_wise << "\n";
 	}
 
 

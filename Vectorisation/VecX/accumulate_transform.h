@@ -514,8 +514,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 
 	using Float = typename InstructionTraits<INS_VEC>::FloatType;
 
-	long step = 4 * width;
-
+	
 	INS_VEC RHS0;
 	INS_VEC RES0;
 
@@ -526,52 +525,109 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 	INS_VEC RES2;
 
 	INS_VEC RHS3;
-	
-	
-	auto accum_4 = [&](Float* pRhs1, size_t extent)
+
+
+	auto accum_8 = [&](Float* pRhs1)
 	{
-		if (extent = 4 * width)
-		{
-			RHS0.load_a(pRhs1 );
-			RHS1.load_a(pRhs1 + width);
-			RHS2.load_a(pRhs1 + width * 2);
-			RHS3.load_a(pRhs1 + width * 3);
 
-			RES0 = oper(RHS0, RHS1);
-			RES1 = oper(RHS2, RHS3);
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
 
-			RES2 = oper(RES0, RES1);
-			return RES2;
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
 
-		}
-		else if (extent = 2 * width)
-		{
-			RHS0.load_a(pRhs1 );
-			RHS1.load_a(pRhs1  + width);
+		INS_VEC RES = oper(RES0, RES1);
 
-			RES0 = oper(RHS0, RHS1);
-			
-			return RES0;
-		}
-		
-		//else if (extent = width)
-		//{
-		//	INS_VEC AGG = 0.0;
-		//	INS_VEC RES = scan8(pRhs1, AGG, oper);
-		//	return RES;
-		//}
-		
+		RHS0.load_a(pRhs1 + width * 4);
+		RHS1.load_a(pRhs1 + width *5);
+		RHS2.load_a(pRhs1 + width * 6);
+		RHS3.load_a(pRhs1 + width * 7);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+
+		return oper(RES , oper(RES0,RES1));
+	
 	};
 
-	/*
-	INS_VEC val = accum_recurse(pRhs, sz, accum_recurse);
-	INS_VEC AGG = 0.0;
-	INS_VEC RES = scan8(val, AGG, oper);
-	return RES[7];
-	*/
+
+
+	auto accum_16 = [&](Float* pRhs1)
+	{
+
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+		INS_VEC RES = oper(RES0, RES1);
+
+		RHS0.load_a(pRhs1 + width * 4);
+		RHS1.load_a(pRhs1 + width * 5);
+		RHS2.load_a(pRhs1 + width * 6);
+		RHS3.load_a(pRhs1 + width * 7);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+		RES =  oper(RES, oper(RES0, RES1));
+
+
+		RHS0.load_a(pRhs1 + width * 8);
+		RHS1.load_a(pRhs1 + width * 9);
+		RHS2.load_a(pRhs1 + width * 10);
+		RHS3.load_a(pRhs1 + width * 11);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+		INS_VEC RES_T =  oper(RES0, RES1);
+
+		RHS0.load_a(pRhs1 + width * 12);
+		RHS1.load_a(pRhs1 + width * 13);
+		RHS2.load_a(pRhs1 + width * 14);
+		RHS3.load_a(pRhs1 + width * 15);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+		RES_T = oper(RES_T, oper(RES0, RES1));
+
+		return oper(RES, RES_T);
+	};
+
+
+	
+	
+	auto accum_4 = [&](Float* pRhs1)
+	{
+		
+		RHS0.load_a(pRhs1 );
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+
+		RES2 = oper(RES0, RES1);
+		return RES2;
+
+	};
+
+
+	auto accum_2 = [&](Float* pRhs1)
+	{
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		
+		RES0 = oper(RHS0, RHS1);	
+		return RES0;
+	};
 
     
-	INS_VEC ZERO = 0.0;//
+	INS_VEC ZERO = 0.0;
 	INS_VEC val = 0.0;
 
 	INS_VEC RES = 0.0;
@@ -579,7 +635,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 	size_t working_Size = sz;
 
 	size_t RemainSZ = 31;
-	size_t remainder = working_Size & RemainSZ;
+	int remainder = static_cast<int>(working_Size & RemainSZ);
 
 	while (remainder >= InstructionTraits< INS_VEC>::width)
 	{ 	
@@ -608,9 +664,24 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 	
 	auto accum_recurse = [&](Float* pRhs1, size_t extent, auto&& self)
 	{
+		if (extent == 16 * width)
+		{
+			return  accum_16(pRhs1);
+		}
+
+		if (extent == 8 * width)
+		{
+			return  accum_8(pRhs1);
+		}
+
 		if (extent == 4 * width)
 		{
-			return  accum_4(pRhs1, extent);
+			return  accum_4(pRhs1);
+		}
+
+		if (extent == 2 * width)
+		{
+			return  accum_2(pRhs1);
 		}
 
 		// split  maybe use << for division and bitwise  for size test
@@ -622,6 +693,10 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 
 
 	//working_Size
+	/*
+	* keep doubling block size untill reach input extent and accumulate if is power of 2 
+	* cf integer power  in math
+	*/
 	INS_VEC  accumulations_of_all_blocks = 0.0;
 	size_t current_block_SZ = RemainSZ + 1;
 	while (working_Size >= current_block_SZ)
@@ -1633,34 +1708,34 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 	const int width = InstructionTraits<INS_VEC>::width;
 	int step = 4 * width;
 
-	int sz = rhs1.size();
+	int sz = static_cast<int>(rhs1.size());
 	Vec<INS_VEC> ret(sz);
 
-	SAMPLER LHS1;// (sampler_lhs);
+	SAMPLER LHS1;
 	LHS1.X_0.value = zero;
-	SAMPLER RHS1;// (sampler_rhs);
+	SAMPLER RHS1;
 	RHS1.X_0.value = zero;
 	INS_VEC RES = zero;
 
-	SAMPLER LHS2;// (sampler_lhs);
+	SAMPLER LHS2;
 	LHS2.X_0.value = zero;
-	SAMPLER RHS2;// (sampler_rhs);
+	SAMPLER RHS2;
 	RHS2.X_0.value = zero;
 	INS_VEC RES1 = zero;
 
-	SAMPLER LHS3;// (sampler_lhs);
+	SAMPLER LHS3;
 	LHS3.X_0.value = zero;
-	SAMPLER RHS3;// (sampler_rhs);
+	SAMPLER RHS3;
 	RHS3.X_0.value = zero;
 	INS_VEC RES2 = zero;
 
-	SAMPLER LHS4;// (sampler_lhs);
+	SAMPLER LHS4;
 	LHS4.X_0.value = zero;
-	SAMPLER RHS4;// (sampler_rhs);
+	SAMPLER RHS4;
 	RHS4.X_0.value = zero;
 	INS_VEC RES3 = zero;
 
-//	int i = 0;
+
 
 	if (sz >= step * 2)
 	{
@@ -1683,12 +1758,12 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 		}
 
 		i += step;
-		//int rhsSZ = rhs1.size();
-		int impSZ = rhs1.paddedSize();
-		//int rhsSZ = sz - step;
+		
+		int impSZ = static_cast<int>(rhs1.paddedSize());
+		
 		int rhsSZ = impSZ - step;
 
-		//for (; i <= (rhsSZ - step); i += step)
+		
 		for (; i <= (impSZ - step); i += step)
 		{
 			LHS1.load(pLhs1 + i);
@@ -1710,7 +1785,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 		}
 
 		// odd bits
-		//for (; i <= rhsSZ - width; i += width)
 		for (; i <= impSZ - width; i += width)
 		{
 			LHS1.load(pLhs1 + i);
