@@ -53,3 +53,23 @@
 /VectorTest/My Advisor Results - VectorTest
 /VectorTest/My Inspector Results - VectorTest
 /out/build/x64-Debug
+/cumNormalExample/My Advisor Results - cumNormalExample
+/cumNormalExample/VTune Profiler Results/cumNormalExample
+/lattice/x64/Release
+/lattice/x64/Debug
+/dancingAVX512/x64/clang-cl
+/dancingAVX512/x64/ICC2022
+/dancingAVX512/x64/Release
+/dancingAVX512/x64/clang-cl
+/dancingAVX512/x64
+/lattice/x64
+/lattice/My Advisor Results - lattice
+/curveExample/My Advisor Results - curveExample
+/curveExample/VTune Profiler Results/curveExample
+/curveExample/x64
+/Vectorisation/Report20230616-1801.diagsession
+/Vectorisation/Report20230616-1731.diagsession
+/Vectorisation/My Advisor Results - Vectorisation
+/lattice/VTune Profiler Results/lattice
+/scratch/My Advisor Results - scratch
+/scratch/x64
