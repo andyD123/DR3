@@ -194,10 +194,10 @@ struct ZeroInterp : protected LinearInterp<T,V>
 
 
 /// 
-//git hub cache
+//git hub LRU cache
 ////
 
-template<typename key_t, typename value_t>//, typename CALC = []() {throw std::range_error("There is no such key in cache")} >
+template<typename key_t, typename value_t>
 class lru_cache {
 public:
 	typedef typename std::pair<key_t, value_t> key_value_pair_t;
@@ -224,17 +224,15 @@ public:
 		}
 	}
 
-	const value_t& get(const key_t& key)//, CALC& calc) 
+	const value_t& get(const key_t& key)
 	{
 		auto it = _cache_items_map.find(key);
 		if (it == _cache_items_map.end()) {
 			throw std::range_error("There is no such key in cache");
-			//auto calcRes = calc(key);
-			//put(key, calcRes);
-			//return calcRes;
+		
 		}
 		else {
-			_cache_items_list.splice(_cache_items_list.begin(), _cache_items_list, it->second);
+			_cache_items_list.splice(_cache_items_list.begin(), _cache_items_list, it->second);  
 			return it->second->second;
 		}
 	}
@@ -275,7 +273,7 @@ public:
 		{
 
 			return  m_interpCache.calc(dt, m_vals, m_ords);
-			//return INTERP_POLICY::calc(dt, m_vals, m_ords);
+			
 		}
 
 		if (dt < m_min)
@@ -340,12 +338,11 @@ struct MyCalc
 		m_vals(vals), m_ords(ords)
 	{
 		m_deltaTAtOrds.emplace_back(0);
-		V discountfactor = vals[0] / vals[0];// { 1.0, 0 };// InstructionTraits<V>::oneValue;//1.0;  
+		V discountfactor = vals[0] / vals[0];
 		V fwdRate;
 		m_DiscountFactorAtOrd.emplace_back(discountfactor);
 		m_Fwds.emplace_back(vals[0]);
-		//m_Fwds.emplace_back(vals[0]);// flat  rate
-		//discountfactor = exp(-ords[0] * vals[1]);
+	
 		for (size_t i = 1; i < ords.size(); ++i)
 		{
 			auto deltaT = ords[i] - ords[i - 1];
@@ -369,13 +366,11 @@ struct MyCalc
 		m_ords =ords;
 
 		m_deltaTAtOrds.emplace_back(0);
-		V discountfactor = vals[0] / vals[0];// { 1.0, 0 };// InstructionTraits<V>::oneValue;//1.0;  
+		V discountfactor = vals[0] / vals[0];
 		V fwdRate;
 		m_DiscountFactorAtOrd.emplace_back(discountfactor);
 		m_Fwds.emplace_back(vals[0]);
-		//m_Fwds.emplace_back(vals[0]);
-		//m_Fwds.emplace_back(vals[0]);// flat  rate
-		//discountfactor = exp(-ords[0] * vals[1]);
+
 		for (size_t i = 1; i < ords.size(); ++i)
 		{
 			auto deltaT = ords[i] - ords[i - 1];
@@ -390,7 +385,7 @@ struct MyCalc
 			discountfactor *= dfOverInterval;
 
 			i==1?m_Fwds.emplace_back(vals[1]):m_Fwds.emplace_back(2.0*Yavg - m_Fwds[i-1]);
-			m_DiscountFactorAtOrd.emplace_back(discountfactor);// newDiscountfactor);
+			m_DiscountFactorAtOrd.emplace_back(discountfactor);
 		}
 
 	}
@@ -399,35 +394,26 @@ struct MyCalc
 
 	V operator()(const T& t)
 	{
-		//return Calc(t, m_vals, m_ords, m_DiscountFactorAtOrd, m_deltaTAtOrds);
+	
 		return Calc(t, m_Fwds, m_ords, m_DiscountFactorAtOrd, m_deltaTAtOrds);
 	}
 
-	//V Calc(const T& dt, const std::vector<V>& vals, const  std::vector<T>&  ords)
-	//{
-	//	const auto& Yields = LinearInterp<T, V>::calc(dt, vals, ords);
-	//	return exp(-Yields * dt);
-	//}
 
 
 	V Calc(const T& t, const std::vector<V>& vals, const  std::vector<T>&  ords,
 		const  std::vector<V>&  discountFactorAtOrd,
-		const  std::vector<T>& )// deltaTAtOrd)
+		const  std::vector<T>& )
 	{
 	const auto& Yields = LinearInterp<T, V>::calc(t, vals, ords);
 	const auto& DFsAtPoints = FlatInterp<T, V>::calc(t, discountFactorAtOrd, ords);
-	//const auto& dt = t-FlatInterp<T, T>::calc(t, deltaTAtOrd, ords);
+
 	const auto& dt = t - FlatInterp<T, T>::calc(t, ords, ords);
-	//const auto& interval = FlatInterp<T, T>::calc(deltaTAtOrd, ords, ords);
-	//const auto& dt = t - FlatInterp<T, T>::calc(deltaTAtOrd, ords, ords);
+
 	return exp(-Yields * dt)* DFsAtPoints;
 
-	//return exp(-Yields * t); zero rate intep
+	
 	}
 
-
-//	const std::vector<V>&  m_vals;
-//	const  std::vector<T>&  m_ords;
 
 
 	std::vector<V>  m_vals;
@@ -443,41 +429,47 @@ struct ZeroInterpCached  : protected  LinearInterp<T, V>
 	using LRU_C = lru_cache<T, V>;
 
 	LRU_C m_lru;
-	MyCalc<T, V> clc;// (vals, ords);
+	MyCalc<T, V> clc;
 	bool isInit = false;
 
 
 	ZeroInterpCached<T, V>(size_t maxCache) : m_lru(maxCache) {};
 
-	 V calc(const T& dt, const std::vector<V>& vals, const  std::vector<T>&  ords)
+	const V& calc(const T& dt, const std::vector<V>& vals, const  std::vector<T>& ords)
 	{
 
-		 if (!isInit)
-		 {
-			 clc.init(vals, ords);
-			 isInit = true;
-		 }
 
-		 if (m_lru.exists(dt))
-		 {
-			// V ret( m_lru.get(dt) );
-			// return ret;
+		if (isInit)
+		{
 
-			 return V(m_lru.get(dt));
-		 }
-		 else
-		 {
-			// MyCalc<T, V> clc(vals, ords);
-			 //V ret = clc(dt);
-			 m_lru.put(dt, clc(dt));
-			 return V(m_lru.get(dt));
-		 }
+			if (m_lru.exists(dt))
+			{
 
-		//MyCalc<T, V> clc(vals, ords);
-		//exists
-		//V ret = m_lru.get(dt, clc);
-		// V ret; //not reached
-		 //return ret;
+				return m_lru.get(dt);
+			}
+			else
+			{
+
+				m_lru.put(dt, clc(dt));
+			
+
+				return m_lru.get(dt);
+
+
+			}
+
+		}
+		else
+		{
+
+	
+			clc.init(vals, ords);
+			isInit = true;
+		
+			return calc(dt, vals, ords);
+
+		}
+
 	}
 
 

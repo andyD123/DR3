@@ -15,12 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cumNormalExample.cpp">
+    <ClCompile Include="dancingAVX512.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AVX512Dance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cumNormal.h">
+    <ClInclude Include="AVX512Dance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,0 +1,8 @@
+﻿Build started...
+1>------ Build started: Project: accumulateExample, Configuration: Debug x64 ------
+1>accumulate_example.cpp
+1>D:\testDownload\DR3\accumulateExample\accumulate_example.cpp(87,12): error C3861: 'getRandomShuffledVector': identifier not found
+1>D:\testDownload\DR3\accumulateExample\accumulate_example.cpp(97,69): error C2440: 'initializing': cannot convert from 'void' to 'Vec<Vec4d>'
+1>D:\testDownload\DR3\accumulateExample\accumulate_example.cpp(97,12): message : Expressions of type void cannot be converted to other types
+1>Done building project "accumulateExample.vcxproj" -- FAILED.
+========== Build: 0 succeeded, 1 failed, 5 up-to-date, 0 skipped ==========
