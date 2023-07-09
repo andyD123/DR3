@@ -595,7 +595,7 @@ void doCurve2A()
 			double period = 0.25 * 365;
 
 			//double offset = int(count / 30000.0) * 0.03 * 365.0;
-			long offset = int(count / 999999) * 30;
+			long offset = int(count / (999999 / 365));
 			for (auto& cf : swp)
 			{
 				cf.first = date + offset;
