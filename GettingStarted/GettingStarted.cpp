@@ -47,33 +47,27 @@ AllAllocatorsGuard<typename VecXX::SCALA_TYPE> allocGuard;
 
 int main()
 {
+   basicVector();
 
+   applyLambdasToVector();
 
-
-
-//    basicVector();
-
-//    applyLambdasToVector();
-
-//   applyBinaryLambdasToVector();
+   applyBinaryLambdasToVector();
    
-  //  applySparseLambdasToVector();
+   applySparseLambdasToVector();
 
-  //   accumulateVector();
+   accumulateVector();
 
- //    transformReduce();
+   transformReduce();
 
-      branching();
-//    filtersAndViews();
+   branching();
 
- //   complexExampleOfJoiningfiltersAndViews();
+   filtersAndViews();
 
- //   experimentalAAD();
+   complexExampleOfJoiningfiltersAndViews();
 
- //   optionPricerDriver();
+   experimentalAAD();
 
-
-
+   optionPricerDriver();
 }
 
 

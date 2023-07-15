@@ -29,7 +29,7 @@ TEST(TestViews, ApplyUnitaryOperation)
 		std::vector<Numeric>  v(SZ, asNumber(6.66));
 		int i = 0;
 		for (auto& x : v) { x -= asNumber(500.0 + i); ++i; }
-		VecXX test(v);
+		const VecXX test(v);
 
 		auto mySquareItLambda = [](const auto& x) {return x * x;  };
 		auto testSquare = ApplyUnitaryOperation(test, mySquareItLambda);

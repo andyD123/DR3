@@ -16,6 +16,10 @@
 
 #include "../Vectorisation/VecX/dr3.h"
 #include "../Vectorisation/VecX/accumulate_transform.h"
+#include "../Vectorisation/VecX/error_utils.h"
+
+
+#include "../Vectorisation/VecX/zip_utils.h"
 
 #include "norm.h"
 
@@ -46,15 +50,16 @@ precision of results compare for float types is incorrect.
 
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
-using namespace DRC::VecD4D;	//avx2   double
+//using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
-//using namespace DRC::VecD8D;  //avx512 double
+using namespace DRC::VecD8D;  //avx512 double
 //using namespace DRC::VecF16F; //avx512   float
 
 
-using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
+using FLOAT = typename InstructionTraits<VecXX::INS>::FloatType;
 
-AllAllocatorsGuard<FLOAT> allocGuard;
+
+//AllAllocatorsGuard<FLOAT> allocGuard;
 
 const double billion = 1000000000.0;
 
@@ -192,6 +197,9 @@ auto getRandomShuffledVector(int SZ, int instance_number=0)
 
 
 
+
+
+
 auto numOps = [](int TEST_LOOP_SZ, int SZ) { return  static_cast<int>(double(TEST_LOOP_SZ) * double(SZ)); };
 
 
@@ -325,7 +333,7 @@ void	doTransform();
 void 	doSumSqrs();
 void    khanAccumulation();
 void	binarySelectionBetweenConst();
-void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of of operations
+void	binarySelectionBetweenLinearFunction(); // y= mx + c    a couple of operations
 void    binarySelectionBetweenMiddleWeightFunction();
 void	binarySelectionBetweenHeavyWeightFunction();
 void	doCountIf(); 
@@ -338,17 +346,14 @@ void doAVXMax512Dance();
 
 
 
-
-
-
-
 int main()
 {
 
 
-
 	std::cout << "\n \n \n \n testMemCpy2() \n" << std::endl;
 	testMemCpy2(); 
+
+	//return 0;
 
 	//accumulate 
 	std::cout << "\n \n \n \n doMax() \n"  << std::endl;
@@ -388,9 +393,9 @@ int main()
 	doCountIf();
 
 	// experimental
-	doMinMax();
+	std::cout << "\n \n \n \n doSumSqrsMulti() sum of vals  + sum sqrs multiple transform reduce \n" << std::endl;
 	doSumSqrsMulti();
-	//return 0;
+	
 
 	
 	// use namespace DRC::VecD8D  run this and watch power consumption
@@ -578,13 +583,20 @@ void doMinMax()
 
 
 		{   TimerGuard timer(time);
-		for (long l = 0; l < TEST_LOOP_SZ; l++)
-		{
-			res = *std::max_element(v1.begin(), v1.end());
-			res_min = *std::min_element(v1.begin(), v1.end());
+            for (long l = 0; l < TEST_LOOP_SZ; l++)
+            {
+                res = *std::max_element(v1.begin(), v1.end());
+                res_min = *std::min_element(v1.begin(), v1.end());
+
+                res = 0.5 * (res + res_min);
+            }
 		}
-		}
+
+        ignore(res_min);
+
 		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+
+
 	};
 
 
@@ -602,6 +614,7 @@ void doMinMax()
 		VecXX vec(v1);
 
 		auto ress = reduceM(vec, mxDbl, minDbl);
+		ignore(ress);
 		//warm up
 		for (long l = 0; l < 100; l++)
 		{
@@ -612,12 +625,14 @@ void doMinMax()
 
 
 		{   TimerGuard timer(time);
-		for (long l = 0; l < TEST_LOOP_SZ; l++)
-		{
-		  	 res = reduce(vec, mxDbl);
-	   	     double mnn = reduce(vec, minDbl);
-			 ignore(mnn);
-		}
+			for (long l = 0; l < TEST_LOOP_SZ; l++)
+			{
+		  		 res = reduce(vec, mxDbl);
+	   			 double mnn = reduce(vec, minDbl);
+				 ignore(mnn);
+				 res = 0.5 * (res + mnn);
+			}
+
 		}
 
 		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
@@ -652,6 +667,8 @@ void doMinMax()
 			ress = reduceM(vec, mxDbl, minDbl);
 			double mmmm = std::get<0>(ress);
 			double mnn = std::get<1>(ress);
+
+			res = 0.5 * (mnn + mmmm);
 			ignore(mnn);
 			ignore(mmmm);
 		}
@@ -685,6 +702,9 @@ void doMinMax()
 			<< "\t \t DR3 reduce_mult, size " << perf_stl.first << ", " << stats_DR3_perf_mult[perf_stl.first].first << ",  + - ," << stats_DR3_perf_mult[perf_stl.first].second
 			<< ", numerical check : " << strMatch << "\n";
 	}
+
+
+	
 }
 
 
@@ -961,8 +981,6 @@ void doSumSqrs()
 		std::cout << "STL inner product sum sqrs , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "\t \t DR3 inner product sum sqrs , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second << ", numerical check: " << strMatch << "\n";
 	}
 
-
-
 }
 
 
@@ -972,17 +990,18 @@ applies multiple transforms and reductions after the load operation
 reducing memorry traversal
 
 here we do squaring an just return a copy as transform
-and sum as the reduction, usefuk for stats to get sum of all values
+and sum as the reduction, useful for stats to get sum of all values
 and sum of all squares of values
 */
 void doSumSqrsMulti()
 {
 
-	const long TEST_LOOP_SZ = 1000;
-	const int repeatRuns = 20;
+	const long TEST_LOOP_SZ = 100;
+	const int repeatRuns = 5;
 	const int vectorStepSize = 200;
 	const int maxVectorSize = 20000;
 	const int minVectorSize = 400;
+	const int warnUp = 5;// 100;
 
 	auto zero = InstructionTraits<VecXX::INS>::nullValue;
 
@@ -997,7 +1016,7 @@ void doSumSqrsMulti()
 		auto v1 = getRandomShuffledVector(VEC_SZ);
 
 		//warm up
-		for (long l = 0; l < 100; l++)
+		for (long l = 0; l < warnUp; l++)
 		{
 			res = inner_product(v1.cbegin(), v1.cend(), v1.cbegin(), zero);
 		}
@@ -1012,7 +1031,9 @@ void doSumSqrsMulti()
 		}
 		}
 
+        ignore(res2);
 		return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+
 	};
 
 	auto DR3_inner_prod = [&](int SZ, long TEST_LOOP_SZ)
@@ -1030,7 +1051,7 @@ void doSumSqrsMulti()
 		auto SQR = [](auto X) { return X*X; };
 
 		//warm up
-		for (long l = 0; l < 100; l++)
+		for (long l = 0; l < warnUp; l++)
 		{
 
 			res = transformReduce(t1, SQR, Sum);
@@ -1046,6 +1067,8 @@ void doSumSqrsMulti()
 			res2 = transformReduce(t1, Unit, Sum);	
 		}
 		}
+
+        ignore(res2);
 
 		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
 
@@ -1066,9 +1089,8 @@ void doSumSqrsMulti()
 		auto SQR = [](auto X) { return X * X; };
 
 		//warm up
-		for (long l = 0; l < 100; l++)
+		for (long l = 0; l < warnUp; l++)
 		{
-	
 			auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);
 			//auto total 
 			res2 = std::get<0>(tpl);
@@ -1078,16 +1100,18 @@ void doSumSqrsMulti()
 
 
 		{   TimerGuard timer(time);
-		for (long l = 0; l < TEST_LOOP_SZ; l++)
-		{
+            for (long l = 0; l < TEST_LOOP_SZ; l++)
+            {
 
-			auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);
-			res2 = std::get<0>(tpl);
-			auto res0 = std::get<1>(tpl);
-			ignore(res0);
-	
+                auto tpl = transformReduceM(t1, Unit, Sum, SQR, Sum);
+                res2 = std::get<0>(tpl);
+                auto res0 = std::get<1>(tpl);
+                ignore(res0);
+
+            }
 		}
-		}
+
+        ignore(res2);
 
 		return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
 
@@ -1210,6 +1234,44 @@ void khanAccumulation()
 
 
 
+	auto DR3_pairwise_reduce = [&](int VEC_SZ, long TEST_LOOP_SZ)
+	{
+		double relative_error = 0.;
+	//	auto NULL_Vec = VecXX::INS(0.0);
+	//	const auto zero = InstructionTraits<VecXX::INS>::nullValue;
+		//lambdas
+
+		auto sum_it = [](auto x, auto y) { return x + y; };
+
+
+		double time = 0.;
+		volatile  double res = 0.;
+		VecXX t1(VecXX::scalar(1.0 / 6.0), VEC_SZ);
+
+		//warm up
+		for (long l = 0; l < 100; l++)
+		{				
+			res = ApplyAccumulate2UR_X_pairwise(t1, sum_it);
+		}
+
+
+		{   TimerGuard timer(time);
+
+			for (long l = 0; l < TEST_LOOP_SZ; l++)
+			{
+				res = ApplyAccumulate2UR_X_pairwise(t1, sum_it);
+			}
+		}
+
+		relative_error = (VEC_SZ / 6. - res) / res;
+		return std::make_pair(relative_error, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+
+	};
+
+
+
+
+
 	auto run_res_innerProd = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, stl_run, TEST_LOOP_SZ);
 	auto stats_inner_prod = performanceStats(run_res_innerProd.m_raw_results);
 
@@ -1218,12 +1280,20 @@ void khanAccumulation()
 	auto stats_DR3_inner_prod = performanceStats(dr3_raw_results.m_raw_results);
 
 
+	auto dr3_pairwise_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_pairwise_reduce, TEST_LOOP_SZ);
+	auto stats_DR3_pairwise  = performanceStats(dr3_pairwise_raw_results.m_raw_results);
+
+
+
+
 	//print out results
 	for (const auto& elem : stats_inner_prod)
 	{
+		auto  valDr3_pair_wise = dr3_pairwise_raw_results.m_calc_results[elem.first];
 		auto  valDr3 = dr3_raw_results.m_calc_results[elem.first];
 		auto  valStl = run_res_innerProd.m_calc_results[elem.first];
-		std::cout << "STL accumulate , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second <<"relative err"<< valStl << "\t \t DR3 khan accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second << ", relative err " << valDr3 << "\n";
+		std::cout << "STL accumulate , size " << elem.first << " , " << elem.second.first << ", +- ," << elem.second.second << "relative err" << valStl << "\t \t DR3 khan accumulate , size " << elem.first << " , " << stats_DR3_inner_prod[elem.first].first << ", +- ," << stats_DR3_inner_prod[elem.first].second << ", relative err " << valDr3;//  \\ << \\ "\n";
+		std::cout  << "\t \t DR3 pairwise accumulate , size " << elem.first << " , " << stats_DR3_pairwise[elem.first].first << ", +- ," << stats_DR3_pairwise[elem.first].second << ", relative err " << valDr3_pair_wise << "\n";
 	}
 
 

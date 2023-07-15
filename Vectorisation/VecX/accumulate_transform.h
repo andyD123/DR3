@@ -16,6 +16,9 @@
 #include "binary_unitary_operations.h"
 #include "unroll_operators.h"
 #include "error_utils.h"
+#include "scan.h"
+#include "span.h"
+#include "sampler.h"
 
 #include <stdexcept>
 #include <tuple>
@@ -49,7 +52,7 @@ VecView<INS_VEC> init(const VecView<INS_VEC>& rhs)
 template<typename INS_VEC>
 VecView<INS_VEC> initTransformer(const VecView<INS_VEC>& rhs)
 {
-	return VecView<INS_VEC>(rhs.size(),rhs);
+	return VecView<INS_VEC>( rhs);
 }
 
 
@@ -388,8 +391,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR(const Vec<INS_
 
 
 //unrolled version helps greatly with VC2019
-template< typename INS_VEC, typename OP>
-typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const Vec<INS_VEC>& rhs1, OP& oper )
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TYPE<INS_VEC>& rhs1, OP& oper )
 {
 	check_vector(rhs1);
 	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
@@ -397,10 +400,10 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const Vec<IN
 		return rhs1.getScalarValue();
 	}
 
-	int sz = rhs1.size();
+	long sz = static_cast<long>(rhs1.size());
 	auto pRhs1 = rhs1.start();
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 4 * width;
+	const long width = InstructionTraits<INS_VEC>::width;
+	long step = 4 * width;
 
 	INS_VEC RHS1;
 	INS_VEC RES;
@@ -414,7 +417,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const Vec<IN
 	INS_VEC RHS4;
 	INS_VEC RES3;
 
-	int i = 0;
+	long i = 0;
 
 	if (sz >= step * 2)
 	{
@@ -427,7 +430,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const Vec<IN
 		}
 
 		i += step;
-		int rhsSZ = rhs1.size();
+		long rhsSZ = static_cast<long>(rhs1.size());
 		for (; i <= (rhsSZ - step); i += step)
 		{
 			RHS1.load_a(pRhs1 + i);
@@ -471,9 +474,9 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const Vec<IN
 	}
 
 	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
-	int min_wdth = std::min(sz, width);
+	long min_wdth = std::min(sz, width);
 	//across vectors lanes  // not assuming horizontal versoion exist
-	for (int j = 1; j < min_wdth; ++j)
+	for (long j = 1; j < min_wdth; ++j)
 	{
 		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], oper);
 	}
@@ -488,9 +491,16 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const Vec<IN
 }
 
 
-//unrolled version helps greatly with VC2019
-template< typename INS_VEC, typename OP>
-typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VecView<INS_VEC>& rhs1, OP& oper)
+
+
+
+
+
+
+
+//experimental pairwise unrolled version  avx512
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(const VEC_TYPE<INS_VEC>& rhs1, OP& oper)
 {
 	check_vector(rhs1);
 	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
@@ -498,95 +508,214 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VecVie
 		return rhs1.getScalarValue();
 	}
 
-	int sz = rhs1.size();
-	auto pRhs1 = rhs1.start();
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 4 * width;
+	long sz = static_cast<long>(rhs1.size());
+	auto pRhs = rhs1.start();
+	const long width = InstructionTraits<INS_VEC>::width;
+
+	using Float = typename InstructionTraits<INS_VEC>::FloatType;
+
+	
+	INS_VEC RHS0;
+	INS_VEC RES0;
 
 	INS_VEC RHS1;
-	INS_VEC RES;
-
-	INS_VEC RHS2;
 	INS_VEC RES1;
 
-	INS_VEC RHS3;
+	INS_VEC RHS2;
 	INS_VEC RES2;
 
-	INS_VEC RHS4;
-	INS_VEC RES3;
+	INS_VEC RHS3;
 
-	int i = 0;
 
-	if (sz >= step * 2)
+	auto accum_8 = [&](Float* pRhs1)
 	{
-		//initialise first set of registers
+
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+
+		INS_VEC RES = oper(RES0, RES1);
+
+		RHS0.load_a(pRhs1 + width * 4);
+		RHS1.load_a(pRhs1 + width *5);
+		RHS2.load_a(pRhs1 + width * 6);
+		RHS3.load_a(pRhs1 + width * 7);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+
+		return oper(RES , oper(RES0,RES1));
+	
+	};
+
+
+
+	auto accum_16 = [&](Float* pRhs1)
+	{
+
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+		INS_VEC RES = oper(RES0, RES1);
+
+		RHS0.load_a(pRhs1 + width * 4);
+		RHS1.load_a(pRhs1 + width * 5);
+		RHS2.load_a(pRhs1 + width * 6);
+		RHS3.load_a(pRhs1 + width * 7);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+		RES =  oper(RES, oper(RES0, RES1));
+
+
+		RHS0.load_a(pRhs1 + width * 8);
+		RHS1.load_a(pRhs1 + width * 9);
+		RHS2.load_a(pRhs1 + width * 10);
+		RHS3.load_a(pRhs1 + width * 11);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+		INS_VEC RES_T =  oper(RES0, RES1);
+
+		RHS0.load_a(pRhs1 + width * 12);
+		RHS1.load_a(pRhs1 + width * 13);
+		RHS2.load_a(pRhs1 + width * 14);
+		RHS3.load_a(pRhs1 + width * 15);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+		RES_T = oper(RES_T, oper(RES0, RES1));
+
+		return oper(RES, RES_T);
+	};
+
+
+	
+	
+	auto accum_4 = [&](Float* pRhs1)
+	{
+		
+		RHS0.load_a(pRhs1 );
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
+
+		RES0 = oper(RHS0, RHS1);
+		RES1 = oper(RHS2, RHS3);
+
+		RES2 = oper(RES0, RES1);
+		return RES2;
+
+	};
+
+
+	auto accum_2 = [&](Float* pRhs1)
+	{
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		
+		RES0 = oper(RHS0, RHS1);	
+		return RES0;
+	};
+
+    
+	INS_VEC ZERO = 0.0;
+	INS_VEC val = 0.0;
+
+	INS_VEC RES = 0.0;
+
+	size_t working_Size = sz;
+
+	size_t RemainSZ = 31;
+	int remainder = static_cast<int>(working_Size & RemainSZ);
+
+	while (remainder >= InstructionTraits< INS_VEC>::width)
+	{ 	
+		val.load(pRhs);
+		RES = oper(RES, val);
+
+		remainder -= InstructionTraits< INS_VEC>::width;
+		pRhs+= InstructionTraits< INS_VEC>::width;
+	}
+
+	auto whole_reg_sum = scanN(RES, ZERO, oper)[InstructionTraits< INS_VEC>::width - 1];
+
+	
+	//RES += val;
+	if (remainder > 0)
+	{	
+		val = 0.0;
+		val.load_partial(remainder, pRhs);
+		INS_VEC ZERO = 0.0;
+		RES = scanN(val, ZERO, oper);
+		whole_reg_sum += RES[remainder];
+		pRhs += remainder;
+	}
+
+
+	
+	auto accum_recurse = [&](Float* pRhs1, size_t extent, auto&& self)
+	{
+		if (extent == 16 * width)
 		{
-			RES.load_a(pRhs1 + i);
-			RES1.load_a(pRhs1 + i + width);
-			RES2.load_a(pRhs1 + i + width * 2);
-			RES3.load_a(pRhs1 + i + width * 3);
+			return  accum_16(pRhs1);
 		}
 
-		i += step;
-		int rhsSZ = rhs1.size();
-		for (; i <= (rhsSZ - step); i += step)
+		if (extent == 8 * width)
 		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RES, RHS1);
-
-			RHS2.load_a(pRhs1 + i + width);
-			RES1 = oper(RES1, RHS2);
-
-			RHS3.load_a(pRhs1 + i + width * 2);
-			RES2 = oper(RES2, RHS3);
-
-			RHS4.load_a(pRhs1 + i + width * 3);
-			RES3 = oper(RES3, RHS4);
-
+			return  accum_8(pRhs1);
 		}
 
-		// odd bits
-		for (; i <= rhsSZ - width; i += width)
+		if (extent == 4 * width)
 		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RES, RHS1);
+			return  accum_4(pRhs1);
 		}
 
-		RES = oper(RES, RES1);
-		RES2 = oper(RES2, RES3);
-		RES = oper(RES, RES2);
-
-	}
-	else
-	{
-		RES.load_a(pRhs1);
-
-		i += width;
-		// odd bits
-		for (; i <= sz - width; i += width)
+		if (extent == 2 * width)
 		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RES, RHS1);
+			return  accum_2(pRhs1);
 		}
 
-	}
+		// split  maybe use << for division and bitwise  for size test
+		INS_VEC LHS2 = self(pRhs1, extent / 2, self);
+		INS_VEC RHS2 = self(pRhs1 + extent / 2, extent / 2, self);
+		return oper(LHS2, RHS2);
 
-	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
-	int min_wdth = std::min(sz, width);
-	//across vectors lanes  // not assuming horizontal versoion exist
-	for (int j = 1; j < min_wdth; ++j)
+	};
+
+
+	//working_Size
+	/*
+	* keep doubling block size untill reach input extent and accumulate if is power of 2 
+	* cf integer power  in math
+	*/
+	INS_VEC  accumulations_of_all_blocks = 0.0;
+	size_t current_block_SZ = RemainSZ + 1;
+	while (working_Size >= current_block_SZ)
 	{
-		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], oper);
+
+		if (working_Size & current_block_SZ)
+		{
+			accumulations_of_all_blocks += accum_recurse(pRhs, current_block_SZ, accum_recurse);
+		}
+
+		current_block_SZ *= 2;
 	}
 
-	//end bits for vecs not filling padding
-	for (; i < rhs1.size(); ++i)
-	{
-		result = ApplyBinaryOperationVec<INS_VEC, OP>(pRhs1[i], result, oper);
-	}
+	auto accum_over_all_blocks = scanN(accumulations_of_all_blocks, ZERO, oper)[InstructionTraits< INS_VEC>::width - 1];
 
-	return result;
+	return accum_over_all_blocks + whole_reg_sum;
+
 }
+
 
 
 template< typename INS_VEC,  typename OPT, typename OP>
@@ -621,6 +750,15 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulateUR(const 
 }
 
 
+
+
+
+
+
+
+
+
+
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Impl(const VEC_TYPE<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc)
 {
@@ -629,16 +767,15 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 	{
 		auto trform = ApplyUnitaryOperation(rhs1, operTransform);
 		return trform.getScalarValue();
-
 	}
 
-	int sz = rhs1.size();
+	long sz = static_cast<long>(rhs1.size());
 	auto pRhs1 = rhs1.start();
-	const int width = InstructionTraits<INS_VEC>::width;
+	const long width = InstructionTraits<INS_VEC>::width;
 
 	auto zero = InstructionTraits<INS_VEC>::nullValue;
 
-	int step = 4 * width;
+	long step = 4 * width;
 
 	INS_VEC RHS1 = zero;
 	INS_VEC RES = zero;
@@ -652,7 +789,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 	INS_VEC RHS4 = zero;
 	INS_VEC RES3 = zero;
 
-	int i = 0;
+	long i = 0;
 
 	if (sz >= step * 2)
 	{
@@ -670,7 +807,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 		}
 
 		i += step;
-		int rhsSZ = rhs1.size();
+		long rhsSZ = static_cast<long>(rhs1.size());
 		for (; i <= (rhsSZ - step); i += step)
 		{
 			RHS1.load_a(pRhs1 + i);
@@ -901,6 +1038,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 }
 
 
+
+
 template< typename INS_VEC, typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_XBin(const Vec<INS_VEC>& lhs1, const Vec<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc)
 {
@@ -1071,87 +1210,639 @@ void ApplyTransformUR_X_Impl(VEC_TYPE<INS_VEC>& rhs1, OP& oper)
 
 }
 
+// experimental 
+template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYPE_RET, typename INS_VEC, typename OP, typename SAMPLER >
+void ApplyTransformUR_X_Impl_EX(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& ret, OP& oper, SAMPLER& sampler, int i = 0, int impSZ = -1)
+{
+
+	impSZ = (impSZ < 0) ? static_cast<long>(rhs1.paddedSize()) : impSZ;
+
+
+	auto pRhs1 = rhs1.start();
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int stride = static_cast<int>(sampler.stride());
+	stride = (stride == 1) ? 1 : stride * width;
+	int step = 4 * width * stride;
+
+
+
+
+	SAMPLER RHS1(sampler);
+	INS_VEC RES;
+
+
+	SAMPLER RHS2(sampler);
+	INS_VEC RES1;
+
+	SAMPLER RHS3(sampler);
+	INS_VEC RES2;
+
+	SAMPLER RHS4(sampler);
+	INS_VEC RES3;
+
+	//we can only get a starting position bigger than  zero when we access points in the 
+	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
+	i = i + std::max(0, -sampler.min());
+
+
+
+	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
+	// that we stay in a valid range 
+	impSZ = impSZ - std::max(0, sampler.max());
+
+	int ld_offset = 0;
+	int SV_offset = 0;
+
+	int rhsSZ = impSZ - step;
+	for (; i < rhsSZ; i += step)
+	{
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1);
+		RES.store(pRet + i + SV_offset);
+
+		RHS2.load(pRhs1 + i + ld_offset + width * stride);
+		RES1 = oper(RHS2);
+		RES1.store(pRet + i + SV_offset + width);
+
+		RHS3.load(pRhs1 + i + ld_offset + width * stride * 2);
+		RES2 = oper(RHS3);
+		RES2.store(pRet + i + SV_offset + width * 2);
+
+		RHS4.load(pRhs1 + i + ld_offset + width * stride * 3);
+		RES3 = oper(RHS4);
+		RES3.store(pRet + i + SV_offset + width * 3);
+	}
+	//
+	for (; i <= impSZ - width * stride; i += width * stride)
+	{
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//one register case or do it scalar ops ?
+
+	if (i < (impSZ - width * stride))
+	{
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+
+	//iterate over remaining values and store
+	RHS1.load(pRhs1 + i + ld_offset);
+	RES = oper(RHS1);
+
+	int j = 0;
+	for (; i < impSZ; ++i, ++j)
+	{
+		(pRet + SV_offset)[i] = RES[j];
+	}
+
+}
+
+
+
+// experimental  binary version for use with spans
+template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYPE_RET, typename INS_VEC, typename OP, typename SAMPLER >
+void ApplyTransformUR_X_Impl_EX_BN(VEC_TYPE<INS_VEC>& lhs1, VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& ret, OP& oper, SAMPLER& sampler_lhs, SAMPLER& sampler, int i = 0, int impSZ = -1)
+{
+
+	//TO DO SOME CHECKING on sizes etc
+	//TAKING rhs as corect size in this initial go
+
+	//NB strides can be different onleft and right too  2 DO
+
+	impSZ = (impSZ < 0) ? static_cast<long>(rhs1.paddedSize()) : impSZ;
+
+	auto pLhs1 = lhs1.start();
+	auto pRhs1 = rhs1.start();
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int stride = static_cast<int>(sampler.stride());
+	stride = (stride == 1) ? 1 : stride * width;
+	int step = 4 * width * stride;
+
+
+
+	SAMPLER LHS1(sampler_lhs);
+	SAMPLER RHS1(sampler);
+	INS_VEC RES;
+
+	SAMPLER LHS2(sampler_lhs);
+	SAMPLER RHS2(sampler);
+	INS_VEC RES1;
+
+	SAMPLER LHS3(sampler_lhs);
+	SAMPLER RHS3(sampler);
+	INS_VEC RES2;
+
+	SAMPLER LHS4(sampler_lhs);
+	SAMPLER RHS4(sampler);
+	INS_VEC RES3;
+
+	//we can only get a starting position bigger than  zero when we access points in the 
+	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
+	i = i + std::max(0, -sampler.min());
+
+
+
+	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
+	// that we stay in a valid range 
+	impSZ = impSZ - std::max(0, sampler.max());
+
+	int ld_offset = 0;
+	int SV_offset = 0;
+
+	int rhsSZ = impSZ - step;
+	for (; i < rhsSZ; i += step)
+	{
+		LHS1.load(pLhs1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(LHS1,RHS1);
+		RES.store(pRet + i + SV_offset);
+
+		LHS2.load(pLhs1 + i + ld_offset + width * stride);
+		RHS2.load(pRhs1 + i + ld_offset + width * stride);
+		RES1 = oper(LHS2,RHS2);
+		RES1.store(pRet + i + SV_offset + width);
+
+		LHS3.load(pLhs1 + i + ld_offset + width * stride * 2);
+		RHS3.load(pRhs1 + i + ld_offset + width * stride * 2);
+		RES2 = oper(LHS3,RHS3);
+		RES2.store(pRet + i + SV_offset + width * 2);
+
+		LHS4.load(pLhs1 + i + ld_offset + width * stride * 3);
+		RHS4.load(pRhs1 + i + ld_offset + width * stride * 3);
+		RES3 = oper(LHS4,RHS4);
+		RES3.store(pRet + i + SV_offset + width * 3);
+	}
+	//
+	for (; i <= impSZ - width * stride; i += width * stride)
+	{
+		LHS1.load(pLhs1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(LHS1,RHS1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//one register case or do it scalar ops ?
+	//
+
+	if (i < (impSZ - width * stride))
+	{
+		LHS1.load(pLhs1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(LHS1,RHS1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//in the case that all input ranges are al.igned  and padded and that 
+	//spans cone from inside these ranges and the sampler is prevented 
+	// from going out of these ranges then this is fine.
+
+
+	// These mighty not be padded
+	// 
+	/*
+	//iterate over remaining values and store
+	RHS1.load(pRhs1 + i + ld_offset);
+	RES = oper(RHS1);
+
+	int j = 0;
+	for (; i < impSZ; ++i, ++j)
+	{
+		(pRet + SV_offset)[i] = RES[j];
+	}
+
+	*/
+
+	//iterate over remaining values and store
+	/*
+	if (stride == 1) // and on last element
+	{
+		LHS1.load(pLhs1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(LHS1,RHS1);
+
+		int j = 0;
+		for (; i < impSZ; ++i, ++j)
+		{
+			(pRet + SV_offset)[i] = RES[j];
+		}
+	}
+	else //load each element at a  time
+	*/
+	{
+		//wrong 
+		/*
+		int K = 0;
+		int j = 0;
+		for (; i < impSZ; ++j)
+		{
+			LHS1.X_0.value = pLhs1[i + ld_offset];
+			RHS1.X_0.value = pRhs1[i + ld_offset];
+			RES = oper(LHS,RHS1);
+			(pRet + i+ SV_offset)[K] = RES[0];
+			i += stride;
+			K++;
+		}
+		*/
+
+
+		//int j = 0;
+		for (; i < impSZ; ++i)
+		{
+			LHS1.X_0.value = pLhs1[i + ld_offset];
+			RHS1.X_0.value = pRhs1[i + ld_offset];
+			RES = oper(LHS1, RHS1);
+			(pRet + i + SV_offset)[0] = RES[0];
+			//i++;
+			
+			
+		}
+
+
+	}
+
+}
+
+
+
+
+
+// experimental 
+template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYPE_RET,typename INS_VEC, typename OP, typename SAMPLER >
+void ApplyTransformUR_X_Impl_EX_STRD(VEC_TYPE<INS_VEC>& rhs1, VEC_TYPE_RET<INS_VEC>& ret, OP& oper, SAMPLER& sampler, int i = 0, int impSZ = -1)
+{
+
+	impSZ = (impSZ < 0) ? static_cast<long>(rhs1.paddedSize()) : impSZ;
+
+
+	auto pRhs1 = rhs1.start();
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int stride = static_cast<int>(sampler.stride());
+
+
+	int step = 4 * width * stride;
+
+
+	SAMPLER RHS1(sampler);
+	INS_VEC RES;
+
+
+	SAMPLER RHS2(sampler);
+	INS_VEC RES1;
+
+	SAMPLER RHS3(sampler);
+	INS_VEC RES2;
+
+	SAMPLER RHS4(sampler);
+	INS_VEC RES3;
+
+	//we can only get a starting position bigger than  zero when we access points in the 
+	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
+	i = i+ std::max(0,-sampler.min());
+
+	
+	
+	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
+	// that we stay in a valid range 
+	impSZ = impSZ -std::max(0,sampler.max());
+
+	int ld_offset = 0;
+	int SV_offset = 0;
+
+	int rhsSZ = impSZ - step;
+	int K = 0;
+	for (; i < rhsSZ; i += step, K+=4*width)
+	{
+		RHS1.load(pRhs1 + i+ ld_offset);
+		RES = oper(RHS1);
+		RES.store(pRet + K + SV_offset);
+
+		RHS2.load(pRhs1 + i + ld_offset + width * stride);
+		RES1 = oper(RHS2);
+		RES1.store(pRet + K + SV_offset + width);
+
+		RHS3.load(pRhs1 + i + ld_offset + width * stride * 2);
+		RES2 = oper(RHS3);
+		RES2.store(pRet + K + SV_offset + width * 2);
+
+		RHS4.load(pRhs1 + i + ld_offset + width * stride * 3);
+		RES3 = oper(RHS4);
+		RES3.store(pRet + K + SV_offset + width * 3);
+	}
+	
+
+	for (; i <= impSZ - width * stride; i += width * stride, K+=width)
+	{
+		RHS1.load(pRhs1 + i + ld_offset );
+		RES = oper(RHS1);
+		RES.store(pRet + K + SV_offset);
+	}
+
+	//one register case or do it scalar ops ?
+
+	if ( i < (impSZ- width * stride) )
+	{
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1);
+		RES.store(pRet + K + SV_offset);
+	}
+
+	
+
+	//iterate over remaining values and store
+	if (stride == 1)
+	{
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1);
+
+		int j = 0;
+		for (; i < impSZ; ++i, ++j)
+		{
+			(pRet + SV_offset)[i] = RES[j];
+		}
+	}
+	else //load each element at a  time
+	{
+	
+		int j = 0;
+		for (; i < impSZ;  ++j)
+		{
+
+			RHS1.X_0.value = pRhs1[i + ld_offset];
+			RES = oper(RHS1);
+			(pRet + SV_offset)[K] = RES[0];
+			i += stride;
+			K++;
+		}
+
+	}
+
+}
+
+
+
+// experimental binary transform  // need to check handling remainders ie not whole registers left at end of loop 
+// since might get unpadded cases
+//assumed to be unaligned
+template<  template <class> typename VEC_TYPE, template <class> typename VEC_TYPE_AUX, template <class> typename VEC_TYPE_RET,typename INS_VEC, typename OP, typename SAMPLER >
+void ApplyTransformUR_X_Impl_EX(const VEC_TYPE<INS_VEC>& rhs1,const VEC_TYPE_AUX<INS_VEC>& aux, VEC_TYPE_RET<INS_VEC>& ret, OP& oper, SAMPLER& sampler, int i = 0, int impSZ = -1)
+{
+
+	impSZ = (impSZ < 0) ? rhs1.paddedSize() : impSZ;
+
+	auto pAux1 = aux.start();
+	auto pRhs1 = rhs1.start();
+	auto pRet = ret.start();
+
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	INS_VEC AUX1;
+	SAMPLER RHS1(sampler);
+	INS_VEC RES;
+
+	INS_VEC AUX2;
+	SAMPLER RHS2(sampler);
+	INS_VEC RES1;
+
+	INS_VEC AUX3;
+	SAMPLER RHS3(sampler);
+	INS_VEC RES2;
+
+	INS_VEC AUX4;
+	SAMPLER RHS4(sampler);
+	INS_VEC RES3;
+
+	//int i = 0;
+
+	//we can only get a starting position bigger than  zero when we access points in the 
+	// data preceeding the starting point, so we advance to a popint where we sample valid /existing data
+	i = i + std::max(0, -sampler.min());
+
+	//similarly if we are sampling  points beyond current index, we need to reduce maximum value iterated to so
+	// that we stay in a valid range 
+	impSZ = impSZ - std::max(0, sampler.max());
+
+	int ld_offset = 0;
+	int SV_offset = 0;
+
+	int rhsSZ = impSZ - step;
+	for (; i < rhsSZ; i += step)
+	{
+		AUX1.load(pAux1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1,AUX1);
+		RES.store(pRet + i + SV_offset);
+
+		AUX2.load(pAux1 + i + ld_offset + width);
+		RHS2.load(pRhs1 + i + ld_offset + width);
+		RES1 = oper(RHS2, AUX2);
+		RES1.store(pRet + i + SV_offset + width);
+
+		AUX3.load(pAux1 + i + ld_offset + width * 2);
+		RHS3.load(pRhs1 + i + ld_offset + width * 2);
+		RES2 = oper(RHS3, AUX3);
+		RES2.store(pRet + i + SV_offset + width * 2);
+
+		AUX4.load(pAux1 + i + ld_offset + width * 3);
+		RHS4.load(pRhs1 + i + ld_offset + width * 3);
+		RES3 = oper(RHS4, AUX4);
+		RES3.store(pRet + i + SV_offset + width * 3);
+	}
+
+	for (; i <= impSZ - width; i += width)
+	{
+		AUX1.load(pAux1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1, AUX1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//one register case or do it scalar ops ?
+
+	if (i < (impSZ - width))
+	{
+		AUX1.load(pAux1 + i + ld_offset);
+		RHS1.load(pRhs1 + i + ld_offset);
+		RES = oper(RHS1,AUX1);
+		RES.store(pRet + i + SV_offset);
+	}
+
+	//move to one register width from last valid
+	//point to calculate // fine if both are padded and using aligned so probably an error
+	i = impSZ - width;
+	AUX1.load(pAux1 + i + ld_offset);
+	RHS1.load(pRhs1 + i + ld_offset);
+	RES = oper(RHS1, AUX1);
+	RES.store(pRet + i + SV_offset);
+
+}
+
+
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OPT, typename OP, typename SAMPLER>
+typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_ImplBin_EX(const VEC_TYPE<INS_VEC>& lhs1, const VEC_TYPE<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc,
+	SAMPLER sampler_lhs, SAMPLER sampler_rhs, int i = 0, int impSZ = -1)
+{
+
+	check_pair(lhs1, rhs1);
+	auto zero = InstructionTraits<INS_VEC>::nullValue;
+	//to do cover case of scalars
+//	if (isScalar(rhs1) && isScalar(lhs1))
+//	{
+//		return ApplyBinaryOperation1<INS_VEC, OP>(operTransform(lhs1.getScalarValue(), rhs1.getScalarValue()), zero, operAcc);
+//	}
+
+
+	auto pRhs1 = rhs1.start();
+	auto pLhs1 = lhs1.start();
+	const int width = InstructionTraits<INS_VEC>::width;
+	int step = 4 * width;
+
+	int sz = static_cast<int>(rhs1.size());
+	Vec<INS_VEC> ret(sz);
+
+	SAMPLER LHS1;
+	LHS1.X_0.value = zero;
+	SAMPLER RHS1;
+	RHS1.X_0.value = zero;
+	INS_VEC RES = zero;
+
+	SAMPLER LHS2;
+	LHS2.X_0.value = zero;
+	SAMPLER RHS2;
+	RHS2.X_0.value = zero;
+	INS_VEC RES1 = zero;
+
+	SAMPLER LHS3;
+	LHS3.X_0.value = zero;
+	SAMPLER RHS3;
+	RHS3.X_0.value = zero;
+	INS_VEC RES2 = zero;
+
+	SAMPLER LHS4;
+	LHS4.X_0.value = zero;
+	SAMPLER RHS4;
+	RHS4.X_0.value = zero;
+	INS_VEC RES3 = zero;
+
+
+
+	if (sz >= step * 2)
+	{
+		//initialise first set of registers
+		{
+			RHS1.load(pRhs1 + i);
+			RHS2.load(pRhs1 + i + width);
+			RHS3.load(pRhs1 + i + width * 2);
+			RHS4.load(pRhs1 + i + width * 3);
+
+			LHS1.load(pLhs1 + i);
+			LHS2.load(pLhs1 + i + width);
+			LHS3.load(pLhs1 + i + width * 2);
+			LHS4.load(pLhs1 + i + width * 3);
+
+			RES = operTransform(LHS1, RHS1);
+			RES1 = operTransform(LHS2, RHS2);
+			RES2 = operTransform(LHS3, RHS3);
+			RES3 = operTransform(LHS4, RHS4);
+		}
+
+		i += step;
+		
+		int impSZ = static_cast<int>(rhs1.paddedSize());
+		
+		int rhsSZ = impSZ - step;
+
+		
+		for (; i <= (impSZ - step); i += step)
+		{
+			LHS1.load(pLhs1 + i);
+			RHS1.load(pRhs1 + i);
+			RES = operAcc(RES, operTransform(LHS1, RHS1));
+
+			LHS2.load(pLhs1 + i + width);
+			RHS2.load(pRhs1 + i + width);
+			RES1 = operAcc(RES1, operTransform(LHS2, RHS2));
+
+			LHS3.load(pLhs1 + i + width * 2);
+			RHS3.load(pRhs1 + i + width * 2);
+			RES2 = operAcc(RES2, operTransform(LHS3, RHS3));
+
+			LHS4.load(pLhs1 + i + width * 3);
+			RHS4.load(pRhs1 + i + width * 3);
+			RES3 = operAcc(RES3, operTransform(LHS4, RHS4));
+
+		}
+
+		// odd bits
+		for (; i <= impSZ - width; i += width)
+		{
+			LHS1.load(pLhs1 + i);
+			RHS1.load(pRhs1 + i);
+			RES = operAcc(RES, operTransform(LHS1, RHS1));
+		}
+
+		RES = operAcc(RES, RES1);
+		RES2 = operAcc(RES2, RES3);
+		RES = operAcc(RES, RES2);
+
+	}
+	else
+	{
+		LHS1.load(pLhs1);
+		RHS1.load(pRhs1);
+		RES = operTransform(LHS1, RHS1);
+
+		i += width;
+		// odd bits
+		for (; i <= sz - width; i += width)
+		{
+			LHS1.load(pLhs1 + i);
+			RHS1.load(pRhs1 + i);
+			RES = operAcc(RES, operTransform(LHS1, RHS1));
+		}
+
+	}
+
+	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
+	int min_wdth = std::min(sz, width);
+	//across vectors lanes  // not assuming horizontal versoion exist
+	for (int j = 1; j < min_wdth; ++j)
+	{
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], operAcc);
+	}
+
+	//end bits for vecs not filling padding
+	for (; i < rhs1.size(); ++i)
+	{
+		//need to transform before aggregate
+		typename InstructionTraits<INS_VEC>::FloatType trfmResult = operTransform(INS_VEC(pLhs1[i]), INS_VEC(pRhs1[i]))[0];
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, trfmResult, operAcc);
+	}
+	return result;
+
+
+}
+
+
+
+
 
 template< typename INS_VEC, typename OP >
 void ApplyTransformUR_X(VecView<INS_VEC>& rhs1, OP& oper)
 {
 	ApplyTransformUR_X_Impl(rhs1, oper);
 
-	/*
-	if (!rhs1.isScalar())
-	{
-
-
-		check_vector(rhs1); //calls overload with a view
-		//views are not scalar
-
-		//int sz = rhs1.size();
-		auto pRhs1 = rhs1.start();
-		auto pRet = pRhs1;
-
-		const int width = InstructionTraits<INS_VEC>::width;
-		int step = 4 * width;
-
-		INS_VEC RHS1;
-		INS_VEC RES;
-
-		INS_VEC RHS2;
-		INS_VEC RES1;
-
-		INS_VEC RHS3;
-		INS_VEC RES2;
-
-		INS_VEC RHS4;
-		INS_VEC RES3;
-
-		int i = 0;
-
-
-		int impSZ = rhs1.paddedSize();
-
-		//int rhsSZ = sz - step;
-		int rhsSZ = impSZ - step;
-
-		for (; i < rhsSZ; i += step)
-		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RHS1);
-			RES.store_a(pRet + i);
-
-			RHS2.load_a(pRhs1 + i + width);
-			RES1 = oper(RHS2);
-			RES1.store_a(pRet + i + width);
-
-			RHS3.load_a(pRhs1 + i + width * 2);
-			RES2 = oper(RHS3);
-			RES2.store_a(pRet + i + width * 2);
-
-			RHS4.load_a(pRhs1 + i + width * 3);
-			RES3 = oper(RHS4);
-			RES3.store_a(pRet + i + width * 3);
-		}
-
-		for (; i <= impSZ - width; i += width)
-		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RHS1);
-			RES.store_a(pRet + i);
-		}
-
-		//views are padded and filled to width of register 
-		// so no end bits
-
-	}
-	else
-	{
-		auto val = rhs1.getScalarValue();
-		auto scalarRes = oper(INS_VEC(val))[0];
-		VecView<INS_VEC> result;
-		result = scalarRes;
-		rhs1 = result;
-	}
-
-	*/
 }
 
 template< typename INS_VEC, typename OP >
@@ -1729,48 +2420,6 @@ VecView<INS_VEC>  ApplySelectTransformUR_XC(const VecView<INS_VEC>& rhs1, OP& co
 	return ApplySelectTransformUR_XC_Impl(rhs1, cond, trueVal, falseVal);
 }
 
-
-template< typename INS_VEC, typename OP>
-Vec<INS_VEC> ApplyAdjacentDiff(const Vec<INS_VEC>& rhs1, OP& oper)
-{
-	check_vector(rhs1);
-	if (isScalar(rhs1))
-	{
-		throw std::range_error("ApplyAdjacentDiff called on scalar");
-	}
-
-
-	Vec<INS_VEC> result(rhs1.size());
-
-	auto pRes = result.start();
-	auto pRhs1 = rhs1.start();
-
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 1 * width;
-
-
-	INS_VEC RHS1;
-	INS_VEC RHS2;
-	INS_VEC RES;
-
-	int sz = rhs1.paddedSize();
-
-	int i = 0;
-	for (; i < (sz - step); i += step)
-	{
-		RHS1.load_a(pRhs1 + i);
-		RHS2.load(pRhs1 + i + 1); // load un-alligned
-		RES = oper(RHS1, RHS2);
-		RES.store_a(pRes + i);
-	}
-	for (int j = i; j < (sz - 1); j++)
-	{
-		result[j] = ApplyBinaryOperation1<INS_VEC, OP>(rhs1[j], rhs1[j + 1], oper);
-	}
-
-	return result;
-
-};
 
 
 

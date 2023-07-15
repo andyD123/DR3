@@ -28,9 +28,9 @@ struct InstructionTraits
 {
 	using BoolType = VecBoolD;
 	using FloatType = double;
-	static const int width = 2;
-	static const double nullValue;
-	static const double oneValue;
+	static constexpr int width = 2;
+	static constexpr double nullValue = 0.0;
+	static constexpr double oneValue  =1.0;
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = false;
@@ -51,9 +51,9 @@ struct InstructionTraits<VecDouble>
 	using IdxType = Vec2q;
 	using BoolType = VecBoolD;
 	using FloatType = double;
-	static const int width = 2;
-	static const double nullValue;
-	static const double oneValue;
+	static constexpr int width = 2;
+	static constexpr double nullValue = 0.0;
+	static constexpr double oneValue = 1.0;
 	static constexpr  bool alignedLoadStore = true;
 	static constexpr  bool useScatter = false;
 	static constexpr uint32_t limit = 100000;
@@ -71,9 +71,9 @@ struct InstructionTraits<Vec2d>
 	using IdxType = Vec2q;
 	using BoolType = Vec2db;
 	using FloatType = double;
-	static const int width = 2;
-	static const double nullValue;
-	static const double oneValue;
+	static constexpr int width = 2;
+	static constexpr double nullValue = 0.0;
+	static constexpr double oneValue = 1.0;
 	static constexpr  bool alignedLoadStore = true;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = false;
@@ -93,11 +93,11 @@ struct InstructionTraits<Vec4f>
 	using IdxType = Vec4i;
 	using BoolType = Vec4fb;
 	using FloatType = float;
-	static const int width = 4;
-	static const float nullValue;
+	static constexpr int width = 4;
 	static constexpr  bool alignedLoadStore = true;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
-	static const float oneValue;
+	static constexpr float nullValue = 0.f;
+	static constexpr float oneValue = 1.f;
 	static constexpr  bool useScatter = false;
 	static constexpr uint32_t limit = 100000;
 
@@ -116,11 +116,11 @@ struct InstructionTraits<Vec4d>
 	using IdxType = Vec4i;
 	using BoolType = Vec4db;
 	using FloatType = double;
-	static const int width = 4;
-	static const double nullValue;
+	static constexpr int width = 4;
 	static constexpr  bool alignedLoadStore = true;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
-	static const double oneValue;
+	static constexpr double nullValue = 0.0;
+	static constexpr double oneValue = 1.0;
 	static constexpr  bool useScatter = true;
 	static constexpr uint32_t limit = 100000;
 
@@ -137,9 +137,9 @@ struct InstructionTraits<Vec8f>
 	using BoolType = Vec8fb;
 	using FloatType = float;
 
-	static const int width = 8;
-	static const float nullValue;
-	static const float oneValue;
+	static constexpr int width = 8;
+	static constexpr float nullValue = 0.f;
+	static constexpr float oneValue = 1.f;
 	static constexpr  bool alignedLoadStore = true;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = true;
@@ -161,13 +161,13 @@ struct InstructionTraits<Vec8d>
 	using BoolType = Vec8db;
 
 	using FloatType = double;
-	static const int width = 8;
-	static const double nullValue;
-	static const double oneValue;
+	static constexpr int width = 8;
+	static constexpr double nullValue = 0.0;
+	static constexpr double oneValue = 1.0;
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = true;
-	static constexpr uint32_t limit = 100000;
+	static constexpr uint32_t limit = 1000000;
 
 	static constexpr  bool isCompact =  true;
 	using RegBoolType = Vec8db;
@@ -183,13 +183,13 @@ struct InstructionTraits<Vec16f>
 	using IdxType = Vec16i;
 	using BoolType = Vec16fb;
 	using FloatType = float;
-	static const int width = 16;
-	static const float nullValue;
-	static const float oneValue;
+	static constexpr int width = 16;
+	static constexpr float nullValue = 0.f;
+	static constexpr float oneValue = 1.f;
 	static constexpr  bool alignedLoadStore = false;
 	static constexpr  bool boolTypeIsAlignedLoadStore = false;
 	static constexpr  bool useScatter = true;
-	static constexpr uint32_t limit = 100000;
+	static constexpr uint32_t limit = 1000000;
 
 	static constexpr  bool isCompact = true; 
 	using RegBoolType = Vec16fb;

@@ -18,6 +18,7 @@
 #include "vec_double.h"
 #include "vec_view.h"
 #include "apply_operation.h"
+#include "span.h"
 
 namespace DRC
 {
@@ -29,68 +30,78 @@ namespace DRC
 		using VecXX = Vec<VecDouble>;
 		using VecVW = VecView<VecDouble>;
 		using VecBL = VecBool<VecDouble>;
-
+		using SpanXX = Span<VecDouble>;
+		using StrdSpanXX = StridedSpan<VecDouble>;
 	};
 
 
 
 	namespace VecD2D
 	{
-		typedef VecD<Vec2d>  VecxD;
-		typedef VecD<Vec2d>  Vecx;
-		typedef Vec<Vec2d>  VecXX;
-		typedef VecView<Vec2d>  VecVW;
-		typedef VecBool<Vec2d>	VecBL;
+		using  VecxD = VecD<Vec2d>;
+		using  Vecx = VecD<Vec2d>;
+		using  VecXX = Vec<Vec2d>;
+		using  VecVW = VecView<Vec2d>;
+		using  VecBL = VecBool<Vec2d>;
+		using  SpanXX = Span<Vec2d>;
+		using  StrdSpanXX = StridedSpan<Vec2d>;
 	};
 
 
 	namespace VecD4D
 	{
-
-		typedef VecD<Vec4d>  VecxD;
-		typedef VecD<Vec4d>  Vecx;
-		typedef Vec<Vec4d>  VecXX;
-		typedef VecView<Vec4d>  VecVW;
-		typedef VecBool<Vec4d>	VecBL;
-
+		using  VecxD = VecD<Vec4d>;
+		using  Vecx = VecD<Vec4d>;
+		using  VecXX = Vec<Vec4d>;
+		using  VecVW = VecView<Vec4d>;
+		using  VecBL = VecBool<Vec4d>;
+		using  SpanXX = Span<Vec4d>;
+		using  StrdSpanXX = StridedSpan<Vec4d>;
 	};
 
 	namespace VecD8D
 	{
-		typedef VecD<Vec8d>  VecxD;
-		typedef VecD<Vec8d>  Vecx;
-		typedef Vec<Vec8d>  VecXX;
-		typedef VecView<Vec8d>  VecVW;
-		typedef VecBool<Vec8d>	VecBL;
-
+		using  VecxD = VecD<Vec8d>  ;
+		using  Vecx = VecD<Vec8d> ;
+		using  VecXX =Vec<Vec8d> ;
+		using  VecVW = VecView<Vec8d> ;
+		using  VecBL = VecBool<Vec8d> ;
+		using  SpanXX = Span<Vec8d> ;
+		using  StrdSpanXX =StridedSpan<Vec8d> ;
 	};
 
 	namespace VecF16F
 	{
-		typedef VecD<Vec16f>  VecxD;
-		typedef VecD<Vec16f>  Vecx;
-		typedef Vec<Vec16f>  VecXX;
-		typedef VecView<Vec16f>  VecVW;
-		typedef VecBool<Vec16f>	VecBL;
+		using  VecxD = VecD<Vec16f>;
+		using  Vecx = VecD<Vec16f>;
+		using  VecXX = Vec<Vec16f>;
+		using  VecVW = VecView<Vec16f>;
+		using  VecBL = VecBool<Vec16f>;
+		using  SpanXX = Span<Vec16f>;
+		using  StrdSpanXX = StridedSpan<Vec16f>;
 	};
 
 	namespace VecF8F
 	{
-		typedef VecD<Vec8f>  VecxD;
-		typedef VecD<Vec8f>  Vecx;
-		typedef Vec<Vec8f>  VecXX;
-		typedef VecView<Vec8f>  VecVW;
-		typedef VecBool<Vec8f>	VecBL;
+		using  VecxD = VecD<Vec8f>;
+		using  Vecx = VecD<Vec8f>;
+		using  VecXX = Vec<Vec8f>;
+		using  VecVW = VecView<Vec8f>;
+		using  VecBL = VecBool<Vec8f>;
+		using  SpanXX = Span<Vec8f>;
+		using  StrdSpanXX = StridedSpan<Vec8f>;
 	};
 
 
 	namespace VecF4F
 	{
-		typedef VecD<Vec4f>  VecxD;
-		typedef VecD<Vec4f>  Vecx;
-		typedef Vec<Vec4f>  VecXX;
-		typedef VecView<Vec4f>  VecVW;
-		typedef VecBool<Vec4f>	VecBL;
+		using  VecxD = VecD<Vec4f>;
+		using  Vecx = VecD<Vec4f>;
+		using  VecXX = Vec<Vec4f>;
+		using  VecVW = VecView<Vec4f>;
+		using  VecBL = VecBool<Vec4f>;
+		using  SpanXX = Span<Vec4f>;
+		using  StrdSpanXX = StridedSpan<Vec4f>;
 	};
 
 

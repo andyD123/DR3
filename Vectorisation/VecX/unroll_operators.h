@@ -28,7 +28,7 @@ ApplyBinaryOperationVec(const typename InstructionTraits<INS_VEC>::FloatType& rh
 // OpElement's several different use cases for loading and applying operations
 // these are register that will be loaded, operated on and writen from
 // they can be used in a single case or in a block to give aloop unroll effect
-template<typename INS_VEC, int OFFSET>
+template<typename INS_VEC, int OFFSET , bool IS_NOT_ALIGNED =false>
 struct RegisterElement 
 {
 	RegisterElement():value(InstructionTraits<INS_VEC>::nullValue)
@@ -42,13 +42,34 @@ struct RegisterElement
 
 	 inline void load(Float* pData)
 	{
-		 value.load_a(pData + relativeOffset);
+		 if constexpr (IS_NOT_ALIGNED)
+		 {
+			 value.load(pData + relativeOffset);
+		 }
+		 else
+		 {
+			 value.load_a(pData + relativeOffset);
+		 }
 	}
+
+
+	 inline void load_u(Float* pData)
+	 {
+		 value.load(pData + OFFSET);
+	 }
 
 
 	 inline void store(Float* pData)
 	{
-		 value.store_a(pData + relativeOffset);
+		
+		 if constexpr (IS_NOT_ALIGNED)
+		 {
+			 value.store(pData + relativeOffset);
+		 }
+		 else
+		 {
+			 value.store_a(pData + relativeOffset);
+		 }
 	}
 
 };
@@ -63,7 +84,9 @@ struct  UnitaryOpElement
 	using  IdxType = typename InstructionTraits< INS_VEC>::IdxType;
 	IdxType idx;
 
-	uint32_t limit = 100000; //maxs size for scatter TO DO 
+	
+
+	uint32_t limit = InstructionTraits< INS_VEC>::limit; //maxs size for scatter TO DO 
 
 
 	UnitaryOpElement()

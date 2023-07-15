@@ -42,8 +42,7 @@ static INS_VEC cdfnormD(INS_VEC x)
 }
 
 
-
-
+/**/
 template<typename INS_VEC>
 static INS_VEC cdfnorm(const INS_VEC& z)  
 {
@@ -65,12 +64,12 @@ static INS_VEC cdfnorm(const INS_VEC& z)
 	INS_VEC p = asInsVec(0.2316419);	
 	INS_VEC c2 = asInsVec(0.3989423);
 
-	const auto  cond1 = (z > asInsVec(6.0));
-	INS_VEC x = select(cond1, asInsVec(1.0), z);
-	x = x;
+//	const auto  cond1 = (z > asInsVec(6.0));
+//	INS_VEC x = select(cond1, asInsVec(1.0), z);
+//	x = x;
 	
-	INS_VEC y = select( (z < asInsVec(-6.0)),asInsVec(0.0), z);
-	y = y;
+//	INS_VEC y = select( (z < asInsVec(-6.0)),asInsVec(0.0), z);
+//	y = y;
 	INS_VEC a = abs(z);
 	INS_VEC t = asInsVec(1.0) / (asInsVec(1.0) + a*p);
 	INS_VEC b = c2*exp((-z)*(z / asInsVec(2.0)));
@@ -80,6 +79,65 @@ static INS_VEC cdfnorm(const INS_VEC& z)
 	return n;
 }
 
+
+
+template<typename INS_VEC>
+Vec<INS_VEC> cdfnorm(const Vec<INS_VEC>& X)
+
+{
+
+	auto centralLambda = [&](auto z)
+	{
+
+		constexpr double N[] = { 3.52624965998911e-02 , 0.700383064443688,   6.37396220353165, 33.912866078383,  112.079291497871,  221.213596169931, 220.206867912376 };
+		constexpr double M[] = { 8.83883476483184e-02, 1.75566716318264, 16.064177579207, 86.7807322029461 , 296.564248779674,  637.333633378831, 793.826512519948,440.413735824752 };
+
+		auto inv_dc = 1.0 / mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(M[0], z, M[1]), z, M[2]), z, M[3]), z, M[4]), z, M[5]), z, M[6]), z, M[7]);
+		auto n_c = mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(N[0], z, N[1]), z, N[2]), z, N[3]), z, N[4]), z, N[5]), z, N[6]);
+
+		return n_c * inv_dc;
+	};
+
+
+	auto outerLambda = [](auto z)
+	{
+		constexpr double inv_RT2PI(0.39894228040143267793994605993438);
+		constexpr double  d[] = { 20. , 13., 200., 78., 300., 39. };
+		constexpr double  n[] = { 20., 13., 180., 65., 160. };
+
+		auto d_outer = mul_add(mul_add(mul_add(mul_add(mul_add((d[0] * z), z, d[1]), z, d[2]), z, d[3]), z, d[4]), z, d[5]);
+		auto inv_d_outer = inv_RT2PI / d_outer;
+
+		auto n_outer = mul_add(mul_add(mul_add(mul_add((n[0] * z), z, n[1]), z, n[2]), z, n[3]), z, n[4]);
+		return   n_outer * inv_d_outer;
+	};
+
+
+
+	auto onePass = [=](auto x)
+	{
+		auto z = abs(x);
+		auto e = exp(-z * z * 0.5);
+		auto central = centralLambda(z);
+		auto  SPLIT = 7.42;// 7106781186547; // appears to give less error
+		auto condAllDone = (x * x < SPLIT* SPLIT);
+
+		if (horizontal_and(condAllDone))
+		{
+			central *= e;
+			return select(x <= 0.0, central, 1.0 - central);
+		}
+
+		auto outer = outerLambda(z);
+		auto RES = select((z < SPLIT), central, outer);
+		RES *= e;
+		return select(x <= 0.0, RES, 1.0 - RES);
+
+	};
+
+	return ApplyTransformUR_X(X, onePass);
+
+}
 
 
 

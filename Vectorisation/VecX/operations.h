@@ -38,13 +38,13 @@ Vec<INS_VEC> operator -( const Vec<INS_VEC>& rhs)
 	return ApplyUnitaryOperation<INS_VEC,  DR_CUBED::_unitaryMinus<INS_VEC> >(rhs);
 }
 
-
+/*
 template<typename INS_VEC>
 Vec<INS_VEC> cdfnorm( const Vec<INS_VEC>& rhs)
 {
 	return ApplyUnitaryOperation<INS_VEC, DR_CUBED::_cdfnorm<INS_VEC> >(rhs);
 }
-
+*/
 
 template<typename INS_VEC>
 Vec<INS_VEC> cdfnormD(const Vec<INS_VEC>& rhs)

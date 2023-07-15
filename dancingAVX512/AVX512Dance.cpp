@@ -33,7 +33,7 @@ struct RunResults
 class TimerGuard
 {
 	double& m_runTime;
-	std::chrono::steady_clock::time_point  m_startTme;
+	std::chrono::high_resolution_clock::time_point  m_startTme;
 
 public:
 	TimerGuard(double& runTime) : m_runTime(runTime), m_startTme(std::chrono::high_resolution_clock::now()) { runTime = 0.; }
@@ -155,6 +155,53 @@ void doAVXMax512Dance()
 	};
 
 
+
+
+	auto DR3_sse2 = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		using namespace DRC::VecD2D;
+
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); };
+
+		auto v1 = getRandomShuffledVectorxxx(SZ, 0);
+		VecXX vec(v1);
+
+
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+			res = reduce(vec, mxDbl);
+		}
+
+		return std::make_pair(res, time);
+
+	};
+
+
+
+	auto DR3_stl = [&](int SZ, long TEST_LOOP_SZ)
+	{
+		using namespace DRC::VecD2D;
+
+		double time = 0.;
+		volatile  double res = 0.;
+
+		auto v1 = getRandomShuffledVectorxxx(SZ, 0);
+		
+
+		for (long l = 0; l < TEST_LOOP_SZ; l++)
+		{
+			res = *std::max_element(begin(v1), end(v1));
+		}
+
+		return std::make_pair(res, time);
+	};
+
+
+
+
 	using namespace std::chrono_literals;
 
 	for (;;)
@@ -189,6 +236,38 @@ void doAVXMax512Dance()
 			std::this_thread::sleep_for(15000ms);
 
 		}
+
+		std::this_thread::sleep_for(15000ms);
+
+
+		//SSE2
+		for (int K = 0; K < 4; K++)
+		{
+			time = 0.;
+			std::cout << "SSE 2 " << K + 1 << "of 4   " << std::endl;
+			{	TimerGuard timer(time);
+			auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_sse2, TEST_LOOP_SZ);
+			}
+			std::cout << "SSE2 " << K + 1 << "of 4   " << time << " seconds   now sleep" << std::endl;
+			std::this_thread::sleep_for(15000ms);
+		}
+
+		std::this_thread::sleep_for(15000ms);
+
+
+		//STL
+		for (int K = 0; K < 4; K++)
+		{
+			time = 0.;
+			std::cout << "1/10th work using STL max " << K + 1 << "of 4   " << std::endl;
+			{	TimerGuard timer(time);
+			auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_stl, TEST_LOOP_SZ/10);
+			}
+			std::cout << "STL " << K + 1 << "of 4   " << time << " seconds   now sleep" << std::endl;
+			std::this_thread::sleep_for(15000ms);
+		}
+
+		std::this_thread::sleep_for(15000ms);
 
 	}
 

@@ -12,6 +12,7 @@
 #pragma once
 #include "vec.h"
 #include "vec_view.h"
+#include "span.h"
 #include <exception>
 #include <cassert>
 
@@ -179,6 +180,28 @@ bool check_vector_for_filter(const VecView<INS_VEC>&/* rhs*/)
 	}
 	*/
 }
+
+
+template<typename INS_VEC>
+bool check_vector_for_filter(const Span<INS_VEC>&/* rhs*/)
+{
+	return true;// views can be empty
+	/*
+	auto rhsSz = rhs.size();
+
+	if ((rhsSz > 0) || !rhs.isScalar()) //no scalar vectors for filtering to views
+	{
+		return true;
+	}
+	else
+	{
+		//std::assert(false);
+		throw std::exception("bad vector size of non scalar");
+	}
+	*/
+}
+
+
 
 
 template<typename INS_VEC>

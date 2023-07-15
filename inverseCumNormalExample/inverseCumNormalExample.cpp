@@ -1,6 +1,3 @@
-// accumulateExample.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include "../Vectorisation/VecX/vec.h"
 #include "../Vectorisation/VecX/operations.h"
 #include "../Vectorisation/VecX/apply_operation.h"
@@ -70,8 +67,8 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 int main()
 {
       doPerformanceComparison();
-	//	compareNumerics();
-	//profileExample();
+	// compareNumerics();
+	// profileExample();
 	return 0;
 }
 
@@ -79,29 +76,13 @@ int main()
 void doPerformanceComparison()
 {
 
-	long loop = 10000;
-	//for (int SZ = 100; SZ < 10000; SZ += 100)
-	//{
+	   long loop = 10000;
 
 		using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
-	//	std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
-
-
-		//for (int i = 0; i < SZ; i++) { v[i] = i / (FloatType)(SZ); }
 
 		std::random_device rd;
 		std::mt19937 g(rd());
-	//	std::shuffle(&v[0], &v[SZ - 1], g);
 
-
-		//VecXX test(v);
-		//auto test2 = test;
-
-		//VecXX resultsWichura;
-		//std::vector<double> resT(test.size(), .0);
-
-		//
-		///*
 		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
 			std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
@@ -265,7 +246,7 @@ void doPerformanceComparison()
 		}
 
 		
-//*/
+
 
 		for (int SZ = 100; SZ < 10000; SZ += 100)
 		{
@@ -300,11 +281,7 @@ void doPerformanceComparison()
 
 			}
 		}
-		//
-		/*
-		
 
-		//*/
 //
 /*
 //
@@ -341,22 +318,7 @@ void doPerformanceComparison()
 		}
 //
 */
-		/*	*/
-		/*
-		std::vector<VecXX::SCALA_TYPE> wch = resultsWichura;
-		
-		if (vectorsEqual(resT, resT, wch))
-		{
-			std::cout << "\n transform and WS241 MATCH \n";
-		}
-		else
-		{
-			std::cout << "\n FAIL transform and WS241 DO NOT MATCH \n";
-		}
-		std::cout << " | \n \n" << std::endl;
-	//}
 
-		*/
 
 }
 
@@ -368,12 +330,12 @@ void compareNumerics()
 	for (float x = 0.001f; x < 1.0f; x += 0.003f)
 	{
 		VecXX X(x, 16);
-		//auto res =calcCDFNormsSparseFMAOnePass(X)[0]; //OK
-		//auto res = calcCDFNormsSparseFMA(X)[0]; // good
-		//auto res = calcCDFNormWichuraViewsAndFMA(X)[0]; // superb accuract
-		//auto res = calcCDFNormWithViewsAndFMA(X)[0]; // superb accuract
-		//auto res = calcCDFNormWichuraViewsAndFMA(X)[0]; // superb accuract
-		auto res =  calcCDFNormWichuraViewsAndFMA2splits(X)[0]; // superb accuract
+		//auto res =calcCDFNormsSparseFMAOnePass(X)[0];
+		//auto res = calcCDFNormsSparseFMA(X)[0]; 
+		//auto res = calcCDFNormWichuraViewsAndFMA(X)[0];
+		//auto res = calcCDFNormWithViewsAndFMA(X)[0]; 
+		//auto res = calcCDFNormWichuraViewsAndFMA(X)[0];
+		auto res =  calcCDFNormWichuraViewsAndFMA2splits(X)[0]; 
 		std::cout << x << "," << res << "expected" << qnorm8(x) << ",err" << res - qnorm8(x) << std::endl;
 	}
 
@@ -382,9 +344,8 @@ void compareNumerics()
 
 void profileExample()
 {
-	//	int SZ = 2000;
-	long loop = 100000;// 100;
-//	for (int SZ = 100; SZ < 10000; SZ += 100)
+	
+	long loop = 100000;
 	int SZ = 10000;
 	{
 

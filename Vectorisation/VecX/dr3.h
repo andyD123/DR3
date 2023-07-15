@@ -73,6 +73,31 @@ void transformM(LAMBDA& lambda, Vec<INS_VEC>& inputVec)
 	ApplyUnitaryOperationM(inputVec, lambda);
 }
 
+
+//// experimental inplace transforms
+// Sampler loads multiple offset INS_VECs so that lagged and advanced values can be used by the lambda oper,
+// oper takes the sampler as an input argument, iteration and transformation of input vector   
+// is confined to startPos and endPos, subject to not going out of range.
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename SAMPLER >
+void transform(VEC_TYPE<INS_VEC>& inputVec, VEC_TYPE<INS_VEC>& result, OP& oper, SAMPLER& sampler, int startPos = 0, int endPos = -1)
+{
+	ApplyTransformUR_X_Impl_EX(inputVec, result, oper,  sampler, startPos, endPos);
+}
+
+
+
+//// experimental inplace transforms binary transform version of above
+// Sampler loads multiple offset INS_VECs so that lagged and advanced values can be used by the lambda oper,
+// oper takes the sampler as an input argument, iteration and transformation of input vector   
+// is confined to startPos and endPos, subject to not going out of range.
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename SAMPLER >
+void transform(const VEC_TYPE<INS_VEC>& inputVec, const VEC_TYPE<INS_VEC>& aux_inputVec, VEC_TYPE<INS_VEC>& result, OP& oper, SAMPLER& sampler, int startPos = 0, int endPos = -1)
+{
+	ApplyTransformUR_X_Impl_EX(inputVec, aux_inputVec, result, oper, sampler, startPos, endPos);
+}
+
+
+
 //not unrolled x1
 template<typename LAMBDA, typename INS_VEC>
 void  transform1(LAMBDA& lambda, Vec<INS_VEC>& inputVec)
@@ -300,6 +325,93 @@ VecView<INS_VEC> transform(LAMBDA& lambda, const VecView<INS_VEC>& inputVec)
 
 
 
+//input should be const
+template<typename LAMBDA, typename INS_VEC>
+void transform(LAMBDA& lambda, StridedSpan<INS_VEC>& inputVec, Span<INS_VEC>& outVec)
+{
+		
+	StridedSampler<INS_VEC> strided_sampler(inputVec.stride());
+
+	auto wrappedLambda = [&](StridedSampler<INS_VEC>& sampler)
+	{
+		auto x = sampler.X_0.value; 
+		return lambda(x);
+	};
+
+	ApplyTransformUR_X_Impl_EX_STRD(inputVec, outVec, wrappedLambda, strided_sampler, 0, int(inputVec.paddedSize()));
+
+}
+
+
+//input should be const
+template<typename LAMBDA, typename INS_VEC>
+void transform(LAMBDA& lambda,   Span<INS_VEC>& inputVec, Span<INS_VEC>& outVec)
+{
+	UnitarySampler<INS_VEC> identity_sampler;
+
+	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler)
+	{
+		auto x = sampler.X_0.value;
+		return lambda(x);
+	};
+
+	ApplyTransformUR_X_Impl_EX(inputVec, outVec, wrappedLambda, identity_sampler, 0, int(inputVec.paddedSize()));
+
+}
+
+//////////////////// binary with overload //////////
+
+//input both should be const ?
+template<typename LAMBDA, typename INS_VEC>
+void transform(LAMBDA& lambda, Span<INS_VEC>& inputVec, Span<INS_VEC>& inputVec2, Span<INS_VEC>& outVec)
+{
+	UnitarySampler<INS_VEC> identity_sampler_lhs;
+	UnitarySampler<INS_VEC> identity_sampler_rhs;
+
+	int iterate_size = static_cast<int>(std::min(inputVec.size(), inputVec2.size()));
+	//assert(iterate_size <= outVec.size());
+
+	auto wrappedLambda = [&](UnitarySampler<INS_VEC>& sampler_lhs, UnitarySampler<INS_VEC>& sampler_rhs)
+	{
+		INS_VEC& lhs = sampler_lhs.X_0.value;
+		INS_VEC& rhs = sampler_rhs.X_0.value;
+		return lambda(lhs,rhs);
+	};
+
+	ApplyTransformUR_X_Impl_EX_BN(inputVec, inputVec2, outVec, wrappedLambda, identity_sampler_lhs, identity_sampler_rhs,0, iterate_size);
+
+}
+
+
+
+template<typename LAMBDA, typename INS_VEC>
+void transform(LAMBDA& lambda, Span<INS_VEC>& inputVec, Vec<INS_VEC>& inputVec2, Span<INS_VEC>& outVec)
+{
+	
+	Span<INS_VEC> spnVector(inputVec2.data(), inputVec2.size());
+	transform(lambda, inputVec, spnVector, outVec);
+
+}
+
+
+template<typename LAMBDA, typename INS_VEC>
+void transform(LAMBDA& lambda, Vec<INS_VEC>& inputVec,  Span<INS_VEC>&  inputSpan, Span<INS_VEC>& outVec)
+{
+	Span<INS_VEC> spnVector(inputVec.data(), inputVec.size());
+	transform(lambda, spnVector, inputSpan, outVec);
+
+}
+
+
+///////////////////////////////////////////////////
+
+template<typename LAMBDA, typename INS_VEC>
+void transformM(LAMBDA& lambda, Span<INS_VEC>& inputOutputSpan)
+{
+	transform(lambda, inputOutputSpan, inputOutputSpan);
+}
+
+
 /*
 applies the OP to the view in and  scatter,  writes the results to the corresponding elements  of the result vector.
 */
@@ -349,6 +461,30 @@ VecView<INS_VEC>  filter(OP& condition, const Vec<INS_VEC>& lhs)
 {
 	return ApplyFilterImpl< Vec, INS_VEC, OP>(condition, lhs);
 };
+
+
+template< typename INS_VEC, typename OP>
+VecView<INS_VEC> filter(OP& condition, const Span<INS_VEC>& lhs)
+{
+	return ApplyFilter(condition, lhs);
+}
+
+
+template< typename INS_VEC, typename OP>
+VecView<INS_VEC> filter(OP& condition, const StridedSpan<INS_VEC>& lhs)
+{
+
+	StridedSampler<INS_VEC> strided_sampler(lhs.stride());
+	auto wrappedLambda = [&](StridedSampler<INS_VEC>& sampler)
+	{
+		auto x = sampler.X_0.value;
+		return condition(x);
+	};
+
+	assert(lhs.stride() % InstructionTraits<INS_VEC>::width == 0);
+
+	return ApplyFilterImpl_EXt_STRD(wrappedLambda, lhs, strided_sampler);
+}
 
 
 /*
@@ -436,6 +572,90 @@ typename InstructionTraits<INS_VEC>::FloatType reduce(const Vec<INS_VEC>& rhs1, 
 }
 
 
+//unroll version
+template< typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduce(const Span<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	return ApplyAccumulate2UR_X(rhs1, oper);
+	ignore(initVal);
+	ignore(singularInit);
+}
+
+
+//experimental unroll version strided span reduce
+template< typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduce(const StridedSpan<INS_VEC>& input, OP& lambda, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+
+	StridedSampler<INS_VEC> strided_sampler(input.stride());
+
+	auto stridesampler = [&](INS_VEC accRes, StridedSampler<INS_VEC> sampler)
+	{
+		auto x = sampler.X_0.value;
+		return lambda(accRes, x);
+	};
+
+	auto wrapper = [&](INS_VEC lhs, INS_VEC rhs)
+	{
+		return lambda(lhs, rhs);
+	};
+
+
+	//auto wrappedLambda 
+	const auto&  overloaded_lambda = makeOverloaded<decltype(stridesampler), decltype(wrapper)> (stridesampler, wrapper);
+		
+
+		
+	//see lambda story for this impl
+	
+	return ApplyAccumulate2UR_X_EX_STRD(input, overloaded_lambda, strided_sampler, 0, int(input.paddedSize()));
+
+	ignore(initVal);
+	ignore(singularInit);
+}
+
+
+//experimental unroll version strided span reduce
+template< typename INS_VEC, typename OP, typename TRAMSFORM >
+typename InstructionTraits<INS_VEC>::FloatType transformReduce(const StridedSpan<INS_VEC>& input, OP& lambda, TRAMSFORM& trans)
+{
+
+	StridedSampler<INS_VEC> strided_sampler(input.stride());
+	/*
+	auto stridesampler = [&](INS_VEC accRes, StridedSampler<INS_VEC> sampler)
+	{
+		auto x = sampler.X_0.value;
+		return lambda(accRes, x);
+	};
+	*/
+
+	auto stridedTransformer = [&]( StridedSampler<INS_VEC> sampler)->INS_VEC
+	{
+		auto x = sampler.X_0.value;
+		return trans( x);
+	};
+
+	auto wrapper = [&](INS_VEC lhs, INS_VEC rhs)
+	{
+		return lambda(lhs, rhs);
+	};
+
+
+	//auto wrappedLambda 
+//	const auto& overloaded_lambda = makeOverloaded<decltype(stridesampler), decltype(wrapper)>(stridesampler, wrapper);
+
+
+	//see lambda story for this impl
+
+//	return ApplyTransformAccumulate2UR_X_EX_STRD(input, overloaded_lambda, trans,strided_sampler, 0, int(input.paddedSize()));
+	return ApplyTransformAccumulate2UR_X_EX_STRD(input, wrapper, stridedTransformer, strided_sampler, 0, int(input.paddedSize()));
+
+	//ignore(initVal);
+	//ignore(singularInit);
+}
+
+
+
 
 //unroll version
 template< typename INS_VEC, typename OP>
@@ -503,17 +723,53 @@ template< typename INS_VEC, typename OP, typename OPT>
 typename InstructionTraits<INS_VEC>::FloatType transformReduce(const VecView<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
 	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
-	/*
-#ifdef _VC_PERF_REG_
-	return ApplyTransformAccumulate2UR_X(rhs1, operTransform, operAcc);
-	ignore(initVal);
-	ignore(singularInit);
-#else
-	return ApplyTransformAccumulateUR(rhs1, operTransform, operAcc, initVal, singularInit);
-#endif
-*/
-
 }
+
+
+template< typename INS_VEC, typename OP, typename OPT>
+typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Span<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	return ApplyTransformAccumulate2UR_X_Impl(rhs1, operTransform, operAcc);
+}
+
+
+template< typename INS_VEC, typename OP, typename OPT>
+typename InstructionTraits<INS_VEC>::FloatType transformReduce(const Span<INS_VEC>& lhs, const Span<INS_VEC>& rhs, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	////////////////////////////////
+
+	UnitarySampler<INS_VEC> identity_sampler_lhs;
+	UnitarySampler<INS_VEC> identity_sampler_rhs;
+
+	int iterate_size = static_cast<int>(std::min(lhs.size(), rhs.size()));
+	//assert(iterate_size <= outVec.size());
+
+	//transform
+	auto wrappedLambda = [&](UnitarySampler<INS_VEC> sampler_lhs, UnitarySampler<INS_VEC> sampler_rhs)
+	{
+		INS_VEC lhs = sampler_lhs.X_0.value;
+		INS_VEC rhs = sampler_rhs.X_0.value;
+		return operTransform(lhs, rhs);
+	};
+
+
+	auto wrappedLambdaDirect = [&](INS_VEC& lhs, INS_VEC& rhs)
+	{
+		return operTransform(lhs, rhs);
+	};
+
+	auto accumulate_wrapper = [&](INS_VEC lhs, INS_VEC rhs)
+	{
+		return operAcc(lhs, rhs);
+	};
+
+
+	const auto& overloaded_wrappedTransformLambda = makeOverloaded<decltype(wrappedLambdaDirect), decltype(wrappedLambda)>(wrappedLambdaDirect, wrappedLambda);
+
+
+	return ApplyTransformAccumulate2UR_X_ImplBin_EX(lhs, rhs, overloaded_wrappedTransformLambda, accumulate_wrapper, identity_sampler_lhs, identity_sampler_rhs,0, iterate_size);
+}
+
 
 
 
@@ -560,9 +816,6 @@ typename InstructionTraits<INS_VEC>::FloatType transformReduce(const VecView<INS
 }
 
 
-
-
-
 ///////////////////////////adjacent diff ////////////
 
 template< typename INS_VEC, typename OP>
@@ -572,9 +825,10 @@ Vec<INS_VEC> adjacentDiff(const Vec<INS_VEC>& rhs1, OP& oper)
 };
 
 
-//////////////////////////////////
-
-
-
-
-
+//
+//inclusive scan
+template< typename INS_VEC, typename OP>
+Vec<INS_VEC> scan(const Vec<INS_VEC>& rhs1, OP& oper)
+{
+	return ApplyScan(rhs1, oper);
+}

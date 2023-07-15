@@ -37,6 +37,23 @@ inline unsigned int getIndex(const Vec<INS_VEC>& lhs, int i, int j)
 }
 
 
+template <typename INS_VEC>
+inline unsigned int getIndex(const Span<INS_VEC>& lhs, int i, int j)
+{
+	lhs.start();// to get rid of unused
+	return static_cast<unsigned int>(i + j);
+}
+
+
+template <typename INS_VEC>
+inline unsigned int getIndex(const StridedSpan<INS_VEC>& lhs, int i, int j)
+{
+	const long stride = lhs.stride();
+	return static_cast<unsigned int>(i  + j* stride);
+}
+
+
+
 /*
 common implementation for filtering a vec or a view using a vector of pre calulated boolean condition values
 */
@@ -103,9 +120,9 @@ VecView<INS_VEC>  ApplyFilterImpl(OP& condition, const VEC_TYPE<INS_VEC>& lhs)
 	auto pIdx = vw.idxStart();
 	auto pLhs = lhs.start();
 
-	int sz = lhs.size();// should be size() which goes to m_last  element
-	const int width = InstructionTraits<INS_VEC>::width;
-	int step = 1 * width;
+	long sz = static_cast<long>(lhs.size() );// should be size() which goes to m_last  element
+	const long width = InstructionTraits<INS_VEC>::width;
+	long step = 1 * width;
 	INS_VEC LHS;
 
 	int psn = 0;
@@ -135,6 +152,81 @@ VecView<INS_VEC>  ApplyFilterImpl(OP& condition, const VEC_TYPE<INS_VEC>& lhs)
 	return vw;
 };
 
+
+template< template <class> typename VEC_TYPE, typename INS_VEC, typename OP, typename SAMPLER  >
+VecView<INS_VEC>  ApplyFilterImpl_EXt_STRD(OP& condition, const VEC_TYPE<INS_VEC>& lhs, SAMPLER& sampler )
+{
+	check_vector(lhs);
+
+	VecView<INS_VEC> vw(static_cast<size_t>(lhs.size()));
+	auto pRes = vw.start();
+	auto pIdx = vw.idxStart();
+	auto pLhs = lhs.start();
+
+	long sz = static_cast<long>(lhs.size());// should be size() which goes to m_last  element
+	const long width = InstructionTraits<INS_VEC>::width;
+	int stride = static_cast<int>(sampler.stride());
+
+	long step = stride * width;
+	
+	SAMPLER LHS(sampler);
+
+	int psn = 0;
+	int WDTH = std::min(sz, width);
+	int i = 0;
+	for (; i <= (sz- step); i += step)
+	{
+		LHS.load(pLhs + i);
+		using boolVType = typename InstructionTraits<INS_VEC>::BoolType;
+		boolVType		 COND;
+
+		COND = condition(LHS);
+		if (horizontal_or(COND))
+		{
+			for (int j = 0; j < WDTH && ((i + j*stride) < sz); j++)
+			{
+				if (COND[j])
+				{
+					auto idx = getIndex<INS_VEC>(lhs, i, j);
+					pIdx[psn] = idx;
+					pRes[psn] = pLhs[idx];
+					++psn;
+				}
+			}
+		}
+	}
+
+
+	for (; i < sz; i += step)
+	{
+		using Float = typename InstructionTraits<INS_VEC>::FloatType;
+		using boolVType = typename InstructionTraits<INS_VEC>::BoolType;
+		boolVType		 COND;
+
+		for(int j = 0; ((i + j * stride) < sz); i+=stride)
+		{	
+			LHS.X_0.value = pLhs[i];
+			COND = condition(LHS);
+			if (COND[0])
+			{
+				auto idx = getIndex<INS_VEC>(lhs, i, j);
+				pIdx[psn] = idx;
+				pRes[psn] = pLhs[idx];
+				++psn;
+			}
+		}
+		
+	}
+
+
+
+	vw.setSizeAndPad(psn);
+	return vw;
+};
+
+
+
+
 /*
 applys filter  boloean lammda  (condition) to a  values held in VectorView  if result is true values
 are passed on to the result vvector view which is returned.
@@ -153,6 +245,18 @@ template< typename INS_VEC, typename OP>
 VecView<INS_VEC>  ApplyFilter(OP& condition, const Vec<INS_VEC>& lhs)
 {
 	return ApplyFilterImpl< Vec, INS_VEC, OP>(condition, lhs);	
+};
+
+
+
+
+/*
+* tests if any elements satisfy the condition before trying to do the conditional element copy
+*/
+template< typename INS_VEC, typename OP>
+VecView<INS_VEC>  ApplyFilter(OP& condition, const Span<INS_VEC>& lhs)
+{
+	return ApplyFilterImpl< Span, INS_VEC, OP>(condition, lhs);
 };
 
 /*
@@ -298,15 +402,15 @@ std::tuple<VecView<INS_VEC>, VecView<INS_VEC> >  ApplyBinaryFilter(OP& condition
 /*
 applies the OP to the view updating input in situ.
 */
-template< typename INS_VEC, typename OP>
-void ApplyUnitaryOperation(VecView<INS_VEC>& rhs, OP& oper)
+template< template <class> typename VEC_TYPE, typename INS_VEC,  typename OP>
+void ApplyUnitaryOperation(VEC_TYPE<INS_VEC>& rhs, OP& oper)
 {
 
 	if (rhs.isScalar())
 	{
 		auto val = rhs.getScalarValue();
 		auto scalarRes = oper(INS_VEC(val))[0];
-		VecView<INS_VEC> result;
+		VEC_TYPE<INS_VEC> result;
 		result = scalarRes;
 		rhs = result;
 	}
@@ -318,30 +422,43 @@ void ApplyUnitaryOperation(VecView<INS_VEC>& rhs, OP& oper)
 	}
 }
 
-/*
-applies the OP and creates a new view.
-*/
-template< typename INS_VEC, typename OP>
-VecView<INS_VEC> ApplyUnitaryOperation(const VecView<INS_VEC>& rhs, OP& oper)
+
+
+template<  typename INS_VEC, typename OP>
+void ApplyUnitaryOperation(Span<INS_VEC>& rhs, OP& oper)
+{
+
+	Convertable<INS_VEC> sampler;
+	ApplyTransformUR_X_Impl_EX(rhs, rhs, oper, sampler, 0, static_cast<int>(rhs.paddedSize()));
+}
+
+
+
+template< template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+VEC_TYPE<INS_VEC> ApplyUnitaryOperation(const VEC_TYPE<INS_VEC>& rhs, OP& oper)
 {
 	if (rhs.isScalar())
 	{
 		auto val = rhs.getScalarValue();
-		auto scalarRes = oper(INS_VEC(val))[0];
-		VecView<INS_VEC> result( scalarRes);
+		//auto
+		typename InstructionTraits<INS_VEC>::FloatType scalarRes = oper(INS_VEC(val))[0];
+		VEC_TYPE<INS_VEC> result( scalarRes);
 		return result;
 	}
 	else
 	{
 		check_vector_for_filter(rhs);
-		VecView<INS_VEC> result(rhs);
+		VEC_TYPE<INS_VEC> result(rhs);
 		auto pRes = result.start();
 		auto pRhs = rhs.start();
-		int sz = rhs.paddedSize();
+		int sz = static_cast<int>(rhs.paddedSize());
 		Unroll_Unitary<INS_VEC, OP>::apply_4(sz, pRhs, pRes, oper);
 		return result;
 	}
 }
+
+
+
 
 
 
