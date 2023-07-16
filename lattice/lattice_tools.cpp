@@ -19,11 +19,23 @@
 #include "../Vectorisation/VecX/zip_utils.h"
 #include "../Vectorisation/VecX/span.h"
 
-
 #include "utils.h"
-
 #include "lattice_tools.h"
 
+
+/*
+Experimental features for using SIMD in rangified manner 
+lagged/sampled valued being introduced into iterating lambda
+
+zip iterator
+
+strided iteration
+
+span based access 
+
+and abridged version of layout scheme  MDSpan .. not the standard
+
+*/
 
 static auto getRandomShuffledVector(int SZ, int instance_number = 0)
 {
@@ -65,13 +77,13 @@ void doScan()
 {
 
 	auto v1 = std::vector<VecXX::SCALA_TYPE>(4000, 0.0);
-	FLOAT last = 0.0;// -1.0;
+	FLOAT last = 0.0;
 	for (auto& x : v1)
 	{
 		x = last + 1.0;
 		last = x;
 	}
-	// getRandomShuffledVector(200);
+	
 	VecXX a(v1);
 	std::vector<FLOAT> dbg = v1;
 
@@ -91,24 +103,6 @@ void doScan()
 		dbg = result;
 	}
 	std::cout << "run time = " << time << "\n";
-
-
-
-	///////TRANSFORM SCAN //////
-
-	//{
-	//	TimerGuard timer(time);
-	//	auto doubleIt= [](auto X) { return  X*2.; };
-	//	VecXX result;
-	//	for (long l = 0; l < 1000000; ++l)
-	//	{
-	//		result = ApplyTransformScan(a, sum, doubleIt);
-	//		//dbg = a;
-	//	}
-	//	dbg = result;
-	//}
-
-	//////////
 
 
 
@@ -153,59 +147,36 @@ void doStridedSpan()
 {
 
 	auto v1 = std::vector<VecXX::SCALA_TYPE>(4000, 0.0);
-	FLOAT last = 0.0;// -1.0;
+	FLOAT last = 0.0;
 	for (auto& x : v1)
 	{
 		x = last + 1.0;
 		last = x;
 	}
-	// getRandomShuffledVector(200);
+
 	VecXX a_vec(v1);
 	std::vector<FLOAT> dbg = v1;
-
 	VecXX result = a_vec;
-
 	result *= 0.0;
 
 	StridedSampler<VecXX::INS> strided_sampler(2);
-
-	//sampler.load(a_vec.data());
-
-
-
-	//DRC::Span< VecXX::INS>
 	SpanXX spn(a_vec.start(), 800);
 
 	SpanXX spnPlus(result.start(), 800);
 
-	//UnitarySampler<VecXX::INS> identity_sampler;
-
-
 	auto SQR = [](StridedSampler<VecXX::INS>& sampler)
 	{
-		auto x = sampler.X_0.value;//get<0>();
+		auto x = sampler.X_0.value;
 		return x * x;
 	};
 
 
-	//need a ptr diff  betwee start span and start vecXX
-	//spnPlus *= 0;
-
-	ApplyTransformUR_X_Impl_EX(spn, spnPlus, SQR, strided_sampler, 0, int(spn.paddedSize()));// int impSZ = -1)`
+	ApplyTransformUR_X_Impl_EX(spn, spnPlus, SQR, strided_sampler, 0, int(spn.paddedSize()));
 
 	std::vector<double> ddbbgg = spn;
 	ddbbgg = spnPlus;
 
 	VecXX rootvec = result;
-
-	//auto SQRT = []( VecXX::INS x) { return sqrt(x); };
-
-	//auto SQRT = [](UnitarySampler<VecXX::INS>& sampler)
-	//{
-	//	auto x = sampler.get<0>();
-	//	return sqrt(x);
-	//};
-
 
 	auto SQRT2 = [](auto& x)
 	{
@@ -213,42 +184,9 @@ void doStridedSpan()
 	};
 
 	auto rooted = spnPlus;
-	transform(SQRT2, spnPlus, rooted);// rootvec);
+	transform(SQRT2, spnPlus, rooted);
 
 	ddbbgg = rooted;
-
-
-
-	//reduce
-	//auto SUM = [](auto x, auto y) {return x + y; };
-
-	//auto val =ApplyAccumulate2UR_X(spn, SUM);
-	// goes to reduce(span,lambda)
-
-	//auto SUM_SPARSE = [](StridedSampler<VecXX::INS>& sampler_lhs, StridedSampler<VecXX::INS>& sampler_rhs)
-	//{
-	//	auto x = sampler_lhs.get<0>();
-	//	auto y = sampler_rhs.get<0>();
-	//	return x + y;
-	//};
-
-	//auto val = reduce(spn, SUM_SPARSE);
-
-	/*
-
-	//TO DO transformReduce
-
-	auto SQR_VAL = [](auto x) {return x * x; };
-
-	const auto& cnstSpn = spn;
-
-	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(cnstSpn, SQR_VAL, SUM);
-	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(spn, SQR_VAL, SUM);
-
-
-	auto sumSqrsXXX = transformReduce(spn, SQR_VAL, SUM);
-
-	*/
 
 }
 
@@ -256,20 +194,18 @@ void doTransformWithASpan()
 {
 
 	auto v1 = std::vector<VecXX::SCALA_TYPE>(4000, 0.0);
-	FLOAT last = 0.0;// -1.0;
+	FLOAT last = 0.0;
 	for (auto& x : v1)
 	{
 		x = last + 1.0;
 		last = x;
 	}
-	// getRandomShuffledVector(200);
+
 	VecXX a_vec(v1);
 	std::vector<FLOAT> dbg = v1;
 
 	VecXX result = a_vec;
 
-
-	//DRC::Span< VecXX::INS>
 	SpanXX spn(a_vec.start(), 200);
 
 	SpanXX spnPlus(a_vec.start() + 200, 200);
@@ -279,7 +215,7 @@ void doTransformWithASpan()
 
 	auto SQR = [](UnitarySampler<VecXX::INS>& sampler)
 	{
-		auto x = sampler.X_0.value; // get<0>();
+		auto x = sampler.X_0.value; 
 		return x * x;
 	};
 
@@ -289,13 +225,11 @@ void doTransformWithASpan()
 		return x * x;
 	};
 
-
-
 	//need a ptr diff  betwee start span and start vecXX
 
-	ApplyTransformUR_X_Impl_EX(a_vec, spnPlus, SQR, identity_sampler, 0, int(spn.paddedSize()));// int impSZ = -1)`
+	ApplyTransformUR_X_Impl_EX(a_vec, spnPlus, SQR, identity_sampler, 0, int(spn.paddedSize()));
 
-	ApplyTransformUR_X_Impl_EX(spn, spnPlus, SQR, identity_sampler, 0, int(spn.paddedSize()));// int impSZ = -1)
+	ApplyTransformUR_X_Impl_EX(spn, spnPlus, SQR, identity_sampler, 0, int(spn.paddedSize()));
 
 	//trapped into using same container , ie vecxx vecxx  , not mixed so add extra type argument 
 	std::vector<double> ddbbgg = spn;
@@ -328,7 +262,7 @@ void doTransformWithASpan()
 	auto CUBE_IT = [](auto x) { return x * x * x; };
 
 	auto neVw = vwOfSpan;
-	transformM(CUBE_IT, neVw);// , resvec);// vwOfSpan); // broken somehow
+	transformM(CUBE_IT, neVw);
 
 	for (auto& x : neVw)
 	{
@@ -341,7 +275,7 @@ void doTransformWithASpan()
 
 	//transforming view as a result of filtering a span
 
-	vwOfSpan = transform(CUBE_IT, vwOfSpan); // broken somehow
+	vwOfSpan = transform(CUBE_IT, vwOfSpan); // broken somehow ?
 
 	ddbbgg = vwOfSpan;
 
@@ -349,42 +283,6 @@ void doTransformWithASpan()
 	{
 		std::cout << x << std::endl;
 	}
-
-
-
-	//reduce
-	//auto SUM = [](auto x, auto y) {return x + y; };
-
-	//auto val =ApplyAccumulate2UR_X(spn, SUM);
-	// goes to reduce(span,lambda)
-
-
-	// possible problem calls align load
-	// we need a more general version using unaligne dor sampled load
-	//auto val = reduce(spn, SUM);
-
-
-
-	//TO DO transformReduce 
-
-//	auto SQR_VAL = [](auto x) {return x * x; };
-
-//	const auto& cnstSpn = spn;
-
-	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(cnstSpn, SQR_VAL, SUM);
-	//auto sumSqrsXXX = ApplyTransformAccumulate2UR_X_Impl(spn, SQR_VAL, SUM);
-
-
-//	auto sumSqrsXXX = transformReduce(spn, SQR_VAL, SUM);
-
-
-
-	//auto trform = ApplyUnitaryOperation(cnstSpn, SQR_VAL);
-	//return trform.getScalarValue();
-
-
-	//need to make apply unitary op work with generic vec/view so that it works with span
-
 
 
 
@@ -404,7 +302,6 @@ void doZipping()
 	auto it = make_Zipped_itr<VecXX::INS>(a, b, c);
 
 
-	//auto zipped =
 	const VecXX& aa = a;
 	const VecXX& bb = b;
 	const VecXX& cc = c;
@@ -417,8 +314,6 @@ void doZipping()
 	ignore(zp5);
 	ignore(zp5_itr);
 
-
-	//it.inc(1);
 
 	auto addingLambda = [](auto& zpped)
 	{
@@ -456,33 +351,20 @@ void doZipping()
 	};
 
 
-
-	//Vec<INS_VEC> res =   transform(OP & oper, const Zipped_ITR< INS_VEC, N>&zip)
-
 	auto res = transform(addingLambda5, zp5_itr);
 
 	std::vector<FLOAT> vdb = res;
 
 	enum class Access { down = -1, mid = 0, up = 1 };
-	//	using Mysample = Named_Zip_iter < VecXX::INS, 3, Access > ;
 
-		//NAMED_INDEX
-
-		//Mysample instance;
-
-
-	//	Named_Zipped_Reg < VecXX::INS, 3, Access > myReg;
 	Zipped_Reg < VecXX::INS, 3 > myReg;
-	//	using reg = Zipped_Reg < VecXX::INS, 3 >;
 
-		//auto zz = Access::down;
 	auto yy = myReg.get((int)Access::up);
 	ignore(yy);
 
 
 
 	//////////////////////////////
-
 
 	VecXX out1 = a;
 	VecXX out2 = b;
@@ -526,7 +408,7 @@ void doMatrix()
 
 	using MAT1 = Layout2D<double, 8, 0>; //row order  pad/simd size = 8
 
-	//auto pDat =
+
 	MDSpan<double, MAT1> mat8(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
@@ -542,9 +424,9 @@ void doMatrix()
 	std::cout << "  8 \n  \n \n  \n ";
 		
 
-	using MAT4 = Layout2D<double, 4, 0>; //row order  pad/simd size = 8
+	using MAT4 = Layout2D<double, 4, 0>; 
 
-//auto pDat =
+
 	MDSpan<double, MAT4> mat4(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
@@ -560,9 +442,9 @@ void doMatrix()
 	std::cout << " 4 \n  \n \n  \n ";
 
 
-	using MAT2 = Layout2D<double, 2, 0>; //row order  pad/simd size = 8
+	using MAT2 = Layout2D<double, 2, 0>; 
 
-//auto pDat =
+
 	MDSpan<double, MAT2> mat2(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
@@ -581,7 +463,6 @@ void doMatrix()
 
 	using MAT16 = Layout2D<double, 16, 0>; //row order  pad/simd size = 8
 
-//auto pDat =
 	MDSpan<double, MAT16> mat16(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
@@ -599,9 +480,7 @@ void doMatrix()
 	////////////////////////
 
 
-	using MAT11 = Layout2D<double, 8, 1>; //row order  pad/simd size = 8
-
-//auto pDat =
+	using MAT11 = Layout2D<double, 8, 1>; //row order 
 	MDSpan<double, MAT11> mat1_8(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
@@ -617,9 +496,8 @@ void doMatrix()
 	std::cout << "col  8 \n  \n \n  \n ";
 
 
-	using MAT14 = Layout2D<double, 4, 1>; //row order  pad/simd size = 8
+	using MAT14 = Layout2D<double, 4, 1>; //row order  
 
-//auto pDat =
 	MDSpan<double, MAT14> mat1_4(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
@@ -635,9 +513,7 @@ void doMatrix()
 	std::cout << "col 4 \n  \n \n  \n ";
 
 
-	using MAT12 = Layout2D<double, 2,1>; //row order  pad/simd size = 8
-
-//auto pDat =
+	using MAT12 = Layout2D<double, 2,1>; //row order  
 	MDSpan<double, MAT12> mat1_2(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
@@ -654,9 +530,7 @@ void doMatrix()
 	std::cout << "col 2 \n  \n \n  \n ";
 
 
-	using MAT116 = Layout2D<double, 16, 1>; //row order  pad/simd size = 8
-
-//auto pDat =
+	using MAT116 = Layout2D<double, 16, 1>; //row order  
 	MDSpan<double, MAT116> mat116(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
@@ -713,16 +587,20 @@ void doMatrix()
 		auto add = [](auto x, auto y) {return x + y; };
 		double sum = reduce(spn, add);
 
+		double sum1 = 0;
+
 		for (int k = 0; k < 10; k++)
 		{
 			auto  strd_spn = getStridedSpan<VecXX::INS>(mat, 1, k);
 
 			std::vector<double> vdbg_strd = strd_spn;
 
-			double sum1 = reduce(strd_spn, add);
+			sum1 = reduce(strd_spn, add);
 		}
 
-		//auto x = sum1;
+
+		ignore(sum);
+		ignore(sum1);
 
 		// TO DO
 		//VecXX dotProductResult(0., spn.size());
