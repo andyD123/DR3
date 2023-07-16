@@ -53,3 +53,5 @@
 /VectorTest/My Advisor Results - VectorTest
 /VectorTest/My Inspector Results - VectorTest
 /out/build/x64-Debug
+/lattice/x64
+/dancingAVX512/x64

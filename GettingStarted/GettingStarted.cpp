@@ -157,24 +157,24 @@ void applyLambdasToVector()
 //  ApplyTransform 
     
 
-    auto  v = getVector(); 
-    std::vector<double> dbVec = v;
+    auto  v1 = getVector(); 
+    std::vector<double> dbVec = v1;
 
-    auto res1 = transform(square, v);
-    dbVec = res1;
+    auto res = transform(square, v1);
+    dbVec = res;
 
     //transform a constant vector
     const auto  v_const = getVector();
-    res1 = transform(square, v_const);
-    dbVec = res1;
+    res = transform(square, v_const);
+    dbVec = res;
 
     // transform modify inplace 
-   VecXX updater = getVector();
-   transformM(square, updater);
-   dbVec = updater;
+   VecXX updater1 = getVector();
+   transformM(square, updater1);
+   dbVec = updater1;
 
-   transformM(square, updater);
-   dbVec = updater;
+   transformM(square, updater1);
+   dbVec = updater1;
 
    // ApplyTransform to scalar vector with Val 3.0
  
@@ -204,21 +204,21 @@ void applyLambdasToVector()
 void applyBinaryLambdasToVector()
 {
 
-    auto add = [](auto x, auto y) { return x + y; };
+    auto add1 = [](auto x, auto y) { return x + y; };
 
 
     //default transform unroll 4
     //basic binary op 
     std::vector<double> dbVec;
-    const auto  x = getVector();
-    const auto  y = getVector()+2.0;
-    auto res1 = transform(add, x,y);
+    const auto  x1 = getVector();
+    const auto  y1 = getVector()+2.0;
+    auto res1 = transform(add1, x1,y1);
     dbVec = res1;
 
-    auto res2 = transform(add, x, 10.0);
+    auto res2 = transform(add1, x1, 10.0);
     dbVec = res2;
 
-    auto res3 = transform(add, 100.0,y);
+    auto res3 = transform(add1, 100.0,y1);
     dbVec = res3;
 
    // double unused = 0.0;
@@ -230,25 +230,24 @@ void applyBinaryLambdasToVector()
 
         auto add = [](auto x, auto y) { return x + y; };
         //basic binary op 
-        std::vector<double> dbVec;
         const auto  x = getVector();
         const auto  y = getVector();// +2.0;
-        auto res1 = transform1(add, x, y);
-        dbVec1 = res1;
+        auto resa = transform1(add, x, y);
+        dbVec1 = resa;
 
-        auto res2 = transform1(add, x, VecXX(10.0)); //creating  vector containing a scalar
-        dbVec = res2;
+        auto resb = transform1(add, x, VecXX(10.0)); //creating  vector containing a scalar
+        dbVec1 = resb;
 
-        auto res3 = transform1(add, VecXX(100.0), y);
-        dbVec1 = res3;
+        auto resc = transform1(add, VecXX(100.0), y);
+        dbVec1 = resc;
 
 
-        auto res4 = transform1(add, x, 10.0);
-        dbVec = res4;
+        auto resd = transform1(add, x, 10.0);
+        dbVec1 = resd;
 
   
-        auto res5 = transform1(add, 100.0, y);
-        dbVec1 = res5;
+        auto rese = transform1(add, 100.0, y);
+        dbVec1 = rese;
 
     }
 
@@ -257,21 +256,21 @@ void applyBinaryLambdasToVector()
     {
         auto add_mod = [](auto& x, auto y) {  x += y;  return x; };
         //basic binary op 
-        std::vector<double> dbVec;
+        std::vector<double> dbVecA;
         const auto  x = getVector();
         auto xx = x;
         const auto  y = getVector() + 2.0;
         auto yy = y;
         transformM(add_mod, xx, y);
-        dbVec = xx;
+        dbVecA = xx;
 
         auto add_modxx = [](auto& x, auto y) { x += y; return x; };
         transformM(add_modxx, xx, 10.0);
-        dbVec = xx;
+        dbVecA = xx;
 
         auto add_mody = [](auto x, auto& y) { y += x; return y; };
         transformM(add_mody, 100.0, yy);
-        dbVec = yy;
+        dbVecA = yy;
     }
 
 

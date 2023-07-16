@@ -63,19 +63,6 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 }
 
 
-static double getErr(const  std::vector<double>& t)
-{
-	ignore(t);
-	return 2e-11;
-}
-
-
-static float getErr(const  std::vector<float>& t)
-{
-	ignore(t);
-	return 1.0;
-}
-
 
 template<typename T>
 bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std::vector<T>& C3, const std::vector<T>& input, T ERR = 1e-13)
@@ -117,50 +104,6 @@ bool vectorsEqualD(const std::vector<T>& C1, const std::vector<T>& C2, const std
 
 }
 
-static bool valuesAreEqual(double x, double y, double tol = 1e-14)
-{
-
-	auto err1 = fabs((x - y) / (fabs(x) + fabs(y)));
-
-	return (err1 > tol) ? false : true;
-}
-
-
-static auto getRandomShuffledVector(int SZ, int instance_number = 0)
-{
-	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
-
-
-	static std::map<int, std::vector<FloatType> > vectors;
-
-
-	int key = 10 * SZ + instance_number;
-	//store vectors with key 10 times size  and add on 0-9 integer for instance of different random vector
-
-	if (SZ < 0)
-	{
-		vectors.clear();
-		SZ = 0;
-	}
-
-
-	if (vectors.find(key) != vectors.end())
-	{
-		return vectors[key];
-	}
-	else
-	{
-		std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
-		for (int i = 0; i < SZ; i++) { v[i] += /*FloatType(SZ / 2)*/ +i; }
-		std::random_device rd;
-		std::mt19937 g(rd());
-		std::shuffle(begin(v), end(v), g);
-		vectors[key] = v;
-		return v;
-	}
-}
-
-
 
 
 
@@ -169,10 +112,6 @@ static auto getRandomShuffledVector(int SZ, int instance_number = 0)
 static auto numOps = [](int TEST_LOOP_SZ, int SZ) { return  static_cast<int>(double(TEST_LOOP_SZ) * double(SZ)); };
 
 
-static double getnull(double)
-{
-	return 0.0;
-}
 
 using Calc_Values = std::map<int, FLOAT>;
 using Calc_Values_V = std::map<int, std::vector<FLOAT> >;

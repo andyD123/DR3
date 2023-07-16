@@ -629,7 +629,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
     
 	INS_VEC ZERO = 0.0;
 	INS_VEC val = 0.0;
-
 	INS_VEC RES = 0.0;
 
 	size_t working_Size = sz;
@@ -654,7 +653,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 	{	
 		val = 0.0;
 		val.load_partial(remainder, pRhs);
-		INS_VEC ZERO = 0.0;
 		RES = scanN(val, ZERO, oper);
 		whole_reg_sum += RES[remainder];
 		pRhs += remainder;

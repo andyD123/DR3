@@ -293,6 +293,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="americanCrankNicholsonPricer.cpp" />
+    <ClCompile Include="americanFinitDiffPricer.cpp" />
+    <ClCompile Include="americanImplicitFiniteDiff.cpp" />
+    <ClCompile Include="americanTrinomialPricer.cpp" />
+    <ClCompile Include="americanTrinomialPricerUpAndOut.cpp" />
+    <ClCompile Include="europeanBinomialPricer.cpp" />
+    <ClCompile Include="euroTrinomial.cpp" />
+    <ClCompile Include="euroTrinomialPricerWithInit.cpp" />
     <ClCompile Include="lattice.cpp" />
   </ItemGroup>
   <ItemGroup>
