@@ -302,6 +302,7 @@
     <ClCompile Include="euroTrinomial.cpp" />
     <ClCompile Include="euroTrinomialPricerWithInit.cpp" />
     <ClCompile Include="lattice.cpp" />
+    <ClCompile Include="lattice_tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vectorisation\Vectorisation.vcxproj">

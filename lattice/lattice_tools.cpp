@@ -25,6 +25,42 @@
 #include "lattice_tools.h"
 
 
+static auto getRandomShuffledVector(int SZ, int instance_number = 0)
+{
+	using FloatType = typename InstructionTraits<VecXX::INS>::FloatType;
+
+
+	static std::map<int, std::vector<FloatType> > vectors;
+
+
+	int key = 10 * SZ + instance_number;
+	//store vectors with key 10 times size  and add on 0-9 integer for instance of different random vector
+
+	if (SZ < 0)
+	{
+		vectors.clear();
+		SZ = 0;
+	}
+
+
+	if (vectors.find(key) != vectors.end())
+	{
+		return vectors[key];
+	}
+	else
+	{
+		std::vector<FloatType>  v(SZ, VecXX::SCALA_TYPE(6.66));
+		for (int i = 0; i < SZ; i++) { v[i] += i; }
+		std::random_device rd;
+		std::mt19937 g(rd());
+		std::shuffle(begin(v), end(v), g);
+		vectors[key] = v;
+		return v;
+	}
+}
+
+
+
 void doScan()
 {
 
