@@ -1470,7 +1470,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 	const int width = InstructionTraits<INS_VEC>::width;
 	int step = 4 * width;
 
-	int sz = rhs1.size();
+	int sz = static_cast<int>(rhs1.size());
 	Vec<INS_VEC> ret(sz);
 
 	SAMPLER LHS1;// (sampler_lhs);
@@ -1521,7 +1521,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_Imp
 
 		i += step;
 		//int rhsSZ = rhs1.size();
-		int impSZ = rhs1.paddedSize();
+		int impSZ = static_cast<int>(rhs1.paddedSize());
 		//int rhsSZ = sz - step;
 		int rhsSZ = impSZ - step;
 

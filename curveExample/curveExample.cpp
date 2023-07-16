@@ -51,12 +51,14 @@ using namespace DRC::VecD8D;
 
 struct OldCurveImpl
 {
+	virtual ~OldCurveImpl() {};
 	virtual double getDiscountFactor(long days) const = 0;
 };
 
 class OldCurve
 {
 public:
+	virtual ~OldCurve() {};
 	OldCurve( std::unique_ptr<OldCurveImpl>&& newCurve) :m_pImpl(std::move(newCurve)) {};
 
 	// no copy/assign 
@@ -76,6 +78,7 @@ private:
 class SimpleInterp : public  OldCurveImpl
 {
 public:
+	~SimpleInterp() = default;
 
 	SimpleInterp(const std::vector<long>& dts, const std::vector<double>& zeros) :zeroRates(zeros), dates(dts) {} //check arrays same size, dates monatonic and rates sensible
 
@@ -573,7 +576,7 @@ void doCurve2A()
 
 		auto valV = testCurve2.valueAt(0.0);
 
-		auto valV2 = testCurve2.valueAt(0.5);
+		//auto valV2 = testCurve2.valueAt(0.5);
 
 		
 		using cashFlow = std::pair< long, double>;
@@ -683,7 +686,7 @@ void doCurve2A()
 			//allPrices[j] =prices;
 	   //	 count++;
 
-			/*
+			/* */
 
 			for (int kk = 0; kk < KRVSZ; kk++)
 			{
@@ -691,7 +694,7 @@ void doCurve2A()
 			}
 			j++;
 
-	 */
+	
 
 
 		}
