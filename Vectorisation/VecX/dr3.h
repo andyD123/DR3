@@ -571,6 +571,24 @@ typename InstructionTraits<INS_VEC>::FloatType reduce(const Vec<INS_VEC>& rhs1, 
 	
 }
 
+//unroll version
+template< typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduceI(const Vec<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	ignore(initVal);
+	ignore(singularInit);
+#ifdef _VC_PERF_REG_
+	return ApplyAccumulate2UR_X(rhs1, oper,0);
+
+
+#else
+	return ApplyAccumulate2UR(rhs1, oper, initVal, singularInit);
+#endif
+
+}
+
+
+
 
 //unroll version
 template< typename INS_VEC, typename OP>

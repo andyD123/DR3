@@ -392,7 +392,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR(const Vec<INS_
 
 //unrolled version helps greatly with VC2019
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
-typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TYPE<INS_VEC>& rhs1, OP& oper )
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TYPE<INS_VEC>& rhs1, OP& oper, int  ZeroInitTag = 1)
 {
 	check_vector(rhs1);
 	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
@@ -421,15 +421,31 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 
 	if (sz >= step * 2)
 	{
-		//initialise first set of registers
+	
+		if  (ZeroInitTag==0)
 		{
-			RES.load_a(pRhs1 + i);
-			RES1.load_a(pRhs1 + i + width);
-			RES2.load_a(pRhs1 + i + width * 2);
-			RES3.load_a(pRhs1 + i + width * 3);
+			//initialise first set of registers
+			{
+				RES = InstructionTraits<INS_VEC>::nullValue;
+				RES1 = InstructionTraits<INS_VEC>::nullValue;
+				RES2 = InstructionTraits<INS_VEC>::nullValue;
+				RES3 = InstructionTraits<INS_VEC>::nullValue;
+			}
+		}
+		else
+		{
+			//initialise first set of registers
+			{
+				RES.load_a(pRhs1 + i);
+				RES1.load_a(pRhs1 + i + width);
+				RES2.load_a(pRhs1 + i + width * 2);
+				RES3.load_a(pRhs1 + i + width * 3);
+			}
+			i += step;
 		}
 
-		i += step;
+		
+
 		long rhsSZ = static_cast<long>(rhs1.size());
 		for (; i <= (rhsSZ - step); i += step)
 		{
