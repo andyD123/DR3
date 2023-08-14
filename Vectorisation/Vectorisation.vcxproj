@@ -568,6 +568,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="intrinsic_utils.h" />
     <ClInclude Include="VecX\accumulate_transform.h" />
     <ClInclude Include="VecX\alloc_policy.h" />
     <ClInclude Include="VecX\alloc_policy_imp.h" />
