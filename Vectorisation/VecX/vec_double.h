@@ -153,6 +153,20 @@ public:
 		return *this;
 	}
 
+
+	VecDouble& load_partial(unsigned int remainder, const double* p)
+	{
+		//to do
+		switch (remainder)
+		{
+		case 2:
+			m_data[0] = p[0];
+		case 1:
+			m_data[1] = p[1];
+		}
+		return *this;
+	}
+
    void store_a( double* p)
 	{
 		p[0] = m_data[0];
@@ -188,6 +202,23 @@ public:
 };
 
 
+
+/*****************************************************************************
+*
+*          Vector blend functions
+*
+*****************************************************************************/
+// permute and blend Vec2d
+template <int i0, int i1>
+static inline VecDouble blend2(VecDouble const a, VecDouble const b) 
+{
+	       
+	static_assert(i0 > -1 && i0 <3 && i1 >-1 && i1 < 3);
+	double  temp[] = { a[0], a[1],b[0],b[1] };
+
+	return { temp[i0],temp[i1] };
+
+}
 
 // vector operator + : add element by element
 static inline VecDouble operator + (VecDouble const & a, VecDouble const & b) {
