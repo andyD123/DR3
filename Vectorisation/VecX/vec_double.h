@@ -153,6 +153,22 @@ public:
 		return *this;
 	}
 
+	//number of elements to load from p*
+	VecDouble& load_partial(unsigned int elements , const double* p)
+	{
+		switch (elements)
+		{
+
+		case 2:
+			m_data[0] = p[0];
+		case 1:
+			m_data[1] = p[1];
+		default:
+			break;
+		}
+		return *this;
+	}
+
    void store_a( double* p)
 	{
 		p[0] = m_data[0];
@@ -188,6 +204,23 @@ public:
 };
 
 
+
+
+// permute and blend 
+//blends elements  from the 2 vectors together index 0 or 1 for a, and 2 or 3 from vec b
+//this enables use as with VCL library
+template <int i0, int i1>
+static inline VecDouble blend2(VecDouble const a, VecDouble const b)
+{
+
+	static_assert(i0 > -1 && i0 < 4);
+	static_assert(i1 > -1 && i1 <4);
+
+	double temp[] = { a[0],a[1],b[0],b[1] };
+
+	return { temp[i0],temp[i1] };
+
+}
 
 // vector operator + : add element by element
 static inline VecDouble operator + (VecDouble const & a, VecDouble const & b) {
