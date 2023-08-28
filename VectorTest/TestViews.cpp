@@ -388,7 +388,7 @@ void testFilterVecX(int SZ)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x <= 200.0; };
+	auto condTest = [](auto x) {return x <= asNumber(200.0); };
 
 	VecVW vw = ApplyFilter(condTest, initVals);
 
@@ -398,7 +398,7 @@ void testFilterVecX(int SZ)
 		EXPECT_TRUE(x <= 200.0);
 	}
 
-	auto NotCondTestVals =  [](auto x) {return x > 200.0; };
+	auto NotCondTestVals =  [](auto x) {return x > asNumber(200.0); };
 
 	VecVW vwNegate = ApplyFilter(NotCondTestVals, initVals);
 
@@ -432,7 +432,7 @@ void testFilterVecZ(int SZ)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x <= 200.0; };
+	auto condTest = [](auto x) {return x <= asNumber(200.0); };
 	VecVW vw = ApplyFilter(condTest, initVals);
 
 
@@ -441,7 +441,7 @@ void testFilterVecZ(int SZ)
 		EXPECT_TRUE(x <= 200.0);
 	}
 
-	auto NotCondTestVals = [](auto x) {return x > 200.0; };
+	auto NotCondTestVals = [](auto x) {return x > asNumber(200.0); };
 
 	VecVW vwNegate = ApplyFilter(NotCondTestVals, initVals);
 
@@ -476,7 +476,7 @@ void testFilterVecW(int SZ)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x <= 200.0; };
+	auto condTest = [](auto x) {return x <= asNumber(200.0); };
 	VecVW vw = ApplyFilter(condTest, initVals);
 
 	for (auto x : vw)
@@ -484,7 +484,7 @@ void testFilterVecW(int SZ)
 		EXPECT_TRUE(x <= 200.0);
 	}
 
-	auto NotCondTestVals = [](auto x) {return x > 200.0; };
+	auto NotCondTestVals = [](auto x) {return x > asNumber(200.0); };
 
 	VecVW vwNegate = ApplyFilter(NotCondTestVals, initVals);
 
@@ -520,7 +520,7 @@ void testFilterViewZ(int SZ)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x <= 200.0; };
+	auto condTest = [](auto x) {return x <= asNumber(200.0); };
 
 	auto evenTest = [](auto x) {return (floor((x - asNumber(0.00000001))) / asNumber(2.0)) == ( floor( (x- asNumber(0.00000001)) / asNumber(2.0))); };
 
@@ -532,7 +532,7 @@ void testFilterViewZ(int SZ)
 		EXPECT_TRUE(x <= 200.0);
 	}
 
-	auto NotCondTestVals = [](auto x) {return x > 200.0; };
+	auto NotCondTestVals = [](auto x) {return x > asNumber(200.0); };
 
 	VecVW vwNegate = ApplyFilter(NotCondTestVals, evenView);
 
@@ -566,7 +566,7 @@ void testCountedFilterZ(int SZ, int count)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x <= 200.0; };
+	auto condTest = [](auto x) {return x <= asNumber(200.0); };
 	VecVW vw = ApplyCountedFilter(condTest, test, count);
 
 	for (auto x : vw)
@@ -586,7 +586,7 @@ void testCountedFilterZAllTrue(int SZ, int count)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x > -10000.0; };
+	auto condTest = [](auto x) {return x > asNumber(-10000.0); };
 
 	VecVW vw = ApplyCountedFilter(condTest, test, count);
 
@@ -628,7 +628,7 @@ void testCountedFilterViewZ(int SZ, int count)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x <= 200.0; };
+	auto condTest = [](auto x) {return x <= asNumber(200.0); };
 	auto evenTest = [](auto x) {return (floor((x - asNumber( 0.00000001))) / asNumber(2.0)) == (floor((x - asNumber(0.00000001)) / asNumber(2.0))); };
 
 	VecVW evenView = ApplyFilter(evenTest, initVals);
@@ -665,7 +665,7 @@ void testCountedFilterViewZAllTrue(int SZ, int count)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x > VecXX::INS(-1200.0); };
+	auto condTest = [](auto x) {return x > VecXX::INS(asNumber(-1200.0)); };
 	auto trueFilter = [](auto x) {return x==x; };
 
 	VecVW trueView = ApplyFilter(trueFilter, initVals);
@@ -870,7 +870,7 @@ TEST(TestViews, binaryFilterZVec)
 	VecXX test(v);
 
 	//auto initVals = test;
-	auto condTest = [](auto x) {return x >= 2.0; };
+	auto condTest = [](auto x) {return x >= asNumber(2.0); };
 
 	auto tupple_vw = ApplyBinaryFilter(condTest, test);
 
@@ -987,7 +987,7 @@ TEST(TestViews, applyFilterSmallLambda)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x >= 2.0; };
+	auto condTest = [](auto x) {return x >= asNumber(2.0); };
 
 	VecVW vw = ApplyFilter(condTest, test );
 
@@ -1006,7 +1006,7 @@ TEST(TestViews, writeView)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x >= 2.0; };
+	auto condTest = [](auto x) {return x >= asNumber(2.0); };
 
 	VecVW vw = ApplyFilter(condTest, test);
 
@@ -1034,8 +1034,8 @@ TEST(TestViews, writeThroView)
 	VecXX test(v);
 
 	auto initVals = test;
-	auto condTest = [](auto x) {return x >= 2.0; };
-	auto condTest2 = [](auto x) {return x >= 5.0; };
+	auto condTest = [](auto x) {return x >= asNumber(2.0); };
+	auto condTest2 = [](auto x) {return x >= asNumber(5.0); };
 
 	VecVW vw = ApplyFilter(condTest, test);
 
@@ -1065,7 +1065,7 @@ TEST(TestViews, writeView2)
 
 	VecXX test(v);
 	auto initVals = test;
-	auto condTest = [](auto x) {return x >= 2.0; };
+	auto condTest = [](auto x) {return x >= asNumber(2.0); };
 
 	VecVW vw = ApplyFilter(condTest, test);
 	auto squareIt = [](auto x) {return x * x; };

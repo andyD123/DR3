@@ -17,7 +17,7 @@
 
 
 //#include "norm.h"
-
+//using namespace DRC::VecLDb;
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
 using namespace DRC::VecD4D;

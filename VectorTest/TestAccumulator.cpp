@@ -19,6 +19,14 @@
 
 #include <numeric>
 
+
+void setEpsilonTransformAccumulate(long double& val)
+{
+	const long double testEpsilon = 0.000001;
+	val = testEpsilon;
+}
+
+
 void setEpsilonTransformAccumulate(double& val)
 {
 	const double testEpsilon = 0.000001;
@@ -28,6 +36,12 @@ void setEpsilonTransformAccumulate(double& val)
 void setEpsilonTransformAccumulate(float& val)
 {
 	const float testEpsilon = 100.f;
+	val = testEpsilon;
+}
+
+void setEpsilonAccumulate(long double& val)
+{
+	const long double testEpsilon = 0.000000004;
 	val = testEpsilon;
 }
 

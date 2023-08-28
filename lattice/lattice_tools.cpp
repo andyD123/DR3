@@ -145,7 +145,7 @@ void testSampler()
 
 void doStridedSpan()
 {
-
+	using FLOAT = VecXX::SCALA_TYPE;
 	auto v1 = std::vector<VecXX::SCALA_TYPE>(4000, 0.0);
 	FLOAT last = 0.0;
 	for (auto& x : v1)
@@ -173,7 +173,7 @@ void doStridedSpan()
 
 	ApplyTransformUR_X_Impl_EX(spn, spnPlus, SQR, strided_sampler, 0, int(spn.paddedSize()));
 
-	std::vector<double> ddbbgg = spn;
+	std::vector<FLOAT> ddbbgg = spn;
 	ddbbgg = spnPlus;
 
 	VecXX rootvec = result;
@@ -232,7 +232,7 @@ void doTransformWithASpan()
 	ApplyTransformUR_X_Impl_EX(spn, spnPlus, SQR, identity_sampler, 0, int(spn.paddedSize()));
 
 	//trapped into using same container , ie vecxx vecxx  , not mixed so add extra type argument 
-	std::vector<double> ddbbgg = spn;
+	std::vector<FLOAT> ddbbgg = spn;
 
 	transform(SQR2, spn, spnPlus);
 
@@ -406,10 +406,10 @@ void doMatrix()
 		val++;
 	}
 
-	using MAT1 = Layout2D<double, 8, 0>; //row order  pad/simd size = 8
+	using MAT1 = Layout2D<FLOAT, 8, 0>; //row order  pad/simd size = 8
 
 
-	MDSpan<double, MAT1> mat8(owningVec.data(), 10, 10);
+	MDSpan<FLOAT, MAT1> mat8(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -424,10 +424,10 @@ void doMatrix()
 	std::cout << "  8 \n  \n \n  \n ";
 		
 
-	using MAT4 = Layout2D<double, 4, 0>; 
+	using MAT4 = Layout2D<FLOAT, 4, 0>;
 
 
-	MDSpan<double, MAT4> mat4(owningVec.data(), 10, 10);
+	MDSpan<FLOAT, MAT4> mat4(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -442,10 +442,10 @@ void doMatrix()
 	std::cout << " 4 \n  \n \n  \n ";
 
 
-	using MAT2 = Layout2D<double, 2, 0>; 
+	using MAT2 = Layout2D<FLOAT, 2, 0>;
 
 
-	MDSpan<double, MAT2> mat2(owningVec.data(), 10, 10);
+	MDSpan<FLOAT, MAT2> mat2(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -461,9 +461,9 @@ void doMatrix()
 	std::cout << "2 \n  \n \n  \n ";
 
 
-	using MAT16 = Layout2D<double, 16, 0>; //row order  pad/simd size = 8
+	using MAT16 = Layout2D<FLOAT, 16, 0>; //row order  pad/simd size = 8
 
-	MDSpan<double, MAT16> mat16(owningVec.data(), 10, 10);
+	MDSpan<FLOAT, MAT16> mat16(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -480,8 +480,8 @@ void doMatrix()
 	////////////////////////
 
 
-	using MAT11 = Layout2D<double, 8, 1>; //row order 
-	MDSpan<double, MAT11> mat1_8(owningVec.data(), 10, 10);
+	using MAT11 = Layout2D<FLOAT, 8, 1>; //row order 
+	MDSpan<FLOAT, MAT11> mat1_8(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -496,9 +496,9 @@ void doMatrix()
 	std::cout << "col  8 \n  \n \n  \n ";
 
 
-	using MAT14 = Layout2D<double, 4, 1>; //row order  
+	using MAT14 = Layout2D<FLOAT, 4, 1>; //row order  
 
-	MDSpan<double, MAT14> mat1_4(owningVec.data(), 10, 10);
+	MDSpan<FLOAT, MAT14> mat1_4(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -513,8 +513,8 @@ void doMatrix()
 	std::cout << "col 4 \n  \n \n  \n ";
 
 
-	using MAT12 = Layout2D<double, 2,1>; //row order  
-	MDSpan<double, MAT12> mat1_2(owningVec.data(), 10, 10);
+	using MAT12 = Layout2D<FLOAT, 2,1>; //row order  
+	MDSpan<FLOAT, MAT12> mat1_2(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -530,8 +530,8 @@ void doMatrix()
 	std::cout << "col 2 \n  \n \n  \n ";
 
 
-	using MAT116 = Layout2D<double, 16, 1>; //row order  
-	MDSpan<double, MAT116> mat116(owningVec.data(), 10, 10);
+	using MAT116 = Layout2D<FLOAT, 16, 1>; //row order  
+	MDSpan<FLOAT, MAT116> mat116(owningVec.data(), 10, 10);
 
 	for (int i = 0; i < 10; ++i)
 	{
@@ -551,7 +551,7 @@ void doMatrix()
 	
 	{
 
-		MDSpan<double, MAT1> mat(owningVec.data(), 10, 10);
+		MDSpan<FLOAT, MAT1> mat(owningVec.data(), 10, 10);
 
 
 		for (int i = 0; i < 10; ++i)
@@ -578,22 +578,22 @@ void doMatrix()
 
 		Span< VecXX::INS>  spn = getSpan<VecXX::INS>(mat, 0);
 
-		std::vector<double> vdbg = spn;
+		std::vector<FLOAT> vdbg = spn;
 
 		Span< VecXX::INS>  spn2 = getSpan<VecXX::INS>(mat, 1);
 
-		std::vector<double> vdbg2 = spn2;
+		std::vector<FLOAT> vdbg2 = spn2;
 
 		auto add = [](auto x, auto y) {return x + y; };
-		double sum = reduce(spn, add);
+		FLOAT sum = reduce(spn, add);
 
-		double sum1 = 0;
+		FLOAT sum1 = 0;
 
 		for (int k = 0; k < 10; k++)
 		{
 			auto  strd_spn = getStridedSpan<VecXX::INS>(mat, 1, k);
 
-			std::vector<double> vdbg_strd = strd_spn;
+			std::vector<FLOAT> vdbg_strd = strd_spn;
 
 			sum1 = reduce(strd_spn, add);
 		}

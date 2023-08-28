@@ -7,6 +7,7 @@
 #include "../Vectorisation/VecX/instruction_traits.h"
 
 //using namespace DRC::VecDb;
+//using namespace DRC::VecLDb;
 
 //using namespace DRC::VecF4F;
 //using namespace DRC::VecD2D;

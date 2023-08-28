@@ -67,6 +67,10 @@ void testScan(int SZ)
 
 
 
+long double getErr(long double)
+{
+	return std::pow(10, 4 - 16);
+}
 
 double getErr(double)
 {

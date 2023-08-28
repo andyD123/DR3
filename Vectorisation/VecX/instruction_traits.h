@@ -65,6 +65,29 @@ struct InstructionTraits<VecDouble>
 };
 
 
+
+
+template<>
+struct InstructionTraits<VecLDouble>
+{
+	using IdxType = Vec2q;
+	using BoolType = VecBoolD;
+	using FloatType = long double;
+	static constexpr int width = 2;
+	static constexpr double nullValue = 0.0;
+	static constexpr double oneValue = 1.0;
+	static constexpr  bool alignedLoadStore = false;
+	static constexpr  bool useScatter = false;
+	static constexpr uint32_t limit = 100000;
+	static constexpr  bool boolTypeIsAlignedLoadStore = true;
+
+	static constexpr  bool isCompact = false;
+	using RegBoolType = VecBoolD;
+	using MemBoolType = VecLDouble;
+};
+
+
+
 template<>
 struct InstructionTraits<Vec2d>
 {

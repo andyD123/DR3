@@ -39,7 +39,7 @@ TEST(TestSpan, ApplyUnitaryOperation)
 
 		auto testSquare = test;
 
-		std::vector<double> std_vec_in = test;
+		std::vector<Numeric> std_vec_in = test;
 
 		ApplyUnitaryOperation(testSquare, mySquareItLambda);
 
@@ -73,7 +73,7 @@ TEST(TestSpan, ApplyUnitaryOperation_shifting_start)
 
 			auto testSquare = test;
 
-			std::vector<double> std_vec_in = test;
+			std::vector<Numeric> std_vec_in = test;
 
 			ApplyUnitaryOperation(testSquare, mySquareItLambda);
 
@@ -102,7 +102,7 @@ TEST(TestSpan, transform)
 
 		auto mySquareItLambda = [](auto x) {return x * x;  };
 
-		std::vector<double> std_vec_in = test;
+		std::vector<Numeric> std_vec_in = test;
 
 		VecXX outVec(v);
 		SpanXX result(outVec.begin(), SZ);
@@ -134,7 +134,7 @@ TEST(TestSpan, transforM)
 
 		auto mySquareItLambda = [](auto x) {return x * x;  };
 
-		std::vector<double> std_vec_in = test;
+		std::vector<Numeric> std_vec_in = test;
 
 
 		transformM(mySquareItLambda, test);
@@ -170,7 +170,7 @@ TEST(TestSpan, transforM_shifting_start)
 
 			auto testSquare = test;
 
-			std::vector<double> std_vec_in = test;
+			std::vector<Numeric> std_vec_in = test;
 
 			transformM(mySquareItLambda, testSquare);
 
@@ -200,7 +200,7 @@ TEST(TestSpan, filter)
 
 		SpanXX testSpan(testV.begin(), SZ);
 
-		std::vector<double> expected;
+		std::vector<Numeric> expected;
 
 		for (const auto& X : testSpan)
 		{
@@ -216,7 +216,7 @@ TEST(TestSpan, filter)
 
 		auto evenView = filter(isEven, testSpan);
 
-		std::vector<double> dbgVw = evenView;
+		std::vector<Numeric> dbgVw = evenView;
 
 
 		for (int i = 0; i < evenView.size(); ++i)
@@ -244,9 +244,9 @@ TEST(TestSpan, filter_shifting_start)
 
 			SpanXX testSpan(testV.begin() + start, SZ);
 
-			std::vector<double> expected;
+			std::vector<Numeric> expected;
 
-			std::vector<double> inspan = testSpan;
+			std::vector<Numeric> inspan = testSpan;
 
 			expected = testSpan;
 			expected.clear();
@@ -267,7 +267,7 @@ TEST(TestSpan, filter_shifting_start)
 
 			auto evenView = filter(isEven, testSpan);
 
-			std::vector<double> dbgVw = evenView;
+			std::vector<Numeric> dbgVw = evenView;
 
 
 			for (int i = 0; i < evenView.size(); ++i)
@@ -297,7 +297,7 @@ TEST(TestSpan, reduce)
 		auto SUM = [](auto x, auto y) { return x + y; };
 
 		auto result = reduce(testSpan, SUM);
-		double expected = 0.;
+		Numeric expected = 0.;
 
 		for (const auto& X : testSpan)
 		{
@@ -328,7 +328,7 @@ TEST(TestSpan, reduce_shifting_start)
 			auto SUM = [](auto x, auto y) { return x + y; };
 
 			auto result = reduce(testSpan, SUM);
-			double expected = 0.;
+			Numeric expected = 0.;
 
 			for (const auto& X : testSpan)
 			{
@@ -362,7 +362,7 @@ TEST(TestSpan, transform_reduce)
 		auto SQR = [](auto x) { return x * x; };
 
 		auto result = transformReduce(testSpan, SQR, SUM);
-		double expected = 0.;
+		Numeric expected = 0.;
 
 		for (const auto& X : testSpan)
 		{
@@ -395,7 +395,7 @@ TEST(TestSpan, transform_reduce_binary)
 		auto MULT = [](auto x, auto y) { return x * y; };
 
 		auto result = transformReduce(testSpan, testSpan2, MULT, SUM);
-		double expected = 0.;
+		Numeric expected = 0.;
 
 		for (int i = 0; i < SZ; ++i)
 		{
@@ -424,7 +424,7 @@ TEST(TestSpan, transform_reduce_binary)
 			auto MULT = [](auto x, auto y) { return x * y; };
 
 			auto result = transformReduce(testSpan, testSpan2, MULT, SUM);
-			double expected = 0.;
+			Numeric expected = 0.;
 
 			for (int i = 0; i < SZ; ++i)
 			{
@@ -462,7 +462,7 @@ TEST(TestSpan, transform_reduce_shifting_start)
 			auto SQR = [](auto x) { return x * x; };
 
 			auto result = transformReduce(testSpan, SQR, SUM);
-			double expected = 0.;
+			Numeric expected = 0.;
 
 			for (const auto& X : testSpan)
 			{
@@ -499,7 +499,7 @@ TEST(TestSpan, strided_transform)
 
 		auto testSquare = test;
 
-		std::vector<double> std_vec_in = test;
+		std::vector<Numeric> std_vec_in = test;
 
 		
 		VecXX outVec(v);
@@ -553,7 +553,7 @@ TEST(TestSpan, strided_transform_withOffset)
 
 		auto testSquare = test;
 
-		std::vector<double> std_vec_in = test;
+		std::vector<Numeric> std_vec_in = test;
 
 
 		VecXX outVec(v);
@@ -610,7 +610,7 @@ TEST(TestSpan, strided_transform_2)
 
 		auto testSquare = test;
 
-		std::vector<double> std_vec_in = test;
+		std::vector<Numeric> std_vec_in = test;
 
 
 		VecXX outVec(v);
@@ -667,7 +667,7 @@ TEST(TestSpan, strided_transform_withOffset_2)
 
 			auto testSquare = test;
 
-			std::vector<double> std_vec_in = test;
+			std::vector<Numeric> std_vec_in = test;
 
 
 			VecXX outVec(v);
@@ -722,7 +722,7 @@ TEST(TestSpan, strided_filter)
 
 			StrdSpanXX testSpan(testV.begin() + offset, SZ, stride);
 
-			std::vector<double> expected;
+			std::vector<Numeric> expected;
 
 			auto  SZ_MAX = std::min(v.size(), static_cast<size_t>(SZ * stride));
 
@@ -736,11 +736,11 @@ TEST(TestSpan, strided_filter)
 				}
 			}
 
-			auto isEven = [](auto x) { return !((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) > VecXX::INS(0.)); };
+			auto isEven = [](auto x) { return !((x - VecXX::INS((asNumber(2.0)) * floor(x * VecXX::INS(asNumber(0.5))))) > VecXX::INS(asNumber(0.))); };
 			auto evenView = filter(isEven, testSpan);
 
-			std::vector<double> dbgSpan = testSpan;
-			std::vector<double> dbgVw = evenView;
+			std::vector<Numeric> dbgSpan = testSpan;
+			std::vector<Numeric> dbgVw = evenView;
 
 
 			for (int i = 0; i < evenView.size(); ++i)
@@ -772,7 +772,7 @@ TEST(TestSpan, strided_filter_vary_offsets)
 
 			StrdSpanXX testSpan(testV.begin() + offset, SZ, stride);
 
-			std::vector<double> expected;
+			std::vector<Numeric> expected;
 
 			auto  SZ_MAX = std::min(v.size(), static_cast<size_t>(SZ * stride));
 
@@ -786,11 +786,11 @@ TEST(TestSpan, strided_filter_vary_offsets)
 				}
 			}
 
-			auto isEven = [](auto x) { return !((x - VecXX::INS((2.0) * floor(x * VecXX::INS(0.5)))) > VecXX::INS(0.)); };
+			auto isEven = [](auto x) { return !((x - VecXX::INS((asNumber(2.0)) * floor(x * VecXX::INS(asNumber(0.5))))) > VecXX::INS(asNumber(0.))); };
 			auto evenView = filter(isEven, testSpan);
 
-			std::vector<double> dbgSpan = testSpan;
-			std::vector<double> dbgVw = evenView;
+			std::vector<Numeric> dbgSpan = testSpan;
+			std::vector<Numeric> dbgVw = evenView;
 
 
 			EXPECT_NUMERIC_EQ(static_cast<int>(expected.size()), evenView.size());
@@ -829,14 +829,14 @@ TEST(TestSpan, strided_reduce)
 		
 		auto testSquare = test;
 
-		std::vector<double> std_vec_in = test;
+		std::vector<Numeric> std_vec_in = test;
 
 
 		auto SUM = [](auto x, auto y) { return x + y; };
 		
 
 		auto result = reduce(test,  SUM);
-		double expected = 0.;
+		Numeric expected = 0.;
 
 		for (int i = 0; i < SZ;i+= stride)
 		{
@@ -870,7 +870,7 @@ TEST(TestSpan, strided_reduce_large)
 
 		auto SUM = [](auto x, auto y) { return x + y; };
 		auto result = reduce(test, SUM);
-		double expected = 0.;
+		Numeric expected = 0.;
 
 		for (int i = 0; i < SZ; i += stride)
 		{
@@ -899,7 +899,7 @@ void testStridedSpanReduce(int offset, int startSZ, int endSZ)
 
 		auto SUM = [](auto x, auto y) { return x + y; };
 		auto result = reduce(test, SUM);
-		double expected = 0.;
+		Numeric expected = 0.;
 
 		for (int i = 0; i < SZ; i += stride)
 		{
@@ -952,14 +952,14 @@ void testTransformReduceStrided(int startSz, int maxSz, int offsetStart, int off
 
 			auto testSquare = test;
 
-			std::vector<double> std_vec_in = test;
+			std::vector<Numeric> std_vec_in = test;
 
 			auto SQR = [](auto x) { return x * x; };
 			auto SUM = [](auto x, auto y) { return x + y; };
 
 
 			auto result = transformReduce(test, SUM, SQR);
-			double expected = 0.;
+			Numeric expected = 0.;
 
 			for (int i = 0; i < SZ; i += stride)
 			{
@@ -1017,12 +1017,12 @@ TEST(TestSpan, binary_transform_simple)
 
 		auto DIV = [](auto x, auto y) {return x / y;  };
 
-		std::vector<double> std_vec_in = spn1;
-		std::vector<double> std_vec_in2 = spn2;
+		std::vector<Numeric> std_vec_in = spn1;
+		std::vector<Numeric> std_vec_in2 = spn2;
 
 		transform(DIV, spn1, spn2, outSpan);
 
-		std::vector<double> outDbg = outSpan;
+		std::vector<Numeric> outDbg = outSpan;
 
 		for (int i = 1; i < spn2.size(); ++i)
 		{
@@ -1107,12 +1107,12 @@ TEST(TestSpan, binary_transform_simple_with_offset)
 
 				auto DIV = [](auto x, auto y) {return x / y;  };
 
-				std::vector<double> std_vec_in = spn1;
-				std::vector<double> std_vec_in2 = spn2;
+				std::vector<Numeric> std_vec_in = spn1;
+				std::vector<Numeric> std_vec_in2 = spn2;
 
 				transform(DIV, spn1, spn2, outSpan);
 
-				std::vector<double> outDbg = outSpan;
+				std::vector<Numeric> outDbg = outSpan;
 
 				for (int i = 1; i < spn2.size(); ++i)
 				{
@@ -1153,13 +1153,13 @@ TEST(TestSpan, binary_transform_simple_with_vector)
 
 		auto DIV = [](auto x, auto y) {return x / y;  };
 
-		std::vector<double> std_vec_in = spn1;
-		std::vector<double> std_vec_in2 = spn2;
+		std::vector<Numeric> std_vec_in = spn1;
+		std::vector<Numeric> std_vec_in2 = spn2;
 
 		//transform(DIV, spn1, spn2, outSpan);
 		transform(DIV, spn1, testY, outSpan);
 
-		std::vector<double> outDbg = outSpan;
+		std::vector<Numeric> outDbg = outSpan;
 
 		for (int i = 1; i < spn2.size(); ++i)
 		{
@@ -1188,12 +1188,12 @@ TEST(TestSpan, binary_transform_simple_with_vector)
 
 		auto DIV = [](auto x, auto y) {return x / y;  };
 
-		std::vector<double> std_vec_in = testY;
-		std::vector<double> std_vec_in2 = spn2;
+		std::vector<Numeric> std_vec_in = testY;
+		std::vector<Numeric> std_vec_in2 = spn2;
 
 		transform(DIV, testY, spn2, outSpan);
 		
-		std::vector<double> outDbg = outSpan;
+		std::vector<Numeric> outDbg = outSpan;
 
 		for (int i = 1; i < spn2.size(); ++i)
 		{
@@ -1231,10 +1231,10 @@ TEST(TestSpan, basic_2D_SPAN)
 
 
 
-	using MAT1 = Layout2D<double, 8, 0>;
+	using MAT1 = Layout2D<Numeric, 8, 0>;
 
 	//auto pDat =
-	MDSpan<double, MAT1> mat(owningVec.data(), 10, 10);
+	MDSpan<Numeric, MAT1> mat(owningVec.data(), 10, 10);
 
 	/*
 	for (int i = 0; i < 10; ++i)

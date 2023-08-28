@@ -5,12 +5,15 @@
 #include "../Vectorisation/VecX/vec.h"
 #include "testNamespace.h"
 
+Numeric asNumber(long double x);
 
 Numeric asNumber(double x);
 
 Numeric asNumber(float x);
 
 Numeric asNumber(int x);
+
+void EXPECT_NUMERIC_EQ(long double x, long double y);
 
 void EXPECT_NUMERIC_EQ(double x, double y);
 

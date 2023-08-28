@@ -14,7 +14,7 @@
 #include <iomanip>  
 #include <cstring>
 
-
+//using namespace DRC::VecLDb;
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;  //sse2   double
 //using namespace DRC::VecD4D;	//avx2   double
@@ -24,8 +24,6 @@ using namespace DRC::VecD8D;  //avx512 double
 
 using FLOAT = typename InstructionTraits<VecXX::INS>::FloatType;
 
-
-//using FLOAT = typename InstructionTraits<VecXX::INS>::FloatType;
 
 constexpr double billion = 1000000000.0;
 

@@ -83,14 +83,19 @@ static INS_VEC cdfnorm(const INS_VEC& z)
 
 template<typename INS_VEC>
 Vec<INS_VEC> cdfnorm(const Vec<INS_VEC>& X)
-
 {
+	using FLOAT =  typename InstructionTraits<INS_VEC>::FloatType;
+
+	 auto asNumber = []( auto x) constexpr
+	{
+		return static_cast<FLOAT>(x);
+	};
 
 	auto centralLambda = [&](auto z)
 	{
 
-		constexpr double N[] = { 3.52624965998911e-02 , 0.700383064443688,   6.37396220353165, 33.912866078383,  112.079291497871,  221.213596169931, 220.206867912376 };
-		constexpr double M[] = { 8.83883476483184e-02, 1.75566716318264, 16.064177579207, 86.7807322029461 , 296.564248779674,  637.333633378831, 793.826512519948,440.413735824752 };
+		constexpr FLOAT N[] = { FLOAT(3.52624965998911e-02) , FLOAT(0.700383064443688),   FLOAT(6.37396220353165), FLOAT(33.912866078383),  FLOAT(112.079291497871),  FLOAT(221.213596169931), FLOAT(220.206867912376) };
+		constexpr FLOAT M[] = { FLOAT(8.83883476483184e-02), FLOAT(1.75566716318264), FLOAT(16.064177579207), FLOAT(86.7807322029461) , FLOAT(296.564248779674),  FLOAT(637.333633378831), FLOAT(793.826512519948),FLOAT(440.413735824752) };
 
 		auto inv_dc = 1.0 / mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(M[0], z, M[1]), z, M[2]), z, M[3]), z, M[4]), z, M[5]), z, M[6]), z, M[7]);
 		auto n_c = mul_add(mul_add(mul_add(mul_add(mul_add(mul_add(N[0], z, N[1]), z, N[2]), z, N[3]), z, N[4]), z, N[5]), z, N[6]);
@@ -99,11 +104,11 @@ Vec<INS_VEC> cdfnorm(const Vec<INS_VEC>& X)
 	};
 
 
-	auto outerLambda = [](auto z)
+	auto outerLambda = [&](auto z)
 	{
-		constexpr double inv_RT2PI(0.39894228040143267793994605993438);
-		constexpr double  d[] = { 20. , 13., 200., 78., 300., 39. };
-		constexpr double  n[] = { 20., 13., 180., 65., 160. };
+		constexpr FLOAT inv_RT2PI(0.39894228040143267793994605993438);
+		constexpr FLOAT  d[] = { FLOAT(20.) , FLOAT(13.), FLOAT(200.), FLOAT(78.), FLOAT(300.), FLOAT(39.) };
+		constexpr FLOAT  n[] = { FLOAT(20.), FLOAT(13.), FLOAT(180.), FLOAT(65.), FLOAT(160.) };
 
 		auto d_outer = mul_add(mul_add(mul_add(mul_add(mul_add((d[0] * z), z, d[1]), z, d[2]), z, d[3]), z, d[4]), z, d[5]);
 		auto inv_d_outer = inv_RT2PI / d_outer;
@@ -117,21 +122,21 @@ Vec<INS_VEC> cdfnorm(const Vec<INS_VEC>& X)
 	auto onePass = [=](auto x)
 	{
 		auto z = abs(x);
-		auto e = exp(-z * z * 0.5);
+		auto e = exp(-z * z * asNumber(0.5) );
 		auto central = centralLambda(z);
-		auto  SPLIT = 7.42;// 7106781186547; // appears to give less error
+		auto  SPLIT = asNumber(7.42);// 7106781186547; // appears to give less error
 		auto condAllDone = (x * x < SPLIT* SPLIT);
 
 		if (horizontal_and(condAllDone))
 		{
 			central *= e;
-			return select(x <= 0.0, central, 1.0 - central);
+			return select(x <= asNumber(0.0), central, asNumber(1.0) - central);
 		}
 
 		auto outer = outerLambda(z);
 		auto RES = select((z < SPLIT), central, outer);
 		RES *= e;
-		return select(x <= 0.0, RES, 1.0 - RES);
+		return select(x <= asNumber(0.0), RES, asNumber(1.0) - RES);
 
 	};
 
@@ -152,7 +157,7 @@ template<typename INS_VEC>
 Vec<INS_VEC> cdfnorminv(const Vec<INS_VEC>& X)
 {
 
-	auto asNumber = [](auto x)
+	auto asNumber = [](auto x) constexpr
 	{
 		return static_cast<typename InstructionTraits<INS_VEC>::FloatType>(x);
 	};
@@ -170,7 +175,7 @@ Vec<INS_VEC> cdfnorminv(const Vec<INS_VEC>& X)
 		auto q = p - asNumber(0.5);
 		auto r = q * q;
 		X = (((((a[1] * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * r + a[6]) * q /
-			(((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + 1);
+			(((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + asNumber(1.));
 
 		return X;
 	};
@@ -184,7 +189,7 @@ Vec<INS_VEC> cdfnorminv(const Vec<INS_VEC>& X)
 		if (!horizontal_or(condLo))
 			return initVal;
 
-		auto q = sqrt(-2.0 * log(p));
+		auto q = sqrt(asNumber (-2.0) * log(p));
 		auto X = (((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) /
 			((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + asNumber(1.0));
 
@@ -196,8 +201,8 @@ Vec<INS_VEC> cdfnorminv(const Vec<INS_VEC>& X)
 	auto aclambdaHi = [=](auto initVal, auto p)
 	{
 		const auto p_low = asNumber(0.02425);
-		const auto p_high = 1 - p_low;
-		auto condHi = (p_high < p) && (p < 1);
+		const auto p_high = asNumber(1.) - p_low;
+		auto condHi = (p_high < p) && (p < asNumber(1.));
 		if (!horizontal_or(condHi))
 			return initVal;
 

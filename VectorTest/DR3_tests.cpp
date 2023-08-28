@@ -25,7 +25,7 @@
 void testTransform_1(int SZ)
 {
 
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0) * x; };
 	VecXX scalar = asNumber(3.33);
 	VecXX res = transform(doubleIt, scalar);
 	auto val = res.getScalarValue();
@@ -89,7 +89,7 @@ TEST(TestDR3, testTransform_1)
 void testTransform_XX(int SZ)
 {
 
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0) * x; };
 	VecXX scalar = asNumber(3.33);
 	VecXX res = transformXX(doubleIt, scalar);
 	auto val = res.getScalarValue();
@@ -144,7 +144,7 @@ TEST(TestDR3, testTransformXX)
 void testTransform_2(int SZ)
 {
 
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0) * x; };
 	VecXX scalar = asNumber(3.33);
 	VecXX resScalar;
 	transform(doubleIt, scalar, resScalar);
@@ -200,7 +200,7 @@ TEST(TestDR3, testTransform_2)
 void testTransform_3(int SZ)
 {
 
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0) * x; };
 	const VecXX scalar =asNumber(3.33);
 	VecXX res = transform1(doubleIt, scalar);
 	auto val = res.getScalarValue();
@@ -254,7 +254,7 @@ TEST(TestDR3, test_transform1)
 void testTransform_M(int SZ)
 {
 
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0) * x; };
 	VecXX scalar = asNumber(3.33);
 	VecXX res = scalar;
 	transformM(doubleIt, res);
@@ -309,7 +309,7 @@ TEST(TestDR3, test_transformM)
 void testTransform_M1(int SZ)
 {
 
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0) * x; };
 	VecXX scalar = asNumber(3.33);
 	VecXX res = scalar;
 	transform1(doubleIt, res);
@@ -605,7 +605,7 @@ struct TestSampler
 void testTransform_M_X(int SZ)
 {
 
-	auto doubleIt = [](Sampler_No_Offset<VecXX::INS>& sampler) { auto x = sampler.get<0>(); return 2.0 * x; };
+	auto doubleIt = [](Sampler_No_Offset<VecXX::INS>& sampler) { auto x = sampler.get<0>(); return asNumber(2.0) * x; };
 
 	Sampler_No_Offset < VecXX::INS> testSampler;
 
@@ -627,7 +627,7 @@ void testTransform_M_X(int SZ)
 
 
 	Sampler_NegOffset < VecXX::INS> testSampler_negOffset;
-	auto doubleItNeg = [](Sampler_NegOffset<VecXX::INS>& sampler) { auto x = sampler.get<-1>(); return 2.0 * x; };
+	auto doubleItNeg = [](Sampler_NegOffset<VecXX::INS>& sampler) { auto x = sampler.get<-1>(); return asNumber(2.0) * x; };
 
 
 	res = testVec * 0.0;
@@ -640,7 +640,7 @@ void testTransform_M_X(int SZ)
 
 
 	Sampler_PositiveOffset < VecXX::INS> testSampler_positiveOffset;
-	auto doubleItPositive = [](Sampler_PositiveOffset<VecXX::INS>& sampler) { auto x = sampler.get<1>(); return 2.0 * x; };
+	auto doubleItPositive = [](Sampler_PositiveOffset<VecXX::INS>& sampler) { auto x = sampler.get<1>(); return asNumber(2.0) * x; };
 
    res = testVec * 0.0;
 	transform(testVec, res, doubleItPositive, testSampler_positiveOffset, 0, testVec.size());
@@ -1124,7 +1124,7 @@ TEST(TestDR3, test_filterTransform)
 
 void testTransform_V(int SZ)
 {
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0)* x; };
 	VecXX scalar = asNumber(3.33);
 	VecVW res = transformV(doubleIt, scalar);
 	auto val = res.getScalarValue();
@@ -1318,7 +1318,7 @@ TEST(TestDR3, testTransformA_view)
 void testTransformM_V(int SZ)
 {
 
-	auto doubleIt = [](auto x) { return 2.0 * x; };
+	auto doubleIt = [](auto x) { return asNumber(2.0) * x; };
 	VecXX scalar = asNumber(3.33);
 	VecVW doubled = transformV(doubleIt, scalar);
 	transformM(doubleIt,doubled );

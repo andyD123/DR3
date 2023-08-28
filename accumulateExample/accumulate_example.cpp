@@ -47,8 +47,8 @@ precision of results compare for float types is incorrect.
 */
 
 //pick an instruction set for intrinsics by selecting a name space
-
-//using namespace DRC::VecDb;
+//using namespace DRC::VecLDb;  //long double 
+//using namespace DRC::VecDb; //double
 //using namespace DRC::VecD2D;  //sse2   double
 //using namespace DRC::VecD4D;	//avx2   double
 //using namespace DRC::VecF8F;	// avx2  float
@@ -94,6 +94,13 @@ bool vectorsEqual(const std::vector<T>& C1, const std::vector<T>& C2, const std:
 
 	return testOK;
 
+}
+
+
+long double getErr(const  std::vector<long double>& t)
+{
+	ignore(t);
+	return 2e-11;
 }
 
 
@@ -1154,6 +1161,7 @@ void doSumSqrsMulti()
 
 void khanAccumulation()
 {
+	using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
 
 	const long TEST_LOOP_SZ = 1000;
 	const int repeatRuns = 20;
@@ -1166,8 +1174,8 @@ void khanAccumulation()
 	auto stl_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
 	{
 		double time = 0.;
-		volatile  double res = 0.;
-		double relative_error = 0.;
+		volatile  FLOAT res = 0.;
+		FLOAT relative_error = 0.;
 		VecXX test(VecXX::scalar(1.0 / 6.0), VEC_SZ);
 		std::vector<InstructionTraits<VecXX::INS>::FloatType> v1 = test;
 		
@@ -1193,7 +1201,7 @@ void khanAccumulation()
 
 	auto DR3_reduce = [&](int VEC_SZ, long TEST_LOOP_SZ)
 	{
-		double relative_error = 0.;
+		FLOAT relative_error = 0.;
 		auto NULL_Vec = VecXX::INS(0.0);
 		const auto zero = InstructionTraits<VecXX::INS>::nullValue;
 		//lambdas
@@ -1209,7 +1217,7 @@ void khanAccumulation()
 
 
 		double time = 0.;
-		volatile  double res = 0.;
+		volatile  FLOAT res = 0.;
 		VecXX t1(VecXX::scalar(1.0 / 6.0), VEC_SZ);
 
 		//warm up
@@ -1236,7 +1244,7 @@ void khanAccumulation()
 
 	auto DR3_pairwise_reduce = [&](int VEC_SZ, long TEST_LOOP_SZ)
 	{
-		double relative_error = 0.;
+		FLOAT relative_error = 0.;
 	//	auto NULL_Vec = VecXX::INS(0.0);
 	//	const auto zero = InstructionTraits<VecXX::INS>::nullValue;
 		//lambdas
@@ -1245,7 +1253,7 @@ void khanAccumulation()
 
 
 		double time = 0.;
-		volatile  double res = 0.;
+		volatile  FLOAT res = 0.;
 		VecXX t1(VecXX::scalar(1.0 / 6.0), VEC_SZ);
 
 		//warm up

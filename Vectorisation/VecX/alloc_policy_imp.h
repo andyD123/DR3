@@ -307,7 +307,7 @@ void freeT(size_t N, T* pOld)
 	return AllAllocators<T>::free(N, pOld);
 
 }
-
+void freeAllAllocators(long double);
 void freeAllAllocators(double);
 void freeAllAllocators(float);
 void freeAllAllocators(unsigned int);

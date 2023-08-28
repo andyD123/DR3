@@ -23,6 +23,21 @@
 namespace DRC
 {
 
+
+
+	namespace VecLDb
+	{
+		using VecxD = VecD<VecLDouble>;
+		using Vecx = VecD<VecLDouble>;
+		using VecXX = Vec<VecLDouble>;
+		using VecVW = VecView<VecLDouble>;
+		using VecBL = VecBool<VecLDouble>;
+		using SpanXX = Span<VecLDouble>;
+		using StrdSpanXX = StridedSpan<VecLDouble>;
+	};
+	// experimental
+	
+
 	namespace VecDb
 	{
 		using VecxD = VecD<VecDouble>;
