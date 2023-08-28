@@ -589,9 +589,11 @@ void doMatrix()
 
 		FLOAT sum1 = 0;
 
-		for (int k = 0; k < 10; k++)
+		const size_t extent = 1;
+
+		for (size_t pos = 0; pos < 10; pos++)
 		{
-			auto  strd_spn = getStridedSpan<VecXX::INS>(mat, 1, k);
+			auto  strd_spn = getStridedSpan<VecXX::INS>(mat, extent, pos);
 
 			std::vector<FLOAT> vdbg_strd = strd_spn;
 

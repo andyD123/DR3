@@ -48,7 +48,7 @@ inline unsigned int getIndex(const Span<INS_VEC>& lhs, int i, int j)
 template <typename INS_VEC>
 inline unsigned int getIndex(const StridedSpan<INS_VEC>& lhs, int i, int j)
 {
-	const long stride = lhs.stride();
+	const long stride = static_cast<long>(lhs.stride());
 	return static_cast<unsigned int>(i  + j* stride);
 }
 
