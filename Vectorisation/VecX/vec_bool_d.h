@@ -107,13 +107,13 @@ static inline bool horizontal_and(VecBoolD const & a)
 
 static inline VecBoolD operator  &&(VecBoolD const& a, const VecBoolD& b)
 {
-	return  VecBoolD( a[0] & b[0],a[1] & b[1]);
+	return  VecBoolD( static_cast<long>(a[0]) & static_cast<long>(b[0]), static_cast<long>(a[1]) & static_cast<long>(b[1]));
 }
 
 
 static inline VecBoolD operator  ||(VecBoolD const& a, const VecBoolD& b)
 {
-	return  VecBoolD(a[0] | b[0], a[1] | b[1]);
+	return  VecBoolD(static_cast<long>(a[0]) | static_cast<long>(b[0]), static_cast<long>(a[1]) | static_cast<long>(b[1]) );
 }
 
 
