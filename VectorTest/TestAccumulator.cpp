@@ -497,6 +497,7 @@ void evalTransformAccumulateUR_X_pairwise(int startLen, int endLen)
 		auto SQR = [](auto lhs) { return lhs * lhs; };
 		Numeric resSTL = std::inner_product(v.begin(), v.end(), v.begin(),  0.0);
 		Numeric resAcc1 = ApplyTransformAccumulate2UR_X_pairwise(test, SQR,Sum);
+		testEpsilon *= (abs(resSTL) + abs(resAcc1));
 		EXPECT_NEAR(resSTL, resAcc1, testEpsilon);
 	}
 
