@@ -18,6 +18,7 @@
 
 
 #include <numeric>
+#include <algorithm>
 
 
 void setEpsilonTransformAccumulate(long double& val)
@@ -470,5 +471,56 @@ TEST(TestAccumulator, simple_pairwise)
 
 
 	evalAccumulateUR_X_pairwise(159, 159);
+
+}
+
+
+
+////////////////////////////////////////////////////
+
+void evalTransformAccumulateUR_X_pairwise(int startLen, int endLen)
+{
+	Numeric testEpsilon;
+	setEpsilonAccumulate(testEpsilon);
+
+
+	for (int SZ = startLen; SZ <= endLen; SZ++)
+	{
+		std::vector<Numeric>  v(SZ, asNumber(0.0));
+		for (int i = 0; i < SZ; i++)
+		{
+			v[i] -= asNumber(500.0 - i);
+		}
+
+		VecXX test(v);
+		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+		auto SQR = [](auto lhs) { return lhs * lhs; };
+		Numeric resSTL = std::inner_product(v.begin(), v.end(), v.begin(),  0.0);
+		Numeric resAcc1 = ApplyTransformAccumulate2UR_X_pairwise(test, SQR,Sum);
+		EXPECT_NEAR(resSTL, resAcc1, testEpsilon);
+	}
+
+}
+
+TEST(TestAccumulator, simple_pairwise_transformReduce)
+{
+	EXPECT_EQ(1, 1);
+	EXPECT_TRUE(true);
+
+	evalTransformAccumulateUR_X_pairwise(32, 32);
+	evalTransformAccumulateUR_X_pairwise(64, 64);
+	evalTransformAccumulateUR_X_pairwise(128, 128);
+	evalTransformAccumulateUR_X_pairwise(256, 256);
+	evalTransformAccumulateUR_X_pairwise(512, 512);
+	evalTransformAccumulateUR_X_pairwise(1024, 1024);
+
+	evalTransformAccumulateUR_X_pairwise(1, 31);
+
+	evalTransformAccumulateUR_X_pairwise(32, 80);
+
+	evalTransformAccumulateUR_X_pairwise(957, 1043);
+
+
+	evalTransformAccumulateUR_X_pairwise(159, 159);
 
 }

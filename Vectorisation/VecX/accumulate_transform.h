@@ -717,6 +717,235 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 
 
 
+
+//experimental pairwise unrolled version  avx512
+template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP_TRANSFORM,typename OP_REDUCE>
+typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pairwise(const VEC_TYPE<INS_VEC>& rhs1, OP_TRANSFORM& tfrm, OP_REDUCE& oper)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1)) // nothing to accumulate with so just return transform of  value
+	{
+		//return rhs1.getScalarValue();
+
+		INS_VEC RHS0 = rhs1.getScalarValue();
+		auto res = tfrm(RHS0);
+		return RHS0[0];
+	}
+
+	long sz = static_cast<long>(rhs1.size());
+	auto pRhs = rhs1.start();
+	const long width = InstructionTraits<INS_VEC>::width;
+
+	using Float = typename InstructionTraits<INS_VEC>::FloatType;
+
+
+	INS_VEC RHS0;
+	INS_VEC RES0;
+
+	INS_VEC RHS1;
+	INS_VEC RES1;
+
+	INS_VEC RHS2;
+	INS_VEC RES2;
+
+	INS_VEC RHS3;
+
+
+	auto accum_8 = [&](Float* pRhs1)
+	{
+
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
+
+		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
+		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
+
+		INS_VEC RES = oper(RES0, RES1);
+
+		RHS0.load_a(pRhs1 + width * 4);
+		RHS1.load_a(pRhs1 + width * 5);
+		RHS2.load_a(pRhs1 + width * 6);
+		RHS3.load_a(pRhs1 + width * 7);
+
+		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
+		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
+
+		return oper(RES, oper(RES0, RES1));
+
+	};
+
+
+
+	auto accum_16 = [&](Float* pRhs1)
+	{
+
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
+
+		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
+		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
+		INS_VEC RES = oper(RES0, RES1);
+
+		RHS0.load_a(pRhs1 + width * 4);
+		RHS1.load_a(pRhs1 + width * 5);
+		RHS2.load_a(pRhs1 + width * 6);
+		RHS3.load_a(pRhs1 + width * 7);
+
+		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
+		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
+		RES = oper(RES, oper(RES0, RES1));
+
+
+		RHS0.load_a(pRhs1 + width * 8);
+		RHS1.load_a(pRhs1 + width * 9);
+		RHS2.load_a(pRhs1 + width * 10);
+		RHS3.load_a(pRhs1 + width * 11);
+
+		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
+		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
+		INS_VEC RES_T = oper(RES0, RES1);
+
+		RHS0.load_a(pRhs1 + width * 12);
+		RHS1.load_a(pRhs1 + width * 13);
+		RHS2.load_a(pRhs1 + width * 14);
+		RHS3.load_a(pRhs1 + width * 15);
+
+		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
+		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
+		RES_T = oper(RES_T, oper(RES0, RES1));
+
+		return oper(RES, RES_T);
+	};
+
+
+
+
+	auto accum_4 = [&](Float* pRhs1)
+	{
+
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+		RHS2.load_a(pRhs1 + width * 2);
+		RHS3.load_a(pRhs1 + width * 3);
+
+		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
+		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
+
+		RES2 = oper(RES0, RES1);
+		return RES2;
+
+	};
+
+
+	auto accum_2 = [&](Float* pRhs1)
+	{
+		RHS0.load_a(pRhs1);
+		RHS1.load_a(pRhs1 + width);
+
+		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
+		return RES0;
+	};
+
+
+	INS_VEC ZERO = 0.0;
+	INS_VEC val = 0.0;
+	INS_VEC RES = 0.0;
+
+	size_t working_Size = sz;
+
+	size_t RemainSZ = 31;
+	int remainder = static_cast<int>(working_Size & RemainSZ);
+
+	while (remainder >= InstructionTraits< INS_VEC>::width)
+	{
+		val.load(pRhs);
+		val = tfrm(val);
+		RES = oper(RES, val);
+
+		remainder -= InstructionTraits< INS_VEC>::width;
+		pRhs += InstructionTraits< INS_VEC>::width;
+	}
+
+	auto whole_reg_sum = scanN(RES, ZERO, oper)[InstructionTraits< INS_VEC>::width - 1];
+
+
+	//RES += val;
+	if (remainder > 0)
+	{
+		val = 0.0;
+		val.load_partial(remainder, pRhs);
+		val = tfrm(val);
+		RES = scanN(val, ZERO, oper);
+		whole_reg_sum += RES[remainder];
+		pRhs += remainder;
+	}
+
+
+
+	auto accum_recurse = [&](Float* pRhs1, size_t extent, auto&& self)
+	{
+		if (extent == 16 * width)
+		{
+			return  accum_16(pRhs1);
+		}
+
+		if (extent == 8 * width)
+		{
+			return  accum_8(pRhs1);
+		}
+
+		if (extent == 4 * width)
+		{
+			return  accum_4(pRhs1);
+		}
+
+		if (extent == 2 * width)
+		{
+			return  accum_2(pRhs1);
+		}
+
+		// split  maybe use << for division and bitwise  for size test
+		INS_VEC LHS2 = self(pRhs1, extent / 2, self);
+		INS_VEC RHS2 = self(pRhs1 + extent / 2, extent / 2, self);
+		return oper(LHS2, RHS2);
+
+	};
+
+
+	//working_Size
+	/*
+	* keep doubling block size untill reach input extent and accumulate if is power of 2
+	* cf integer power  in math
+	*/
+	INS_VEC  accumulations_of_all_blocks = 0.0;
+	size_t current_block_SZ = RemainSZ + 1;
+	while (working_Size >= current_block_SZ)
+	{
+
+		if (working_Size & current_block_SZ)
+		{
+			accumulations_of_all_blocks += accum_recurse(pRhs, current_block_SZ, accum_recurse);
+			pRhs += current_block_SZ;
+		}
+		//pRhs += current_block_SZ;
+		current_block_SZ *= 2;
+	}
+
+	auto accum_over_all_blocks = scanN(accumulations_of_all_blocks, ZERO, oper)[InstructionTraits< INS_VEC>::width - 1];
+
+	return accum_over_all_blocks + whole_reg_sum;
+
+}
+
+
+
+
+
+
 template< typename INS_VEC,  typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate(const Vec<INS_VEC>& rhs1, OPT& operTransform,  OP& operAcc,  typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
