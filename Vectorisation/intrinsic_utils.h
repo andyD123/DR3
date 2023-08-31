@@ -15,6 +15,21 @@
 #include "../Vectorisation/VecX/instruction_traits.h"
 #include <immintrin.h>
 
+/*
+//_MM_MANTISSA_NORM_ENUM n;
+//_MM_MANTISSA_SIGN_ENUM m;
+
+static inline __m256d  getMantissa(__m256d x)// const int n, const int m) 
+{
+
+	return _mm256_getmant_pd(x, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
+}
+
+static inline __m512d  getMantissa(__m512d x, int n, const int m)
+{
+	return _mm512_getmant_pd(x,n,m);
+}
+
 
 
 static inline __m256d  getExponent(__m256d x)
@@ -48,3 +63,5 @@ static inline __m128  getExponent(__m128 x)
 {
 	return _mm_getexp_ps(x);
 }
+
+*/

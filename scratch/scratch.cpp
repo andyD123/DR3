@@ -28,40 +28,78 @@ using namespace DRC::VecD4D;
 //#include <iostream>
 
 #include <iostream>
+#include <algorithm>
+//#include <bits/stdc++.h>
 
 int main()
 {
-  //  int i = 32;
-    long SZ = 1024 * 1024; // 1000000;//
+    //  int i = 32;
+    long SZ = 4;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 1000000;/// 
 
     double a = 10.;
-    double b = 1.0/100.;
-    double  c =1.0/( b * b);
+    double b = 1.0 / 100.;
+    double  c = 1.0 / (b * b);
     double d = c * c;
 
-/*
-    __m256d Number= { a,b,c,d };
-    auto res = getExponent(Number);
+    int n = 16;
+    int m = 1;
+    /**/
+    //__m256d Number= { a,b,c,d };
+    //auto res = getExponent(Number);
 
-    Vec4d  number_t( Number);
+    //auto res2 = getMantissa(Number);//, n, m);
 
-    Vec4d resVCL = getExponent(number_t);
 
-    */
-    VecXX data(1., SZ);// 64 * 1024);
+    //Vec4d  number_t(Number);
 
-   
+    //Vec4d resVCL = getExponent(number_t);
 
-    double count = 1. *1/6.;
+
+    //Vec4d LVL = 32;
+    //Vec4d zero = 0.;
+
+    auto roundIt2 = [&](auto X, auto LEVEL)
+    {
+        //auto rd = long( X / LEVEL);
+        auto integ = roundi(X / LEVEL);
+        //auto rmdr = x % LEVEL; //roundi(X / LEVEL);
+        //auto integ = (x - rmdr) / LEVEL;
+
+
+        auto exp_level = getExponent(LEVEL);
+        auto exp_X = getExponent(X);
+
+
+
+        auto trunc = exp_X - exp_level;
+        auto bigger = max(zero, trunc);
+
+
+        auto big = LEVEL * to_double(integ);
+        auto small = X - big;
+
+        return std::pair(big, small);
+    };
+
+
+    //auto rnd_res = roundIt2(number_t, LVL);
+
+
+
+    VecXX data(0., SZ);// 64 * 1024);
+
+
+
+    double count = 1. * 1 / 3.;
 
     long idx = 0;
-   
+
     for (auto& x : data)
     {
-          
-        
+
+
         x = 1.0;// count;
-       /* 
+       /*
         if (idx % 4 == 0)
         {
             x += 100000000.111111;
@@ -72,10 +110,14 @@ int main()
         }
         */
 
-        if (idx > 500000)
+        if /* (idx > 500000)*/ (true) ///
         {
-            x *= 0.7e-11;
-           // x = 0.0;
+            //  x *= 8e-11;
+             // x *= 8e2;
+             // x = 0.0;
+            x += count * 2.0 / 3.0;
+
+            // x = 0.1* 2.0/3.0;
         }
         else
         {
@@ -83,46 +125,62 @@ int main()
         }
 
         idx++;
+        count++;
     }
 
-  
+
 
     int i = 0;
- 
+
     {
 
-       
+
         auto mixed = data;// 10 * data / 9. * 0.00000001;
+
+        /*
+        auto c = mixed[800252] + mixed[800253];
+
+     
+        auto a = mixed[800252] + 10000000000000.0;
+        auto b = mixed[800253] - 10000000000000.0;
+
+        a = 100000000000000000000.0;
+        b = -100000000000000000000.0;
+
+        a = 0.;
+        b = 0.;
+        */
+        //   mixed[259] -=5055010.0;// 0;
+
+
+        for(int kkk = 0; kkk < 20; kkk++)
+        {
+
+        std::random_device rd;
+        std::mt19937 g(rd());
+
+        //std::shuffle(v.begin(), v.end(), g);
+
+        shuffle(mixed.begin(), mixed.end(), g);
+
+
+        /*
+        mixed[800252] = a;
+        mixed[800253] = b;
+
+        mixed[800257] += c;// -5055010.0;
+        */
+//   mixed[258] += 1. / 60000000.;
+
         std::vector<double> dbg = mixed;
 
-        auto c = mixed[252] + mixed[256];
+        auto std_acc = std::accumulate(cbegin(dbg), cend(dbg), 0.0);
 
-        /*  */
-     //   auto a = mixed[252] +  10000000000000.0;
-     //   auto b = mixed[100256]  -10000000000000.0;
-       
-     a =   100000000000000000000.0;
-     b =  -100000000000000000000.0;
 
-    a = 0.;
-    b = 0.;
-    
-     mixed[259] -=5055010.0;// 0;
-
-  
-  
-       mixed[252] = a;
-       mixed[256] = b;
-
-       mixed[257] += c;// -5055010.0;
-
-       mixed[258] += 1. / 60000000.;
-
-   
         auto sumIt = [](auto x, auto y) {return x + y; };
-        auto sum = ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
+        auto sumPairwiseDr3 = ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
 
-        auto stdaccum = ApplyAccumulate2UR_X(mixed, sumIt);
+        auto DRCubedAccum = ApplyAccumulate2UR_X(mixed, sumIt);
 
         auto trad = 0.0;
         for (auto x : mixed)
@@ -130,119 +188,6 @@ int main()
             trad += x;
         }
 
-  
-        const  double level = -10;
-
-        const auto Mult = 100000000.0;
-        const auto Div = 1. / Mult;
-
-
-        auto sumItBig = [&](auto x, auto y)
-        {
-                  return select( log(abs(y)) > level,  x + round(y),x);
-        };
-
-
-        auto sumItSmall = [&](auto x, auto y)
-        {
-            /*
-                if (log(abs(y)) <= level)
-                {
-                    y *= Mult;
-                    y = y- round(y);
-                   y*=Div;
-                }
-                */
-           // auto x_dash = x;// -round(x);
-
-                return select(log(abs(y)) <= level, x +( y-round(y)), x);
-         //   };
-
-            
-            //return select(log(abs(y)) < level, (x - round(x)) + (y - round(y)), x );
-        };
-
-
-        auto sumItSmallCarry = [&](auto x, auto y)
-        {
-            /*
-                if (log(abs(y)) <= level)
-                {
-                    y *= Mult;
-                    y = y- round(y);
-                   y*=Div;
-                }
-                */
-            auto x_dash = x - round(x);
-            auto y_dash = y - round(y);
-
-           // auto x_dash = x - round(x);
-            //auto unrounded_x_ret = x_dash + (y - round(y));
-
-            auto sum = x_dash + y_dash;
-
-            auto rt = sum - round(sum);
-
-
-            return select(log(abs(y)) <= level, rt, x);
-            //   };
-
-
-               //return select(log(abs(y)) < level, (x - round(x)) + (y - round(y)), x );
-        };
-
-
-
-        auto sumItSmallRounded = [&](auto x, auto y)
-        {
-            auto x_dash = x - round(x);
-            auto y_dash = y - round(y);
-
-            return select(log(abs(y)) <= level, round(x_dash+y_dash), x);
-
-        };
-
-
-
-         /*     
-        auto sumMiddle = [](auto x, auto y)
-        {
-            return  select(log(abs(y)) > 0.0, (x-round(x)) + (y-round(y)), x);
-            //return select(log(abs(y)) < 0.0, x + y, x);
-        };
-
-
-        auto sumMiddleRnd = [](auto x, auto y)
-        {
-            return  select(log(abs(y)) > 0.0,  round(x) +  round(y), x);
-            //return select(log(abs(y)) < 0.0, x + y, x);
-        };
-*/
-        
-
-        /*   
-        auto sumItBig = [](auto x, auto y)
-        {
-            return select(getExponent(y) > 0.0, x + y, x);
-        };
-        auto sumItSmall = [](auto x, auto y)
-        {
-            return select(getExponent(y) <= 0.0, x + y, x);
-        };
-        */
-   
-
-        auto sumB =  reduceI(mixed, sumItBig);
-        auto sumS =  reduceI(mixed, sumItSmall);
-        auto sumM = 0.;
-        //   reduceI(mixed, sumMiddle);
-        auto sumMR = 0.;// reduceI(mixed, sumMiddleRnd);
-
-
-        auto sumB_pairWise = ApplyAccumulate2UR_X_pairwise(mixed, sumItBig);
-        auto sumS_pairWise_rnd = ApplyAccumulate2UR_X_pairwise(mixed, sumItSmallRounded);
-
-        auto sumS_pairWise_cry = ApplyAccumulate2UR_X_pairwise(mixed, sumItSmallCarry);
 
 
         auto NULL_Vec = VecXX::INS(0.0);
@@ -258,169 +203,165 @@ int main()
             return t;
         };
 
-    
+
         auto sumKhan = reduce(mixed, KhanAddV);
 
-     
+
 
 
         SpanXX startspan(mixed.begin(), 32);
 
 
 
-       double startSum = reduce(startspan, sumIt);
+        double startSum = reduce(startspan, sumIt);
 
 
-       auto roundIt = [&](auto X, auto LEVEL)
-       {
-           //auto rd = long( X / LEVEL);
-           auto big = LEVEL * std::round(X / LEVEL);
-           auto small = X - big;
+        auto roundIt = [&](auto X, auto LEVEL)
+        {
+            //auto rd = long( X / LEVEL);
+            auto big = LEVEL * std::round(X / LEVEL);
+            auto small = X - big;
 
-           return std::pair( big , small );
-       };
-
-       
-       double bigSumm = 0;
-       double smallSum = 0;
-       double verySmallSum = 0.0;
-       
-       double VerySmall = 1e-10;
-       double SMALL = 1.0;
-       double tiny = 0.0;
-       double  BIG = 1.0e10;
-
-       for (double x : mixed)
-       {
-           auto resRoundBig = roundIt(x, SMALL);
-           auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-
-           tiny += resRoundSmall.second;
-           auto tinyRound = roundIt(tiny, VerySmall);
-
-           tiny = tinyRound.second;
-
-           smallSum +=( resRoundSmall.first + tinyRound.first);
-
-           auto smallRound = roundIt(smallSum, SMALL);
-
-           smallSum = smallRound.second  ;
-
-           bigSumm += resRoundBig.first + smallRound.first;
-          
+            return std::pair(big, small);
+        };
 
 
 
-       }
+        // const auto zero = InstructionTraits<VecXX::INS>::nullValue;
+        struct Bins
+        {
+
+
+            VecXX::INS veryBigSummV = 0.0;
+            VecXX::INS bigSummV = 0.0;
+            VecXX::INS smallSumV = 0.0;
+            VecXX::INS tinyV = 0.0;
 
 
 
-      // const auto zero = InstructionTraits<VecXX::INS>::nullValue;
-       struct Bins
-       {
+
+            Bins(double x)
+            {
+                const VecXX::INS VerySmall = 1e-15;
+                const VecXX::INS SMALL = 1.0;
+                const VecXX::INS BIG = 1.0e15;
+                const VecXX::INS TINY_C = 1e-30; // ?
 
 
-           VecXX::INS veryBigSummV = 0.0;
-           VecXX::INS bigSummV = 0.0;
-           VecXX::INS smallSumV = 0.0;
-           VecXX::INS tinyV = 0.0;
+                auto roundIt = [&](auto X, auto LEVEL)
+                {
+                    auto INV_LEVEL = 1.0 / LEVEL;
 
-          // struct LEVELS
-           //{  };
-            const VecXX::INS VerySmall = 1e-10;
+                    auto correct = INV_LEVEL * LEVEL;
+                    //auto rd = long( X / LEVEL);
+                    auto big = (LEVEL * round(X * INV_LEVEL)) * correct;
+                    auto small = X - big;
+
+                    return std::pair(big, small);
+
+                };
+
+
+
+                auto resRoundVeryBig = roundIt(x, BIG);
+                auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
+                auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
+
+                veryBigSummV = resRoundVeryBig.first;
+                bigSummV = resRoundBig.first;
+                smallSumV = resRoundSmall.first;
+                tinyV = resRoundSmall.second;
+
+            }
+
+            Bins(Bins&& x) noexcept
+            {
+                veryBigSummV = x.veryBigSummV;
+                bigSummV = x.bigSummV;
+                smallSumV = x.smallSumV;
+                tinyV = x.tinyV;
+
+            };
+        };
+
+
+        //doing accum in Bins
+        Bins bin(0.);
+
+
+        auto BinnedAdd = [&](auto y, auto x) mutable
+        {
+
+
+            const VecXX::INS VerySmall = 1e-16;
             const VecXX::INS SMALL = 1.0;
-            const VecXX::INS BIG = 1.0e10;
-            //const  VecXX::INS tiny = 0.0; // ?
-         
+            const VecXX::INS BIG = 1.0e15;
+            const VecXX::INS TINY_C = 1e-32; // ?
 
+            auto roundIt = [&](auto X, auto LEVEL)//, auto INV_LEVEL)
+            {
+                auto INV_LEVEL = 1.0 / LEVEL;
 
+                auto correct = INV_LEVEL * LEVEL;
+                //auto rd = long( X / LEVEL);
+                auto big = (LEVEL * round(X * INV_LEVEL));//
+                big *= correct;
+                auto small = X - big;
 
-           Bins(double x)
-           {
-               auto roundIt = [&](auto X, auto LEVEL)
-               {
-                   //auto rd = long( X / LEVEL);
-                   auto big = LEVEL * round(X / LEVEL);
-                   auto small = X - big;
+                return std::pair(big, small);
 
-                   return std::pair(big, small);
-               };
+            };
 
-               auto resRoundVeryBig = roundIt(x, BIG);
-               auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-               auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
+            auto resRoundVeryBig = roundIt(x, BIG);
+            auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
+            auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
+            //bin.tinyV += resRoundSmall.second;
+            auto tinyRound = roundIt(resRoundSmall.second, TINY_C);
+            bin.tinyV += (tinyRound.first + tinyRound.second);
 
-               veryBigSummV = resRoundVeryBig.first;
-               bigSummV = resRoundBig.first;
-               smallSumV = resRoundSmall.first;
-               tinyV = resRoundSmall.second;
+            // do truncation here 
+            //auto resRoundTiny = roundIt(bin.tinyV, TINY_C);
+            //bin.tinyV = resRoundTiny.first;
 
-           }
+            bin.smallSumV += (resRoundSmall.first + tinyRound.first);
+            auto smallRound = roundIt(bin.smallSumV, SMALL);
+            bin.smallSumV = smallRound.second;
+            bin.bigSummV += resRoundBig.first + smallRound.first;
+            auto bigRound = roundIt(bin.bigSummV, BIG);
 
-           Bins( Bins&& x) noexcept
-           {
-               veryBigSummV = x.veryBigSummV;
-               bigSummV = x.bigSummV;
-               smallSumV = x.smallSumV;
-               tinyV = x.tinyV;
+            bin.bigSummV = bigRound.second;
 
-           };
-       };
+            bin.veryBigSummV += bigRound.first;
 
+            // return (bin.tinyV + bin.smallSumV) + bin.bigSummV;
+             //reduce across these registers
+            auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + horizontal_add(bin.veryBigSummV);
 
-       //doing accum in Bins
-       Bins bin(0.);
+            return NULL_Vec;
 
-      
-       auto BinnedAdd = [ &](auto y,  auto x) mutable
-       {
-           auto roundIt = [&](auto X, auto LEVEL)
-           {
-               //auto rd = long( X / LEVEL);
-               auto big = LEVEL * round(X / LEVEL);
-               auto small = X - big;
+        };
 
-               return std::pair(big, small);
-           };
+        // not working yet
+        auto rrr = reduceI(mixed, BinnedAdd);
 
-           auto resRoundVeryBig = roundIt(x, BIG);
-           auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-           auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-           bin.tinyV += resRoundSmall.second;
-           auto tinyRound = roundIt(bin.tinyV, VerySmall);
-           bin.tinyV = tinyRound.second;
-           bin.smallSumV += (resRoundSmall.first + tinyRound.first);
-           auto smallRound = roundIt(bin.smallSumV, SMALL);
-           bin.smallSumV = smallRound.second;
-           bin.bigSummV += resRoundBig.first + smallRound.first;
-           auto bigRound = roundIt(bin.bigSummV, BIG);
+        //need to do sorted add across registers or use binned add lambda
+        //use binned
+        auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + +horizontal_add(bin.veryBigSummV);
 
-           bin.bigSummV = bigRound.second;
-
-           bin.veryBigSummV += bigRound.first;
-
-          // return (bin.tinyV + bin.smallSumV) + bin.bigSummV;
-           //reduce across these registers
-           auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + horizontal_add(bin.veryBigSummV);
-
-           return NULL_Vec;
-
-       };
-
-       // not working yet
-       auto rrr=  reduceI(mixed, BinnedAdd);
-       
-       //need to do sorted add across registers or use binned add lambda
-       auto lambdaBinSum =(horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV))+ horizontal_add(bin.bigSummV);
-
-       // need to sort add for bbig
+        // need to sort add for bbig
 
 
 
 
 
-       // std::cout << i << "\t" <<  std::setprecision(9)       << "standard sum "         << stdaccum  << ",   sum pairwise ="   << sum << "\n";
-        std::cout << i << "\t" << std::setprecision(16) << "standard sum  trad" << trad <<",accumulate " <<stdaccum << ",   sum pairwise =" << sum << ", split aggregate =" << bigSumm + smallSum + verySmallSum /* + sumS*/ << ", \n pairwise split aggregate =" << sumB_pairWise + sumS_pairWise_rnd + sumS_pairWise_cry << " , Kahan acc ," << sumKhan << " , lambda bin sum acc ," << lambdaBinSum << "\n";
+        // std::cout << i << "\t" <<  std::setprecision(9)       << "standard sum "         << stdaccum  << ",   sum pairwise ="   << sum << "\n";
+        std::cout << i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
+            << std_acc << "\t std::accumulate sum  trad = \n"
+            << DRCubedAccum << "\t accumulate DR3 = \n"  /* << ",\n split aggregate =" << bigSumm + smallSum + verySmallSum*/ /* + sumS*/ /* << ", \n pairwise split aggregate =" << sumB_pairWise + sumS_pairWise_rnd + sumS_pairWise_cry*/
+            << sumPairwiseDr3 << "\t  sum pairwise = \n"
+            << sumKhan << " ,\t Kahan acc ,\n"
+            << lambdaBinSum << "\t lambda bin sum acc, \n \n \n \n";
     }
+}
 }
 
