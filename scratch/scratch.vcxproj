@@ -277,7 +277,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="scratch.cpp" />
+    <ClCompile Include="scratch.cpp">
+      <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Strict</FloatingPointModel>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
+      <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Precise</FloatingPointModel>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vectorisation\Vectorisation.vcxproj">

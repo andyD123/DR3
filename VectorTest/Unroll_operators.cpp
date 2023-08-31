@@ -338,7 +338,7 @@ TEST(TestUnroll, UnitaryOpElement_filter)
 	}
 
 
-	auto filter_Positive = [](auto x) { return x > 0.; }; 
+	auto filter_Positive = [](auto x) { return x > asNumber(0.0); };
 	int sz = SZ;
 
 	int i = 4;
@@ -372,7 +372,7 @@ TEST(TestUnroll, UnitaryOpElement_filter)
 
 
 	{
-		auto filter_GT_One = [](auto x) { return x > 1; };
+		auto filter_GT_One = [](auto x) { return x > asNumber(1.0); };
 		int i = 0;
 		int  psn = 0;
 		UnitaryOpElement<typename VecXX::INS, typename decltype(filter_GT_One), 0 > elem;

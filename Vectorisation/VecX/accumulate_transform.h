@@ -719,8 +719,9 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 		if (working_Size & current_block_SZ)
 		{
 			accumulations_of_all_blocks += accum_recurse(pRhs, current_block_SZ, accum_recurse);
+			pRhs += current_block_SZ;
 		}
-
+		//pRhs += current_block_SZ;
 		current_block_SZ *= 2;
 	}
 

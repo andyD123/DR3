@@ -13,7 +13,8 @@
 #include "alloc_policy_imp.h"
 #include <unordered_map>
 
-
+template<>
+int AllAllocators<long double>::lastSize_N = -1;
 template<>
 int AllAllocators<double>::lastSize_N = -1;
 template<>
@@ -22,17 +23,28 @@ template<>
 int AllAllocators<unsigned int>::lastSize_N = -1;
 
 template<>
+AllocPolicy<long double>* AllAllocators<long double>::pAllocPolicy = nullptr;
+template<>
 AllocPolicy<double>* AllAllocators<double>::pAllocPolicy = nullptr;
 template<>
 AllocPolicy<float>* AllAllocators<float>::pAllocPolicy = nullptr;
 template<>
 AllocPolicy<unsigned int>* AllAllocators<unsigned int>::pAllocPolicy = nullptr;
 template<>
+std::unordered_map<int, AllocPolicy<long double>*>  AllAllocators<long double>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<long double>*>();
+template<>
 std::unordered_map<int, AllocPolicy<double>*>  AllAllocators<double>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<double>*>();
 template<>
 std::unordered_map<int, AllocPolicy<float>*>  AllAllocators<float>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<float>*>();
 template<>
 std::unordered_map<int, AllocPolicy<unsigned int>*>  AllAllocators<unsigned int>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<unsigned int>*>();
+
+
+
+void freePool(size_t N, long double* pOld)
+{
+	return freeT(N, pOld);
+}
 
 
 void freePool(size_t N, double* pOld)
@@ -50,6 +62,11 @@ void freePool(size_t N, unsigned int* pOld)
 	return freeT(N, pOld);
 }
 
+void allocPool(size_t& N, long double*& pMem)
+{
+	allocT(N, pMem);
+}
+
 void allocPool(size_t& N, double*& pMem)
 {
 	allocT(N, pMem);
@@ -63,6 +80,11 @@ void allocPool(size_t& N, float*& pMem)
 void allocPool(size_t& N, unsigned int*& pMem)
 {
 	allocT(N, pMem);
+}
+
+int  getAllignedSize(size_t N, long double* pOld)
+{
+	return getAllignedSizeT(N, pOld);
 }
 
 int  getAllignedSize(size_t N, double* pOld)
@@ -79,7 +101,10 @@ int  getAllignedSize(size_t N, unsigned int* pOld)
 {
 	return getAllignedSizeT(N, pOld);
 }
-
+void freeAllAllocators(long double)
+{
+	AllAllocators<long double>::freeAll();
+}
 void freeAllAllocators(double)
 {
 	AllAllocators<double>::freeAll();

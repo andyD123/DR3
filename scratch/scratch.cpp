@@ -20,8 +20,8 @@
 //using namespace DRC::VecDb;
 //using namespace DRC::VecD2D;
 //using namespace DRC::VecF4F;
-using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
+//using namespace DRC::VecD4D;
+using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
@@ -34,7 +34,7 @@ using namespace DRC::VecD4D;
 int main()
 {
     //  int i = 32;
-    long SZ = 4;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 1000000;/// 
+    long SZ = 1000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
     double a = 10.;
     double b = 1.0 / 100.;
@@ -69,7 +69,8 @@ int main()
         auto exp_level = getExponent(LEVEL);
         auto exp_X = getExponent(X);
 
-
+        auto zero = X;
+        zero = 0.0;
 
         auto trunc = exp_X - exp_level;
         auto bigger = max(zero, trunc);
@@ -112,12 +113,12 @@ int main()
 
         if /* (idx > 500000)*/ (true) ///
         {
-            //  x *= 8e-11;
-             // x *= 8e2;
+             // x *= 8e-11;
+              x *= 8e2;
              // x = 0.0;
-            x += count * 2.0 / 3.0;
+           // x += count * 2.0 / 3.0;
 
-            // x = 0.1* 2.0/3.0;
+             x += 0.1* 2.0/3.0;
         }
         else
         {
@@ -137,7 +138,7 @@ int main()
 
         auto mixed = data;// 10 * data / 9. * 0.00000001;
 
-        /*
+        /*  */
         auto c = mixed[800252] + mixed[800253];
 
      
@@ -147,9 +148,9 @@ int main()
         a = 100000000000000000000.0;
         b = -100000000000000000000.0;
 
-        a = 0.;
-        b = 0.;
-        */
+      //  a = 0.;
+      //  b = 0.;
+      
         //   mixed[259] -=5055010.0;// 0;
 
 
@@ -164,12 +165,12 @@ int main()
         shuffle(mixed.begin(), mixed.end(), g);
 
 
-        /*
+        /* */
         mixed[800252] = a;
         mixed[800253] = b;
 
         mixed[800257] += c;// -5055010.0;
-        */
+       
 //   mixed[258] += 1. / 60000000.;
 
         std::vector<double> dbg = mixed;

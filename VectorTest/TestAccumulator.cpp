@@ -19,6 +19,14 @@
 
 #include <numeric>
 
+
+void setEpsilonTransformAccumulate(long double& val)
+{
+	const long double testEpsilon = 0.000001;
+	val = testEpsilon;
+}
+
+
 void setEpsilonTransformAccumulate(double& val)
 {
 	const double testEpsilon = 0.000001;
@@ -28,6 +36,12 @@ void setEpsilonTransformAccumulate(double& val)
 void setEpsilonTransformAccumulate(float& val)
 {
 	const float testEpsilon = 100.f;
+	val = testEpsilon;
+}
+
+void setEpsilonAccumulate(long double& val)
+{
+	const long double testEpsilon = 0.000000004;
 	val = testEpsilon;
 }
 
@@ -408,5 +422,53 @@ TEST(TestAccumulator, simpleTransformAccumulate_BinaryFunc_X)
 
 	//eval over multiple lengths
 	evalTransformAccumulateInnerProduct_X(957, 1043);
+
+}
+
+
+////////////////////////////////////////
+
+
+void evalAccumulateUR_X_pairwise(int startLen, int endLen)
+{
+	Numeric testEpsilon;
+	setEpsilonAccumulate(testEpsilon);
+
+
+	for (int SZ = startLen; SZ <= endLen; SZ++)
+	{
+		std::vector<Numeric>  v(SZ, asNumber(0.0));
+		for (int i = 0; i < SZ; i++)
+		{ 
+			v[i] -= asNumber(500.0 - i);
+		}
+
+		VecXX test(v);
+		auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+		Numeric resSTL = std::accumulate(v.begin(), v.end(), asNumber(0.0));
+		Numeric resAcc1 = ApplyAccumulate2UR_X_pairwise(test, Sum);
+		EXPECT_NEAR(resSTL, resAcc1, testEpsilon);
+	}
+
+}
+
+TEST(TestAccumulator, simple_pairwise)
+{
+	EXPECT_EQ(1, 1);
+	EXPECT_TRUE(true);
+
+	evalAccumulateUR_X_pairwise(32, 32);
+	evalAccumulateUR_X_pairwise(64, 64);
+	evalAccumulateUR_X_pairwise(128, 128);
+	evalAccumulateUR_X_pairwise(256, 256);
+	evalAccumulateUR_X_pairwise(512, 512);
+	evalAccumulateUR_X_pairwise(1024, 1024); 
+
+	evalAccumulateUR_X_pairwise(1, 80);
+
+	evalAccumulateUR_X_pairwise(957, 1043);
+
+
+	evalAccumulateUR_X_pairwise(159, 159);
 
 }

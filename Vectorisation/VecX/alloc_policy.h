@@ -13,16 +13,17 @@
 
 #include <cstddef>
 
+void freePool(size_t N, long double* pOld);
 void freePool(size_t N, double* pOld);
 void freePool(size_t N, float* pOld);
 void freePool(size_t N, unsigned int* pOld);
 
-
+void allocPool(size_t& N, long double*& pMem);
 void allocPool(size_t& N, double*& pMem);
 void allocPool(size_t& N, float*& pOld);
 void allocPool(size_t& N, unsigned int*& pOld);
 
-
+int  getAllignedSize(size_t N, long double* pOld);
 int  getAllignedSize(size_t N, double* pOld);
 int  getAllignedSize(size_t N, float* pOld);
 int  getAllignedSize(size_t N, unsigned int* pOld);

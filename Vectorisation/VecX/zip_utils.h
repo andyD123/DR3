@@ -155,42 +155,14 @@ struct Zipped_Reg
 
 
 
-
-
-
-
-
-//template <typename INS_VEC,  int N, class NAMED_INDEX>
-//struct Named_Zipped_Reg : public Zipped_Reg<INS_VEC,N>
-//{
-//	constexpr static NAMED_INDEX idx;
-//};
-//noyt good idea
-
-
-
 template < typename INS_VEC,   typename  ...T>
-constexpr auto make_Zipped( T& ...args)
+constexpr auto make_Zipped( T& ...)
 {
-	
-//	using FT = typename InstructionTraits<INS_VEC>::FloatType;
-
 	constexpr int N = sizeof...(T);
 	Zipped_Reg<INS_VEC, N> ret;
 	return ret;
 }
 
-
-/*
-template < typename INS_VEC, typename  ...T>
-constexpr auto make_Zipped_itr(typename T& ...args)
-{
-	constexpr int N = sizeof...(T);
-	Zipped_ITR<INS_VEC, N > zpd = { {(std::begin(args), ...) } };
-	return zpd;
-
-}
-*/
 
 
 template < typename INS_VEC, typename  ...T>

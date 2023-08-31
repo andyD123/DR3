@@ -152,13 +152,12 @@ struct StridedSpan
 
 	StridedSpan(const T&) {}
 
-	StridedSpan(T* pdata, size_t extent, int stride) :m_pstart(pdata), m_extent(extent), m_stride(stride){}
+	StridedSpan(T* pdata, size_t extent, size_t stride) :m_pstart(pdata), m_extent(extent), m_stride(stride){}
 
 
 	//explicit
 	operator std::vector<typename InstructionTraits<INS_VEC>::FloatType>()
 	{
-		//return std::vector<typename InstructionTraits<INS_VEC>::FloatType>(start(), start() + m_extent);
 		using Float = typename InstructionTraits<INS_VEC>::FloatType;
 		std::vector<Float> ret;
 		ret.reserve((m_extent + 1) / m_stride);
@@ -250,7 +249,7 @@ struct StridedSpan
 		return InstructionTraits<INS_VEC>::nullValue;
 	}
 
-	int stride() const 
+	size_t stride() const
 	{
 		return m_stride;
 	}
@@ -258,7 +257,7 @@ struct StridedSpan
 private:
 	T* m_pstart;
 	size_t m_extent;
-	int m_stride;
+	size_t m_stride;
 };
 
 
@@ -396,7 +395,9 @@ private:
 template<typename INS_VEC, size_t SIMD_SZ = InstructionTraits<INS_VEC>::width, size_t EXTENT = 0>
 StridedSpan<INS_VEC>  getStridedSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType, Layout2D< typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout, size_t  extent, size_t pos)
 {
-	return StridedSpan<INS_VEC>(layout.dataRef() + layout.getArrayPos(0, pos), layout.m_extent - pos, layout.isRowOrder ? layout.m_SimdSize : layout.m_cols);
+	return StridedSpan<INS_VEC>(layout.dataRef() + layout.getArrayPos(0, pos),
+		layout.m_extent - pos, 
+		layout.isRowOrder ? layout.m_SimdSize : layout.m_cols);
 }
 
 
@@ -404,6 +405,7 @@ StridedSpan<INS_VEC>  getStridedSpan(MDSpan<typename InstructionTraits<INS_VEC>:
 template<typename INS_VEC, size_t SIMD_SZ = InstructionTraits<INS_VEC>::width, size_t EXTENT = 0>
 Span<INS_VEC>  getSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType, Layout2D< typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout, size_t pos)
 {
-	return Span<INS_VEC>(layout.dataRef() + layout.getArrayPos(pos, 0), layout.isRowOrder ? layout.m_rows : layout.m_cols);
+	return Span<INS_VEC>(layout.dataRef() + layout.getArrayPos(pos, 0),
+		layout.isRowOrder ? layout.m_rows : layout.m_cols);
 }
 

@@ -1,5 +1,10 @@
 #include "testNamespace.h"
 
+Numeric asNumber(long double x)
+{
+	return static_cast<Numeric>(x);
+}
+
 Numeric asNumber(double x)
 {
 	return static_cast<Numeric>(x);
@@ -14,6 +19,12 @@ Numeric asNumber(float x)
 Numeric asNumber(int x)
 {
 	return static_cast<Numeric>(x);
+}
+
+
+void EXPECT_NUMERIC_EQ(long double x, long double y)
+{
+	EXPECT_DOUBLE_EQ(x, y);
 }
 
 
