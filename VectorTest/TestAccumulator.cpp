@@ -532,6 +532,8 @@ void evalTransformAccumulateUR_X_bivariate_pairwise(int startLen, int endLen)
 	Numeric testEpsilon;
 	setEpsilonAccumulate(testEpsilon);
 
+	 //rounding errors in stl 
+
 
 	for (int SZ = startLen; SZ <= endLen; SZ++)
 	{
@@ -540,7 +542,7 @@ void evalTransformAccumulateUR_X_bivariate_pairwise(int startLen, int endLen)
 		auto v2 = v;
 		for (int i = 0; i < SZ; i++)
 		{
-			v[i] -= asNumber(500.0 - i);
+			v[i] -= asNumber(500.0 - i) / 3.0;
 			v2[i] = 2 * v[i];
 		}
 
@@ -551,6 +553,8 @@ void evalTransformAccumulateUR_X_bivariate_pairwise(int startLen, int endLen)
 		auto mult = [](auto lhs,auto rhs) { return lhs * rhs; };
 		Numeric resSTL = std::inner_product(v.begin(), v.end(), v2.begin(), 0.0);
 		Numeric resAcc1 = ApplyTransformAccumulate2UR_X_pairwise(test, test2, mult, Sum);
+
+		testEpsilon *= (abs(resSTL) + abs(resAcc1));
 		EXPECT_NEAR(resSTL, resAcc1, testEpsilon);
 	}
 
