@@ -55,3 +55,11 @@
 /out/build/x64-Debug
 /lattice/x64
 /dancingAVX512/x64
+/Vectorisation/cmake-build-debug
+/lattice/cmake-build-debug
+/curveExample/Intel® VTune™ Profiler Results/curveExample
+/curveExample/My Advisor Results - curveExample
+/scratch/x64
+/cmake-build-debug
+/.idea
+/curveExample/x64
