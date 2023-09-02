@@ -25,6 +25,8 @@ using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
+//using namespace DRC::VecLDb;
+
 //#include <iostream>
 
 #include <iostream>
@@ -33,13 +35,15 @@ using namespace DRC::VecD8D;
 
 int main()
 {
-    //  int i = 32;
-    long SZ = 1000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
-    double a = 10.;
-    double b = 1.0 / 100.;
-    double  c = 1.0 / (b * b);
-    double d = c * c;
+    using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
+    //  int i = 32;
+    long SZ = 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
+
+    FLOAT a = 10.;
+    FLOAT b = 1.0 / 100.;
+    FLOAT  c = 1.0 / (b * b);
+    FLOAT d = c * c;
 
     int n = 16;
     int m = 1;
@@ -91,7 +95,7 @@ int main()
 
 
 
-    double count = 1. * 1 / 3.;
+    FLOAT count = 1. * 1 / 3.;
 
     long idx = 0;
 
@@ -99,7 +103,7 @@ int main()
     {
 
 
-        x = 1.0;// count;
+        x = FLOAT( 1.0);// count;
        /*
         if (idx % 4 == 0)
         {
@@ -114,15 +118,15 @@ int main()
         if /* (idx > 500000)*/ (true) ///
         {
              // x *= 8e-11;
-              x *= 8e2;
+              x *= 8e2l;
              // x = 0.0;
            // x += count * 2.0 / 3.0;
 
-             x += 0.1* 2.0/3.0;
+              x += 1.l / 3.0l;// 0.1 * 2.0 / 3.0;
         }
         else
         {
-            x = 10.11;
+            x = 10.11l;
         }
 
         idx++;
@@ -145,11 +149,11 @@ int main()
         auto a = mixed[800252] + 10000000000000.0;
         auto b = mixed[800253] - 10000000000000.0;
 
-        a = 100000000000000000000.0;
-        b = -100000000000000000000.0;
+        a = 100000000000000000000.0l;
+        b = -100000000000000000000.0l;
 
-      //  a = 0.;
-      //  b = 0.;
+        a = 0.l;
+        b = 0.l;
       
         //   mixed[259] -=5055010.0;// 0;
 
@@ -173,9 +177,9 @@ int main()
        
 //   mixed[258] += 1. / 60000000.;
 
-        std::vector<double> dbg = mixed;
+        std::vector<FLOAT> dbg = mixed;
 
-        auto std_acc = std::accumulate(cbegin(dbg), cend(dbg), 0.0);
+        auto std_acc = std::accumulate(cbegin(dbg), cend(dbg), 0.0l);
 
 
         auto sumIt = [](auto x, auto y) {return x + y; };
@@ -183,7 +187,7 @@ int main()
 
         auto DRCubedAccum = ApplyAccumulate2UR_X(mixed, sumIt);
 
-        auto trad = 0.0;
+        auto trad = 0.0l;
         for (auto x : mixed)
         {
             trad += x;
@@ -233,25 +237,37 @@ int main()
         {
 
 
-            VecXX::INS veryBigSummV = 0.0;
-            VecXX::INS bigSummV = 0.0;
-            VecXX::INS smallSumV = 0.0;
-            VecXX::INS tinyV = 0.0;
-
-
+            VecXX::INS veryBigSummV = 0.0l;
+            VecXX::INS bigSummV = 0.0l;
+            VecXX::INS smallSumV = 0.0l;
+            VecXX::INS tinyV = 0.0l;
+    
+            /*   
+            const VecXX::INS VerySmall = 1e-15;
+            const VecXX::INS SMALL = 1.0;
+            const VecXX::INS BIG = 1.0e15;
+            const VecXX::INS TINY_C = 1e-30; // ?
+     */
 
 
             Bins(double x)
             {
+
                 const VecXX::INS VerySmall = 1e-15;
                 const VecXX::INS SMALL = 1.0;
                 const VecXX::INS BIG = 1.0e15;
                 const VecXX::INS TINY_C = 1e-30; // ?
 
+                /* 
+                const VecXX::INS VerySmall = 1e-8;
+                const VecXX::INS SMALL = 1.0;
+                const VecXX::INS BIG = 1.0e8;
+                const VecXX::INS TINY_C = 1e-15; // ?
+               
 
-                auto roundIt = [&](auto X, auto LEVEL)
+ */               auto roundIt = [&](auto X, auto LEVEL)
                 {
-                    auto INV_LEVEL = 1.0 / LEVEL;
+                    auto INV_LEVEL = 1.0l / LEVEL;
 
                     auto correct = INV_LEVEL * LEVEL;
                     //auto rd = long( X / LEVEL);
@@ -293,15 +309,23 @@ int main()
         auto BinnedAdd = [&](auto y, auto x) mutable
         {
 
-
+ 
             const VecXX::INS VerySmall = 1e-16;
             const VecXX::INS SMALL = 1.0;
             const VecXX::INS BIG = 1.0e15;
             const VecXX::INS TINY_C = 1e-32; // ?
 
+           /* 
+            const VecXX::INS VerySmall = 1e-8;
+            const VecXX::INS SMALL = 1.0;
+            const VecXX::INS BIG = 1.0e8;
+            const VecXX::INS TINY_C = 1e-15; // ?
+*/
+           
+
             auto roundIt = [&](auto X, auto LEVEL)//, auto INV_LEVEL)
             {
-                auto INV_LEVEL = 1.0 / LEVEL;
+                auto INV_LEVEL = 1.0l / LEVEL;
 
                 auto correct = INV_LEVEL * LEVEL;
                 //auto rd = long( X / LEVEL);

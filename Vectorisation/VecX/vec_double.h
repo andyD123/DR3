@@ -1012,6 +1012,12 @@ static inline VecLDouble abs(VecLDouble const& a)
 	return VecLDouble(::fabs(a[0]), ::fabs(a[1]));
 }
 
+static inline VecLDouble round(VecLDouble const& a)
+{
+	return VecLDouble(::round(a[0]), ::round(a[1]));
+}
+
+
 
 static inline VecLDouble sqrt(VecLDouble const& a)
 {
