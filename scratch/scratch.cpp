@@ -38,7 +38,11 @@ int main()
 
     using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
     //  int i = 32;
-    long SZ = 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
+    long SZ = 1024 * 1024;// *100;// 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
+
+   // long SZ = 100000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
+
+   //SZ = 8;
 
     FLOAT a = 10.;
     FLOAT b = 1.0 / 100.;
@@ -95,7 +99,7 @@ int main()
 
 
 
-    FLOAT count = 1. * 1 / 3.;
+    FLOAT count = 1.;// *1 / 3.;
 
     long idx = 0;
 
@@ -103,7 +107,7 @@ int main()
     {
 
 
-        x = FLOAT( 1.0);// count;
+      //  x = FLOAT( 1.0);// count;
        /*
         if (idx % 4 == 0)
         {
@@ -117,19 +121,20 @@ int main()
 
         if /* (idx > 500000)*/ (true) ///
         {
-             // x *= 8e-11;
-              x *= 8e2l;
+           //  x = 8e-17;
+           //   x *= 8e2l;
              // x = 0.0;
-           // x += count * 2.0 / 3.0;
-
-              x += 1.l / 3.0l;// 0.1 * 2.0 / 3.0;
+            //x = count * 2.0 / 3.0;
+            x = 10000* 1.0 / 3.0;//
+            x += count * 1./100000000;;
+            //  x += 1.l / 3.0l;// 0.1 * 2.0 / 3.0;
         }
         else
         {
             x = 10.11l;
         }
 
-        idx++;
+       // idx++;
         count++;
     }
 
@@ -142,21 +147,11 @@ int main()
 
         auto mixed = data;// 10 * data / 9. * 0.00000001;
 
-        /*  */
-        auto c = mixed[800252] + mixed[800253];
+        /*   */    
 
-     
-        auto a = mixed[800252] + 10000000000000.0;
-        auto b = mixed[800253] - 10000000000000.0;
-
-        a = 100000000000000000000.0l;
-        b = -100000000000000000000.0l;
-
-        a = 0.l;
-        b = 0.l;
       
         //   mixed[259] -=5055010.0;// 0;
-
+   
 
         for(int kkk = 0; kkk < 20; kkk++)
         {
@@ -164,28 +159,43 @@ int main()
         std::random_device rd;
         std::mt19937 g(rd());
 
-        //std::shuffle(v.begin(), v.end(), g);
+      // std::shuffle(v.begin(), v.end(), g);
+
+       // mixed[800252] = -1;// a;
+       // mixed[800253] = 1;// c;// b;
 
         shuffle(mixed.begin(), mixed.end(), g);
 
 
-        /* */
-        mixed[800252] = a;
-        mixed[800253] = b;
+        auto c = mixed[800252] + mixed[800253] + mixed[800257];
 
-        mixed[800257] += c;// -5055010.0;
+
+        auto a = mixed[800252] + 10000000000000.0;
+        auto b = mixed[800253] - 10000000000000.0;
+
+          a =  100000000000000000000.0l;
+          b = -100000000000000000000.0l;
+
+        a = 0.;
+        b = 0.;
+
+ 
        
+        mixed[800252] = a;// a;
+        mixed[800253] =  b;// c;// b;
+        mixed[800257] = c;// -5055010.0;
+ /*    */   
 //   mixed[258] += 1. / 60000000.;
 
-        std::vector<FLOAT> dbg = mixed;
+      //  std::vector<FLOAT> dbg = mixed;
 
-        auto std_acc = std::accumulate(cbegin(dbg), cend(dbg), 0.0l);
+        auto std_acc =  std::accumulate(mixed.begin(), mixed.end(), 0.0l);
 
 
         auto sumIt = [](auto x, auto y) {return x + y; };
-        auto sumPairwiseDr3 = ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
+        auto sumPairwiseDr3 =  ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
 
-        auto DRCubedAccum = ApplyAccumulate2UR_X(mixed, sumIt);
+        auto DRCubedAccum =  ApplyAccumulate2UR_X(mixed, sumIt);
 
         auto trad = 0.0l;
         for (auto x : mixed)
@@ -209,7 +219,7 @@ int main()
         };
 
 
-        auto sumKhan = reduce(mixed, KhanAddV);
+        auto sumKhan =  reduce(mixed, KhanAddV);
 
 
 
@@ -218,7 +228,7 @@ int main()
 
 
 
-        double startSum = reduce(startspan, sumIt);
+        double startSum = 0;// reduce(startspan, sumIt);
 
 
         auto roundIt = [&](auto X, auto LEVEL)
@@ -306,6 +316,8 @@ int main()
         Bins bin(0.);
 
 
+
+
         auto BinnedAdd = [&](auto y, auto x) mutable
         {
 
@@ -369,15 +381,38 @@ int main()
         // not working yet
         auto rrr = reduceI(mixed, BinnedAdd);
 
+        /*
+       // Bins bin(0.);
+        double y = 0.;
+
+        for (auto x : mixed)
+        {
+            BinnedAdd(y, x);
+        }
+        */
+
         //need to do sorted add across registers or use binned add lambda
         //use binned
         auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + +horizontal_add(bin.veryBigSummV);
-
+        //auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + +horizontal_add(bin.veryBigSummV);
+        // need to do multiple of registers for right answer
         // need to sort add for bbig
 
+        /*
+
+        Bins t1(1.0 / 3.0);
+        Bins t2(10.0 / 3.0);
+
+        Bins operator +(const Bins& A, const Bins& B)
+        {
+            Bin res;
+
+            return res;
+        }
 
 
-
+        auto reszzz = BinnedAdd(t1, t2);
+        */
 
         // std::cout << i << "\t" <<  std::setprecision(9)       << "standard sum "         << stdaccum  << ",   sum pairwise ="   << sum << "\n";
         std::cout << i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
