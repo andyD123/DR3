@@ -203,6 +203,12 @@ public:
 		return *this;
 	}
 
+	VecDouble(const VecDouble& rhs)
+	{
+		m_data[0] = rhs.m_data[0];
+		m_data[1] = rhs.m_data[1];	
+	}
+
 
 	VecDouble& load_a(const double* p)
 	{
@@ -653,6 +659,13 @@ public:
 	{
 		m_data[0] = rhs.m_data[0];	m_data[1] = rhs.m_data[1];
 		return *this;
+	}
+
+	VecLDouble(const VecLDouble& rhs)
+	{
+		m_data[0] = rhs.m_data[0];
+		m_data[1] = rhs.m_data[1];
+
 	}
 
 
