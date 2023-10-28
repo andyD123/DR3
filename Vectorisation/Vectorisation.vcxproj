@@ -362,7 +362,7 @@
     <PlatformToolset>Intel C++ Compiler 2022</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ICC2022|x64'" Label="Configuration">
-    <PlatformToolset>Intel C++ Compiler 2022</PlatformToolset>
+    <PlatformToolset>Intel(R) oneAPI DPC++ Compiler 2023</PlatformToolset>
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ICC2023|x64'" Label="Configuration">
