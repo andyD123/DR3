@@ -38,7 +38,7 @@ int main()
 
     using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
     //  int i = 32;
-    long SZ = 1024 * 1024;// *100;// 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
+    long SZ = 1024 * 1024*1;// *100;// 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
    // long SZ = 100000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
@@ -126,7 +126,7 @@ int main()
              // x = 0.0;
             //x = count * 2.0 / 3.0;
             x = 10000* 1.0 / 3.0;//
-            x += count * 1./100000000;;
+          //  x += 100.*count * 1./100000000;;
             //  x += 1.l / 3.0l;// 0.1 * 2.0 / 3.0;
         }
         else
@@ -151,9 +151,34 @@ int main()
 
       
         //   mixed[259] -=5055010.0;// 0;
-   
 
-        for(int kkk = 0; kkk < 20; kkk++)
+/* */
+        long count = 0;
+        for (auto& x : mixed)
+        {
+
+            count++;
+            auto a =  1000000000000.l;
+            auto b = -1000000000000.l;
+
+            
+
+       //     a = 0.0;
+       //     b = 0.0;
+
+            if ((count > 15) && (count % 15 == 0))
+            {
+                auto c = mixed[count] + mixed[count - 1] + mixed[count - 2];
+                mixed[count] = a;
+                mixed[count - 1] = b;
+                mixed[count - 2] = c;
+            }
+
+
+        }
+  
+
+        for(int kkk = 0; kkk < 100; kkk++)
         {
 
         std::random_device rd;
@@ -166,7 +191,8 @@ int main()
 
         shuffle(mixed.begin(), mixed.end(), g);
 
-
+        /**/
+        /* 
         auto c = mixed[800252] + mixed[800253] + mixed[800257];
 
 
@@ -176,15 +202,37 @@ int main()
           a =  100000000000000000000.0l;
           b = -100000000000000000000.0l;
 
-        a = 0.;
-        b = 0.;
+        //a = 0.;
+       //b = 0.;
+          
+        long count = 0;
+        for (auto& x : mixed)
+        {
 
- 
+            count++;
+           auto a =  1000000000.l;
+           auto b = -1000000000.l;
+
+           if ( (count >97) && (count % 97 == 0) )
+           {
+               mixed[count] = a;
+               mixed[count - 1] = b;
+           }
+           
+
+        }
        
-        mixed[800252] = a;// a;
-        mixed[800253] =  b;// c;// b;
-        mixed[800257] = c;// -5055010.0;
- /*    */   
+  //      mixed[800252] = a;// a;
+  //      mixed[800253] =  b;// c;// b;
+  //      mixed[800257] = c;// -5055010.0;
+
+
+
+
+
+        shuffle(mixed.begin(), mixed.end(), g);
+
+   */   
 //   mixed[258] += 1. / 60000000.;
 
       //  std::vector<FLOAT> dbg = mixed;
