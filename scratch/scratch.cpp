@@ -33,6 +33,190 @@ using namespace DRC::VecD8D;
 #include <algorithm>
 //#include <bits/stdc++.h>
 
+
+
+
+template<typename INS_T>
+struct BinsT
+{
+
+    auto roundIt(VecXX::INS X, VecXX::INS LEVEL)//, auto INV_LEVEL)
+        {
+            auto INV_LEVEL = 1.0l / LEVEL;
+
+            auto correct = INV_LEVEL * LEVEL;
+            //auto rd = long( X / LEVEL);
+            auto big = (LEVEL * round(X * INV_LEVEL));//
+            big *= correct;
+            auto small = X - big;
+
+            return std::pair(big, small);
+
+        };
+   // VecXX::INS veryBigSummV = 0.0l;
+   // VecXX::INS bigSummV = 0.0l;
+   // VecXX::INS smallSumV = 0.0l;
+   // VecXX::INS tinyV = 0.0l;
+
+
+    INS_T veryBigSummV;// = 0.0l;
+    INS_T bigSummV;// = 0.0l;
+    INS_T smallSumV; //= 0.0l;
+    INS_T tinyV;// = 0.0l;
+
+
+  //  const VecXX::INS VerySmall = 1e-15;
+  //  const VecXX::INS SMALL = 1.0;
+  //  const VecXX::INS BIG = 1.0e15;
+  //  const VecXX::INS TINY_C = 1e-30; // ?
+
+    const VecXX::INS VerySmall = 1e-16;
+    const VecXX::INS SMALL = 1.0;
+    const VecXX::INS BIG = 1.0e16;
+    const VecXX::INS TINY_C = 1e-32;
+
+    BinsT() {}
+
+
+     BinsT(INS_T x)
+    {
+
+
+        const INS_T VerySmall = 1e-15;
+        const INS_T SMALL = 1.0;
+        const INS_T BIG = 1.0e15;
+        const INS_T TINY_C = 1e-30; // ?
+
+        auto roundIt = [&](auto X, auto LEVEL)
+        {
+            auto INV_LEVEL = 1.0l / LEVEL;
+
+            auto correct = INV_LEVEL * LEVEL;
+            //auto rd = long( X / LEVEL);
+            auto big = (LEVEL * round(X * INV_LEVEL)) * correct;
+            auto small = X - big;
+
+            return std::pair(big, small);
+
+        };
+
+
+
+        auto resRoundVeryBig = roundIt(x, BIG);
+        auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
+        auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
+
+        veryBigSummV = resRoundVeryBig.first;
+        bigSummV = resRoundBig.first;
+        smallSumV = resRoundSmall.first;
+        tinyV = resRoundSmall.second;
+
+    }
+
+     BinsT& operator *(INS_T rhs)
+     {
+
+         veryBigSummV *= rhs;
+         bigSummV *= rhs;
+         smallSumV *= rhs;
+         tinyV *= rhs;
+
+         return *this;
+     }
+
+    BinsT(double x)
+    {
+
+
+        const VecXX::INS VerySmall = 1e-15;
+        const VecXX::INS SMALL = 1.0;
+        const VecXX::INS BIG = 1.0e15;
+        const VecXX::INS TINY_C = 1e-30; // ?
+
+
+
+
+        //const VecXX::INS VerySmall = 1e-8;
+        //const VecXX::INS SMALL = 1.0;
+        //const VecXX::INS BIG = 1.0e8;
+        //const VecXX::INS TINY_C = 1e-15; // ?
+
+
+        auto roundIt = [&](auto X, auto LEVEL)
+        {
+            auto INV_LEVEL = 1.0l / LEVEL;
+
+            auto correct = INV_LEVEL * LEVEL;
+            //auto rd = long( X / LEVEL);
+            auto big = (LEVEL * round(X * INV_LEVEL)) * correct;
+            auto small = X - big;
+
+            return std::pair(big, small);
+
+        };
+
+
+
+        auto resRoundVeryBig = roundIt(x, BIG);
+        auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
+        auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
+
+        veryBigSummV = resRoundVeryBig.first;
+        bigSummV = resRoundBig.first;
+        smallSumV = resRoundSmall.first;
+        tinyV = resRoundSmall.second;
+
+    }
+
+    BinsT(BinsT&& x) noexcept
+    {
+        veryBigSummV = x.veryBigSummV;
+        bigSummV = x.bigSummV;
+        smallSumV = x.smallSumV;
+        tinyV = x.tinyV;
+
+    };
+
+
+    BinsT& operator =(const BinsT& x) //noexcept
+    {
+        veryBigSummV = x.veryBigSummV;
+        bigSummV = x.bigSummV;
+        smallSumV = x.smallSumV;
+        tinyV = x.tinyV;
+        return *this;
+    };
+
+
+    BinsT& operator += (const BinsT& rhs)
+    {
+        auto resRoundTiny = roundIt(tinyV +rhs.tinyV, TINY_C);
+        tinyV = resRoundTiny.second;
+         
+        auto smallRound = roundIt(smallSumV+ rhs.smallSumV+ resRoundTiny.first, SMALL);
+        smallSumV = smallRound.second;
+       
+        auto bigRound = roundIt(smallRound.first +bigSummV + rhs.bigSummV, BIG);
+
+        bigSummV = bigRound.second;
+
+        veryBigSummV = bigRound.first + veryBigSummV + rhs.veryBigSummV;
+
+        return *this;
+    }
+
+
+
+    double hsum()
+    {
+        auto lambdaBinSum = [this]() {return horizontal_add(tinyV) + horizontal_add(smallSumV) + horizontal_add(bigSummV) + horizontal_add(veryBigSummV); };
+
+        return lambdaBinSum();
+    }
+};
+
+
+
 int main()
 {
 
@@ -278,7 +462,7 @@ int main()
 
         double startSum = 0;// reduce(startspan, sumIt);
 
-
+        /*
         auto roundIt = [&](auto X, auto LEVEL)
         {
             //auto rd = long( X / LEVEL);
@@ -288,9 +472,12 @@ int main()
             return std::pair(big, small);
         };
 
+        */
 
 
         // const auto zero = InstructionTraits<VecXX::INS>::nullValue;
+        //template<typename INS_T>
+        /*
         struct Bins
         {
 
@@ -300,30 +487,26 @@ int main()
             VecXX::INS smallSumV = 0.0l;
             VecXX::INS tinyV = 0.0l;
     
-            /*   
-            const VecXX::INS VerySmall = 1e-15;
-            const VecXX::INS SMALL = 1.0;
-            const VecXX::INS BIG = 1.0e15;
-            const VecXX::INS TINY_C = 1e-30; // ?
-     */
 
-
-            Bins(double x)
+             Bins(double x)
             {
 
+                
                 const VecXX::INS VerySmall = 1e-15;
                 const VecXX::INS SMALL = 1.0;
                 const VecXX::INS BIG = 1.0e15;
                 const VecXX::INS TINY_C = 1e-30; // ?
+                
 
-                /* 
-                const VecXX::INS VerySmall = 1e-8;
-                const VecXX::INS SMALL = 1.0;
-                const VecXX::INS BIG = 1.0e8;
-                const VecXX::INS TINY_C = 1e-15; // ?
-               
 
- */               auto roundIt = [&](auto X, auto LEVEL)
+                
+                //const VecXX::INS VerySmall = 1e-8;
+                //const VecXX::INS SMALL = 1.0;
+                //const VecXX::INS BIG = 1.0e8;
+                //const VecXX::INS TINY_C = 1e-15; // ?
+                         
+
+               auto roundIt = [&](auto X, auto LEVEL)
                 {
                     auto INV_LEVEL = 1.0l / LEVEL;
 
@@ -359,29 +542,40 @@ int main()
             };
         };
 
-
         //doing accum in Bins
         Bins bin(0.);
 
 
 
+        */
 
-        auto BinnedAdd = [&](auto y, auto x) mutable
+       // template<typename T> 
+        auto roundIt = [&](VecXX::INS X, VecXX::INS LEVEL)//, auto INV_LEVEL)
+            {
+                auto INV_LEVEL = 1.0l / LEVEL;
+
+                auto correct = INV_LEVEL * LEVEL;
+                //auto rd = long( X / LEVEL);
+                auto big = (LEVEL * round(X * INV_LEVEL));//
+                big *= correct;
+                auto small = X - big;
+
+                return std::pair(big, small);
+
+            };
+
+
+        auto BinnedAdd = [&](auto& bin, auto x) mutable
+        //auto BinnedAdd = [bin=Bins(0.0)](auto y, auto x) mutable
         {
 
  
             const VecXX::INS VerySmall = 1e-16;
             const VecXX::INS SMALL = 1.0;
-            const VecXX::INS BIG = 1.0e15;
+            const VecXX::INS BIG = 1.0e16;
             const VecXX::INS TINY_C = 1e-32; // ?
 
-           /* 
-            const VecXX::INS VerySmall = 1e-8;
-            const VecXX::INS SMALL = 1.0;
-            const VecXX::INS BIG = 1.0e8;
-            const VecXX::INS TINY_C = 1e-15; // ?
-*/
-           
+        /*
 
             auto roundIt = [&](auto X, auto LEVEL)//, auto INV_LEVEL)
             {
@@ -397,6 +591,7 @@ int main()
 
             };
 
+            */
             auto resRoundVeryBig = roundIt(x, BIG);
             auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
             auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
@@ -420,14 +615,26 @@ int main()
 
             // return (bin.tinyV + bin.smallSumV) + bin.bigSummV;
              //reduce across these registers
-            auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + horizontal_add(bin.veryBigSummV);
+         //   auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + horizontal_add(bin.veryBigSummV);
 
-            return NULL_Vec;
+            return  NULL_Vec;
 
         };
 
+      
+
+
+        VecXX a(1.0, 31);
+        auto rK = reduceI(a, KhanAddV);
+
+
         // not working yet
-        auto rrr = reduceI(mixed, BinnedAdd);
+       // auto rrr = reduceI(mixed, BinnedAdd);
+       
+        BinsT< VecXX::INS> binsT;
+        auto nullVec = VecXX::INS(0.);
+
+        auto lambdaBinSum = reduceII(binsT, mixed, BinnedAdd);// , nullVec, 0);
 
         /*
        // Bins bin(0.);
@@ -441,7 +648,7 @@ int main()
 
         //need to do sorted add across registers or use binned add lambda
         //use binned
-        auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + +horizontal_add(bin.veryBigSummV);
+    //    auto lambdaBinSum =  ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + horizontal_add(bin.veryBigSummV);
         //auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + +horizontal_add(bin.veryBigSummV);
         // need to do multiple of registers for right answer
         // need to sort add for bbig

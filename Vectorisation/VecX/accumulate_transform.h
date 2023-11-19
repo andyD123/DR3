@@ -508,6 +508,155 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 
 
 
+//unrolled version helps greatly with VC2019
+template<  template <class> typename VEC_TYPE, typename INS_VEC, template <class> typename ACCUMULATOR_TYPE, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const ACCUMULATOR_TYPE< INS_VEC>& acc, const VEC_TYPE<INS_VEC>& rhs1, OP& oper, int  ZeroInitTag = 1)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
+	{
+		return rhs1.getScalarValue();
+	}
+
+	long sz = static_cast<long>(rhs1.size());
+	auto pRhs1 = rhs1.start();
+	const long width = InstructionTraits<INS_VEC>::width;
+	long step = 4 * width;
+
+	using ACC = ACCUMULATOR_TYPE< INS_VEC>;
+	
+	INS_VEC RHS1;
+	ACC RES = InstructionTraits<INS_VEC>::nullValue;
+
+	INS_VEC RHS2;
+	ACC RES1;
+
+	INS_VEC RHS3;
+	ACC RES2;
+
+	INS_VEC RHS4;
+	ACC RES3;
+
+	long i = 0;
+
+	if (sz >= step * 2)
+	{
+
+		if (ZeroInitTag == 0)
+		{
+			//initialise first set of registers
+			{
+				RES = InstructionTraits<INS_VEC>::nullValue;
+				RES1 = InstructionTraits<INS_VEC>::nullValue;
+				RES2 = InstructionTraits<INS_VEC>::nullValue;
+				RES3 = InstructionTraits<INS_VEC>::nullValue;
+			}
+		}
+		else
+		{
+			//initialise first set of registers
+			{
+				INS_VEC temp;
+				temp.load_a(pRhs1 + i);
+				RES =temp;
+				temp.load_a(pRhs1 + i + width);
+				RES1 =temp;
+				temp.load_a(pRhs1 + i + width * 2);
+				RES2 =temp;
+				temp.load_a(pRhs1 + i + width * 3);
+				RES3 =temp;
+			}
+			i += step;
+		}
+
+
+
+		long rhsSZ = static_cast<long>(rhs1.size());
+		for (; i <= (rhsSZ - step); i += step)
+		{
+			RHS1.load_a(pRhs1 + i);
+			oper(RES, RHS1);
+
+			RHS2.load_a(pRhs1 + i + width);
+			oper(RES1, RHS2);
+
+			RHS3.load_a(pRhs1 + i + width * 2);
+			oper(RES2, RHS3);
+
+			RHS4.load_a(pRhs1 + i + width * 3);
+			oper(RES3, RHS4);
+
+		}
+
+		// odd bits
+		for (; i <= rhsSZ - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RES, RHS1);
+		}
+
+		//RES = oper(RES, RES1);
+		//RES2 = oper(RES2, RES3);
+		//RES = oper(RES, RES2);
+
+		RES += RES1;
+		RES2 += RES3;
+		RES += RES2;
+	}
+	else
+	{
+		//TO DO
+
+		
+		ACC RES= InstructionTraits<INS_VEC>::nullValue;
+		RHS1.load_a(pRhs1);
+		RES = oper(RES, RHS1);
+		i += width;
+		// odd bits
+		for (; i <= sz - width; i += width)
+		{
+			RHS1.load_a(pRhs1 + i);
+			RES = oper(RES, RHS1);
+		}
+
+	}
+
+	//TO DO need masked aggregation
+
+	//should used masked operator id below reg width.
+	//also consideration of remainder bits
+	return RES.hsum();
+
+	//horizontal add across lanes
+
+	// then some masked add across lanes
+
+
+	/*
+	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
+	long min_wdth = std::min(sz, width);
+	//across vectors lanes  // not assuming horizontal versoion exist
+	for (long j = 1; j < min_wdth; ++j)
+	{
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], oper);
+	}
+
+	//end bits for vecs not filling padding
+	for (; i < rhs1.size(); ++i)
+	{
+		result = ApplyBinaryOperationVec<INS_VEC, OP>(pRhs1[i], result, oper);
+	}
+	*/
+
+	//ACC
+
+	//return result;
+}
+
+
+
+
+
 
 
 

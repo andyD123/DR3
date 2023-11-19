@@ -588,6 +588,24 @@ typename InstructionTraits<INS_VEC>::FloatType reduceI(const Vec<INS_VEC>& rhs1,
 }
 
 
+//unroll user accumulator version
+template< template <class> typename ACCUMULATOR_TYPE, template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduceII(const ACCUMULATOR_TYPE< INS_VEC>& acc,const VEC_TYPE<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	ignore(initVal);
+	ignore(singularInit);
+#ifdef _VC_PERF_REG_
+
+	return ApplyAccumulate2UR_X_Accum(acc, rhs1, oper, 0);
+
+
+#else
+	return ApplyAccumulate2UR(rhs1, oper, initVal, singularInit);
+#endif
+
+}
+
+
 
 
 //unroll version
