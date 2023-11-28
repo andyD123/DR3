@@ -10,6 +10,7 @@
 #include <iomanip>  
 #include <functional>
 
+#include <utility>
 
 #include "../Vectorisation/VecX/dr3.h"
 
@@ -222,7 +223,7 @@ int main()
 
     using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
     //  int i = 32;
-    long SZ = 1024 * 1024*1;// *100;// 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
+    long SZ = 1024 * 1024+5;// +3;// +7;// +7;// +1;// //  *100;// *100;// 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
    // long SZ = 100000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
@@ -347,8 +348,8 @@ int main()
 
             
 
-       //     a = 0.0;
-       //     b = 0.0;
+         //  a = 0.0;
+         //  b = 0.0;
 
             if ((count > 15) && (count % 15 == 0))
             {
@@ -425,7 +426,7 @@ int main()
 
 
         auto sumIt = [](auto x, auto y) {return x + y; };
-        auto sumPairwiseDr3 =  ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
+   //     auto sumPairwiseDr3 =  ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
 
         auto DRCubedAccum =  ApplyAccumulate2UR_X(mixed, sumIt);
 
@@ -462,92 +463,6 @@ int main()
 
         double startSum = 0;// reduce(startspan, sumIt);
 
-        /*
-        auto roundIt = [&](auto X, auto LEVEL)
-        {
-            //auto rd = long( X / LEVEL);
-            auto big = LEVEL * std::round(X / LEVEL);
-            auto small = X - big;
-
-            return std::pair(big, small);
-        };
-
-        */
-
-
-        // const auto zero = InstructionTraits<VecXX::INS>::nullValue;
-        //template<typename INS_T>
-        /*
-        struct Bins
-        {
-
-
-            VecXX::INS veryBigSummV = 0.0l;
-            VecXX::INS bigSummV = 0.0l;
-            VecXX::INS smallSumV = 0.0l;
-            VecXX::INS tinyV = 0.0l;
-    
-
-             Bins(double x)
-            {
-
-                
-                const VecXX::INS VerySmall = 1e-15;
-                const VecXX::INS SMALL = 1.0;
-                const VecXX::INS BIG = 1.0e15;
-                const VecXX::INS TINY_C = 1e-30; // ?
-                
-
-
-                
-                //const VecXX::INS VerySmall = 1e-8;
-                //const VecXX::INS SMALL = 1.0;
-                //const VecXX::INS BIG = 1.0e8;
-                //const VecXX::INS TINY_C = 1e-15; // ?
-                         
-
-               auto roundIt = [&](auto X, auto LEVEL)
-                {
-                    auto INV_LEVEL = 1.0l / LEVEL;
-
-                    auto correct = INV_LEVEL * LEVEL;
-                    //auto rd = long( X / LEVEL);
-                    auto big = (LEVEL * round(X * INV_LEVEL)) * correct;
-                    auto small = X - big;
-
-                    return std::pair(big, small);
-
-                };
-
-
-
-                auto resRoundVeryBig = roundIt(x, BIG);
-                auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-                auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-
-                veryBigSummV = resRoundVeryBig.first;
-                bigSummV = resRoundBig.first;
-                smallSumV = resRoundSmall.first;
-                tinyV = resRoundSmall.second;
-
-            }
-
-            Bins(Bins&& x) noexcept
-            {
-                veryBigSummV = x.veryBigSummV;
-                bigSummV = x.bigSummV;
-                smallSumV = x.smallSumV;
-                tinyV = x.tinyV;
-
-            };
-        };
-
-        //doing accum in Bins
-        Bins bin(0.);
-
-
-
-        */
 
        // template<typename T> 
         auto roundIt = [&](VecXX::INS X, VecXX::INS LEVEL)//, auto INV_LEVEL)
@@ -636,44 +551,13 @@ int main()
 
         auto lambdaBinSum = reduceII(binsT, mixed, BinnedAdd);// , nullVec, 0);
 
-        /*
-       // Bins bin(0.);
-        double y = 0.;
 
-        for (auto x : mixed)
-        {
-            BinnedAdd(y, x);
-        }
-        */
-
-        //need to do sorted add across registers or use binned add lambda
-        //use binned
-    //    auto lambdaBinSum =  ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + horizontal_add(bin.veryBigSummV);
-        //auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + +horizontal_add(bin.veryBigSummV);
-        // need to do multiple of registers for right answer
-        // need to sort add for bbig
-
-        /*
-
-        Bins t1(1.0 / 3.0);
-        Bins t2(10.0 / 3.0);
-
-        Bins operator +(const Bins& A, const Bins& B)
-        {
-            Bin res;
-
-            return res;
-        }
-
-
-        auto reszzz = BinnedAdd(t1, t2);
-        */
 
         // std::cout << i << "\t" <<  std::setprecision(9)       << "standard sum "         << stdaccum  << ",   sum pairwise ="   << sum << "\n";
         std::cout << i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
             << std_acc << "\t std::accumulate sum  trad = \n"
             << DRCubedAccum << "\t accumulate DR3 = \n"  /* << ",\n split aggregate =" << bigSumm + smallSum + verySmallSum*/ /* + sumS*/ /* << ", \n pairwise split aggregate =" << sumB_pairWise + sumS_pairWise_rnd + sumS_pairWise_cry*/
-            << sumPairwiseDr3 << "\t  sum pairwise = \n"
+         //   << sumPairwiseDr3 << "\t  sum pairwise = \n"
             << sumKhan << " ,\t Kahan acc ,\n"
             << lambdaBinSum << "\t lambda bin sum acc, \n \n \n \n";
     }

@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include <tuple>
+#include <array>
 
 
 /*
@@ -595,10 +596,6 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 			RES = oper(RES, RHS1);
 		}
 
-		//RES = oper(RES, RES1);
-		//RES2 = oper(RES2, RES3);
-		//RES = oper(RES, RES2);
-
 		RES += RES1;
 		RES2 += RES3;
 		RES += RES2;
@@ -621,36 +618,29 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 
 	}
 
-	//TO DO need masked aggregation
+	long maskSz = sz - i;
 
-	//should used masked operator id below reg width.
-	//also consideration of remainder bits
+
+	if (maskSz >0)
+	{
+		alignas(512)  std::array< typename InstructionTraits<INS_VEC>::FloatType, InstructionTraits<INS_VEC>::width> mask;
+		for (int k = 0; k < mask.size(); k++)
+		{
+			mask[k] = (k < maskSz) ? 1.0 : 0;
+		}
+
+		RHS1.load_a(pRhs1 + i);
+
+		INS_VEC MASK;
+		MASK.load_a(&mask[0]);
+		RHS1 = RHS1 * MASK;
+		oper(RES, RHS1);
+
+	}
+
 	return RES.hsum();
 
-	//horizontal add across lanes
 
-	// then some masked add across lanes
-
-
-	/*
-	typename InstructionTraits<INS_VEC>::FloatType result = RES[0];
-	long min_wdth = std::min(sz, width);
-	//across vectors lanes  // not assuming horizontal versoion exist
-	for (long j = 1; j < min_wdth; ++j)
-	{
-		result = ApplyBinaryOperationVec<INS_VEC, OP>(result, RES[j], oper);
-	}
-
-	//end bits for vecs not filling padding
-	for (; i < rhs1.size(); ++i)
-	{
-		result = ApplyBinaryOperationVec<INS_VEC, OP>(pRhs1[i], result, oper);
-	}
-	*/
-
-	//ACC
-
-	//return result;
 }
 
 
