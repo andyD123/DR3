@@ -223,7 +223,7 @@ int main()
 
     using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
     //  int i = 32;
-    long SZ = 1024 * 1024+5;// +3;// +7;// +7;// +1;// //  *100;// *100;// 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
+    long SZ = 10 *1024 * 1024 +2;// +3;// +7;// +7;// +1;// //  *100;// *100;// 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
    // long SZ = 100000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
@@ -313,6 +313,7 @@ int main()
             x = 10000* 1.0 / 3.0;//
           //  x += 100.*count * 1./100000000;;
             //  x += 1.l / 3.0l;// 0.1 * 2.0 / 3.0;
+           x += idx;
         }
         else
         {
@@ -332,12 +333,14 @@ int main()
 
         auto mixed = data;// 10 * data / 9. * 0.00000001;
 
+       // std::vector<double> dat = mixed;
+
         /*   */    
 
       
         //   mixed[259] -=5055010.0;// 0;
 
-/* */
+/*   */
         long count = 0;
         for (auto& x : mixed)
         {
@@ -348,20 +351,20 @@ int main()
 
             
 
-         //  a = 0.0;
-         //  b = 0.0;
-
+           //a = 0.0;
+           //b = 0.0;
+           /* */
             if ((count > 15) && (count % 15 == 0))
             {
                 auto c = mixed[count] + mixed[count - 1] + mixed[count - 2];
-                mixed[count] = a;
+                mixed[count] = c;
                 mixed[count - 1] = b;
-                mixed[count - 2] = c;
+                mixed[count - 2] = a;
             }
-
+           
 
         }
-  
+
 
         for(int kkk = 0; kkk < 100; kkk++)
         {
@@ -369,15 +372,16 @@ int main()
         std::random_device rd;
         std::mt19937 g(rd());
 
-      // std::shuffle(v.begin(), v.end(), g);
+        // std::shuffle(v.begin(), v.end(), g);
 
        // mixed[800252] = -1;// a;
        // mixed[800253] = 1;// c;// b;
 
-        shuffle(mixed.begin(), mixed.end(), g);
+        std::shuffle(mixed.begin(), mixed.end(), g);
 
         /**/
-        /* 
+     // 
+       /* 
         auto c = mixed[800252] + mixed[800253] + mixed[800257];
 
 
@@ -417,7 +421,8 @@ int main()
 
         shuffle(mixed.begin(), mixed.end(), g);
 
-   */   
+  // 
+  */   
 //   mixed[258] += 1. / 60000000.;
 
       //  std::vector<FLOAT> dbg = mixed;
@@ -426,8 +431,9 @@ int main()
 
 
         auto sumIt = [](auto x, auto y) {return x + y; };
-   //     auto sumPairwiseDr3 =  ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
+        auto sumPairwiseDr3 =  ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
 
+     //   
         auto DRCubedAccum =  ApplyAccumulate2UR_X(mixed, sumIt);
 
         auto trad = 0.0l;
@@ -457,11 +463,11 @@ int main()
 
 
 
-        SpanXX startspan(mixed.begin(), 32);
+    //    SpanXX startspan(mixed.begin(), 32);
 
 
 
-        double startSum = 0;// reduce(startspan, sumIt);
+   //     double startSum =  reduce(startspan, sumIt);
 
 
        // template<typename T> 
@@ -490,7 +496,8 @@ int main()
             const VecXX::INS BIG = 1.0e16;
             const VecXX::INS TINY_C = 1e-32; // ?
 
-        /*
+    //   
+      /*
 
             auto roundIt = [&](auto X, auto LEVEL)//, auto INV_LEVEL)
             {
@@ -506,7 +513,7 @@ int main()
 
             };
 
-            */
+           */
             auto resRoundVeryBig = roundIt(x, BIG);
             auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
             auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
@@ -539,27 +546,26 @@ int main()
       
 
 
-        VecXX a(1.0, 31);
-        auto rK = reduceI(a, KhanAddV);
+      //  VecXX a(1.0, 31);
+      //  auto rK = reduceI(a, KhanAddV);
 
 
-        // not working yet
-       // auto rrr = reduceI(mixed, BinnedAdd);
        
         BinsT< VecXX::INS> binsT;
         auto nullVec = VecXX::INS(0.);
 
         auto lambdaBinSum = reduceII(binsT, mixed, BinnedAdd);// , nullVec, 0);
 
-
+      //  */
 
         // std::cout << i << "\t" <<  std::setprecision(9)       << "standard sum "         << stdaccum  << ",   sum pairwise ="   << sum << "\n";
         std::cout << i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
-            << std_acc << "\t std::accumulate sum  trad = \n"
-            << DRCubedAccum << "\t accumulate DR3 = \n"  /* << ",\n split aggregate =" << bigSumm + smallSum + verySmallSum*/ /* + sumS*/ /* << ", \n pairwise split aggregate =" << sumB_pairWise + sumS_pairWise_rnd + sumS_pairWise_cry*/
-         //   << sumPairwiseDr3 << "\t  sum pairwise = \n"
-            << sumKhan << " ,\t Kahan acc ,\n"
-            << lambdaBinSum << "\t lambda bin sum acc, \n \n \n \n";
+                 << std_acc << "\t std::accumulate sum  trad = \n"
+                 << DRCubedAccum << "\t accumulate DR3 = \n"  /* << ",\n split aggregate =" << bigSumm + smallSum + verySmallSum*/ /* + sumS*/ /* << ", \n pairwise split aggregate =" << sumB_pairWise + sumS_pairWise_rnd + sumS_pairWise_cry*/
+            << sumPairwiseDr3 << "\t  sum pairwise = \n"
+                << sumKhan << " ,\t Kahan acc ,\n"
+                << lambdaBinSum << "\t lambda bin sum acc, \n \n \n \n";
+           // ;
     }
 }
 }
