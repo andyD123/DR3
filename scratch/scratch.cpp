@@ -41,23 +41,20 @@ template<typename INS_T>
 struct BinsT
 {
 
-    auto roundIt(VecXX::INS X, VecXX::INS LEVEL)//, auto INV_LEVEL)
+    auto roundIt(VecXX::INS X, VecXX::INS LEVEL)
         {
             auto INV_LEVEL = 1.0l / LEVEL;
 
-            auto correct = INV_LEVEL * LEVEL;
-            //auto rd = long( X / LEVEL);
+         //   auto correct = INV_LEVEL * LEVEL;
+           
             auto big = (LEVEL * round(X * INV_LEVEL));//
-            big *= correct;
+      //      big *= correct;
             auto small = X - big;
 
             return std::pair(big, small);
 
         };
-   // VecXX::INS veryBigSummV = 0.0l;
-   // VecXX::INS bigSummV = 0.0l;
-   // VecXX::INS smallSumV = 0.0l;
-   // VecXX::INS tinyV = 0.0l;
+  
 
 
     INS_T veryBigSummV;// = 0.0l;
@@ -65,11 +62,6 @@ struct BinsT
     INS_T smallSumV; //= 0.0l;
     INS_T tinyV;// = 0.0l;
 
-
-  //  const VecXX::INS VerySmall = 1e-15;
-  //  const VecXX::INS SMALL = 1.0;
-  //  const VecXX::INS BIG = 1.0e15;
-  //  const VecXX::INS TINY_C = 1e-30; // ?
 
     const VecXX::INS VerySmall = 1e-16;
     const VecXX::INS SMALL = 1.0;
@@ -86,15 +78,13 @@ struct BinsT
         const INS_T VerySmall = 1e-15;
         const INS_T SMALL = 1.0;
         const INS_T BIG = 1.0e15;
-        const INS_T TINY_C = 1e-30; // ?
+    //    const INS_T TINY_C = 1e-30; // ?
 
         auto roundIt = [&](auto X, auto LEVEL)
         {
             auto INV_LEVEL = 1.0l / LEVEL;
-
-            auto correct = INV_LEVEL * LEVEL;
-            //auto rd = long( X / LEVEL);
-            auto big = (LEVEL * round(X * INV_LEVEL)) * correct;
+           
+            auto big = (LEVEL * round(X * INV_LEVEL));
             auto small = X - big;
 
             return std::pair(big, small);
@@ -132,26 +122,16 @@ struct BinsT
         const VecXX::INS VerySmall = 1e-15;
         const VecXX::INS SMALL = 1.0;
         const VecXX::INS BIG = 1.0e15;
-        const VecXX::INS TINY_C = 1e-30; // ?
+      //  const VecXX::INS TINY_C = 1e-30; // ?
 
 
-
-
-        //const VecXX::INS VerySmall = 1e-8;
-        //const VecXX::INS SMALL = 1.0;
-        //const VecXX::INS BIG = 1.0e8;
-        //const VecXX::INS TINY_C = 1e-15; // ?
 
 
         auto roundIt = [&](auto X, auto LEVEL)
         {
             auto INV_LEVEL = 1.0l / LEVEL;
-
-            auto correct = INV_LEVEL * LEVEL;
-            //auto rd = long( X / LEVEL);
-            auto big = (LEVEL * round(X * INV_LEVEL)) * correct;
+            auto big = (LEVEL * round(X * INV_LEVEL));
             auto small = X - big;
-
             return std::pair(big, small);
 
         };
@@ -229,13 +209,13 @@ int main()
 
    //SZ = 8;
 
-    FLOAT a = 10.;
+  //  FLOAT a = 10.;
     FLOAT b = 1.0 / 100.;
     FLOAT  c = 1.0 / (b * b);
-    FLOAT d = c * c;
+ //   FLOAT d = c * c;
 
-    int n = 16;
-    int m = 1;
+   // int n = 16;
+   // int m = 1;
     /**/
     //__m256d Number= { a,b,c,d };
     //auto res = getExponent(Number);
@@ -253,13 +233,9 @@ int main()
 
     auto roundIt2 = [&](auto X, auto LEVEL)
     {
-        //auto rd = long( X / LEVEL);
+     
         auto integ = roundi(X / LEVEL);
-        //auto rmdr = x % LEVEL; //roundi(X / LEVEL);
-        //auto integ = (x - rmdr) / LEVEL;
-
-
-        auto exp_level = getExponent(LEVEL);
+         auto exp_level = getExponent(LEVEL);
         auto exp_X = getExponent(X);
 
         auto zero = X;
@@ -276,84 +252,35 @@ int main()
     };
 
 
-    //auto rnd_res = roundIt2(number_t, LVL);
+  
+    VecXX data(10000.0/3.0, SZ);
 
-
-
-    VecXX data(0., SZ);// 64 * 1024);
-
-
-
-    FLOAT count = 1.;// *1 / 3.;
-
-    long idx = 0;
-
-    for (auto& x : data)
-    {
-
-
-      //  x = FLOAT( 1.0);// count;
-       /*
-        if (idx % 4 == 0)
-        {
-            x += 100000000.111111;
-        }
-        else if ( idx % 2 == 0)
-        {
-           x -= 100000000.111111;
-        }
-        */
-
-        if /* (idx > 500000)*/ (true) ///
-        {
-           //  x = 8e-17;
-           //   x *= 8e2l;
-             // x = 0.0;
-            //x = count * 2.0 / 3.0;
-            x = 10000* 1.0 / 3.0;//
-          //  x += 100.*count * 1./100000000;;
-            //  x += 1.l / 3.0l;// 0.1 * 2.0 / 3.0;
-           x += idx;
-        }
-        else
-        {
-            x = 10.11l;
-        }
-
-       // idx++;
-        count++;
-    }
-
-
+   // bool USE_BIG_CANCELLATION =  false;
+    bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 
     {
 
 
-        auto mixed = data;// 10 * data / 9. * 0.00000001;
+        auto mixed = data;
 
-       // std::vector<double> dat = mixed;
 
-        /*   */    
-
-      
-        //   mixed[259] -=5055010.0;// 0;
-
-/*   */
         long count = 0;
         for (auto& x : mixed)
         {
 
             count++;
-            auto a =  1000000000000.l;
-            auto b = -1000000000000.l;
+            auto a =  100000000000000000.l;
+            auto b = -100000000000000000.l;
 
             
-
-           //a = 0.0;
-           //b = 0.0;
-           /* */
+            if (!USE_BIG_CANCELLATION)
+            {
+                a = 0.0;
+                b = 0.0;
+            }
+          
             if ((count > 15) && (count % 15 == 0))
             {
                 auto c = mixed[count] + mixed[count - 1] + mixed[count - 2];
@@ -372,68 +299,17 @@ int main()
         std::random_device rd;
         std::mt19937 g(rd());
 
-        // std::shuffle(v.begin(), v.end(), g);
-
-       // mixed[800252] = -1;// a;
-       // mixed[800253] = 1;// c;// b;
-
+ 
         std::shuffle(mixed.begin(), mixed.end(), g);
 
-        /**/
-     // 
-       /* 
-        auto c = mixed[800252] + mixed[800253] + mixed[800257];
-
-
-        auto a = mixed[800252] + 10000000000000.0;
-        auto b = mixed[800253] - 10000000000000.0;
-
-          a =  100000000000000000000.0l;
-          b = -100000000000000000000.0l;
-
-        //a = 0.;
-       //b = 0.;
-          
-        long count = 0;
-        for (auto& x : mixed)
-        {
-
-            count++;
-           auto a =  1000000000.l;
-           auto b = -1000000000.l;
-
-           if ( (count >97) && (count % 97 == 0) )
-           {
-               mixed[count] = a;
-               mixed[count - 1] = b;
-           }
-           
-
-        }
-       
-  //      mixed[800252] = a;// a;
-  //      mixed[800253] =  b;// c;// b;
-  //      mixed[800257] = c;// -5055010.0;
-
-
-
-
-
-        shuffle(mixed.begin(), mixed.end(), g);
-
-  // 
-  */   
-//   mixed[258] += 1. / 60000000.;
-
-      //  std::vector<FLOAT> dbg = mixed;
-
+  
         auto std_acc =  std::accumulate(mixed.begin(), mixed.end(), 0.0l);
 
 
         auto sumIt = [](auto x, auto y) {return x + y; };
         auto sumPairwiseDr3 =  ApplyAccumulate2UR_X_pairwise(mixed, sumIt);
 
-     //   
+        
         auto DRCubedAccum =  ApplyAccumulate2UR_X(mixed, sumIt);
 
         auto trad = 0.0l;
@@ -445,8 +321,7 @@ int main()
 
 
         auto NULL_Vec = VecXX::INS(0.0);
-        const auto zero = InstructionTraits<VecXX::INS>::nullValue;
-        //lambdas
+      
         auto KhanAddV = [c = NULL_Vec](auto sum, auto rhs) mutable
         {
             auto y = rhs - c;
@@ -462,33 +337,17 @@ int main()
 
 
 
-
-    //    SpanXX startspan(mixed.begin(), 32);
-
-
-
-   //     double startSum =  reduce(startspan, sumIt);
-
-
-       // template<typename T> 
-        auto roundIt = [&](VecXX::INS X, VecXX::INS LEVEL)//, auto INV_LEVEL)
+        auto roundIt = [&](VecXX::INS X, VecXX::INS LEVEL)
             {
                 auto INV_LEVEL = 1.0l / LEVEL;
-
-                auto correct = INV_LEVEL * LEVEL;
-                //auto rd = long( X / LEVEL);
-                auto big = (LEVEL * round(X * INV_LEVEL));//
-                big *= correct;
+                auto big = (LEVEL * round(X * INV_LEVEL));
                 auto small = X - big;
-
                 return std::pair(big, small);
-
             };
 
 
         auto BinnedAdd = [&](auto& bin, auto x) mutable
-        //auto BinnedAdd = [bin=Bins(0.0)](auto y, auto x) mutable
-        {
+         {
 
  
             const VecXX::INS VerySmall = 1e-16;
@@ -496,34 +355,13 @@ int main()
             const VecXX::INS BIG = 1.0e16;
             const VecXX::INS TINY_C = 1e-32; // ?
 
-    //   
-      /*
+  
 
-            auto roundIt = [&](auto X, auto LEVEL)//, auto INV_LEVEL)
-            {
-                auto INV_LEVEL = 1.0l / LEVEL;
-
-                auto correct = INV_LEVEL * LEVEL;
-                //auto rd = long( X / LEVEL);
-                auto big = (LEVEL * round(X * INV_LEVEL));//
-                big *= correct;
-                auto small = X - big;
-
-                return std::pair(big, small);
-
-            };
-
-           */
             auto resRoundVeryBig = roundIt(x, BIG);
             auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
             auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-            //bin.tinyV += resRoundSmall.second;
             auto tinyRound = roundIt(resRoundSmall.second, TINY_C);
             bin.tinyV += (tinyRound.first + tinyRound.second);
-
-            // do truncation here 
-            //auto resRoundTiny = roundIt(bin.tinyV, TINY_C);
-            //bin.tinyV = resRoundTiny.first;
 
             bin.smallSumV += (resRoundSmall.first + tinyRound.first);
             auto smallRound = roundIt(bin.smallSumV, SMALL);
@@ -535,10 +373,6 @@ int main()
 
             bin.veryBigSummV += bigRound.first;
 
-            // return (bin.tinyV + bin.smallSumV) + bin.bigSummV;
-             //reduce across these registers
-         //   auto lambdaBinSum = ((horizontal_add(bin.tinyV) + horizontal_add(bin.smallSumV)) + horizontal_add(bin.bigSummV)) + horizontal_add(bin.veryBigSummV);
-
             return  NULL_Vec;
 
         };
@@ -546,26 +380,21 @@ int main()
       
 
 
-      //  VecXX a(1.0, 31);
-      //  auto rK = reduceI(a, KhanAddV);
-
 
        
         BinsT< VecXX::INS> binsT;
-        auto nullVec = VecXX::INS(0.);
+      
 
-        auto lambdaBinSum = reduceII(binsT, mixed, BinnedAdd);// , nullVec, 0);
+        auto lambdaBinSum = reduceII(binsT, mixed, BinnedAdd);
 
-      //  */
-
-        // std::cout << i << "\t" <<  std::setprecision(9)       << "standard sum "         << stdaccum  << ",   sum pairwise ="   << sum << "\n";
-        std::cout << i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
+     
+        std::cout << ++i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
                  << std_acc << "\t std::accumulate sum  trad = \n"
-                 << DRCubedAccum << "\t accumulate DR3 = \n"  /* << ",\n split aggregate =" << bigSumm + smallSum + verySmallSum*/ /* + sumS*/ /* << ", \n pairwise split aggregate =" << sumB_pairWise + sumS_pairWise_rnd + sumS_pairWise_cry*/
-            << sumPairwiseDr3 << "\t  sum pairwise = \n"
-                << sumKhan << " ,\t Kahan acc ,\n"
-                << lambdaBinSum << "\t lambda bin sum acc, \n \n \n \n";
-           // ;
+                 << DRCubedAccum << "\t accumulate DR3 = \n" 
+                 << sumPairwiseDr3 << "\t  sum pairwise = \n"
+                 << sumKhan << " ,\t Kahan acc ,\n"
+                 << lambdaBinSum << "\t \t lambda bin sum acc, \n \n \n \n";
+           
     }
 }
 }
