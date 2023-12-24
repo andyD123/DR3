@@ -34,157 +34,6 @@ using namespace DRC::VecD8D;
 
 
 
-template<typename INS_T>
-struct BinsT
-{
-
-    auto roundIt(VecXX::INS X, VecXX::INS LEVEL)
-        {
-            auto INV_LEVEL = 1.0l / LEVEL;
-            auto big = (LEVEL * round(X * INV_LEVEL));
-            auto small = X - big;
-            return std::pair(big, small);
-
-        };
-  
-
-
-    INS_T veryBigSummV;// = 0.0l;
-    INS_T bigSummV;// = 0.0l;
-    INS_T smallSumV; //= 0.0l;
-    INS_T tinyV;// = 0.0l;
-
-
-    const VecXX::INS VerySmall = 1e-16;
-    const VecXX::INS SMALL = 1.0;
-    const VecXX::INS BIG = 1.0e16;
-    const VecXX::INS TINY_C = 1e-32;
-
-    BinsT() {}
-
-
-     BinsT(INS_T x)
-    {
-
-
-        const INS_T VerySmall = 1e-15;
-        const INS_T SMALL = 1.0;
-        const INS_T BIG = 1.0e15;
-    //    const INS_T TINY_C = 1e-30; // ?
-
-        auto roundIt = [&](auto X, auto LEVEL)
-        {
-            auto INV_LEVEL = 1.0l / LEVEL;
-           
-            auto big = (LEVEL * round(X * INV_LEVEL));
-            auto small = X - big;
-
-            return std::pair(big, small);
-
-        };
-
-
-
-        auto resRoundVeryBig = roundIt(x, BIG);
-        auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-        auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-
-        veryBigSummV = resRoundVeryBig.first;
-        bigSummV = resRoundBig.first;
-        smallSumV = resRoundSmall.first;
-        tinyV = resRoundSmall.second;
-
-    }
-
-     BinsT& operator *(INS_T rhs)
-     {
-
-         veryBigSummV *= rhs;
-         bigSummV *= rhs;
-         smallSumV *= rhs;
-         tinyV *= rhs;
-
-         return *this;
-     }
-
-    BinsT(double x)
-    {
-
-
-        const VecXX::INS VerySmall = 1e-15;
-        const VecXX::INS SMALL = 1.0;
-        const VecXX::INS BIG = 1.0e15;
-      //  const VecXX::INS TINY_C = 1e-30; // ?
-
-
-
-
-        auto roundIt = [&](auto X, auto LEVEL)
-        {
-            auto INV_LEVEL = 1.0l / LEVEL;
-            auto big = (LEVEL * round(X * INV_LEVEL));
-            auto small = X - big;
-            return std::pair(big, small);
-
-        };
-
-
-
-        auto resRoundVeryBig = roundIt(x, BIG);
-        auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-        auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-
-        veryBigSummV = resRoundVeryBig.first;
-        bigSummV = resRoundBig.first;
-        smallSumV = resRoundSmall.first;
-        tinyV = resRoundSmall.second;
-
-    }
-
-    BinsT(BinsT&& x) noexcept
-    {
-        veryBigSummV = x.veryBigSummV;
-        bigSummV = x.bigSummV;
-        smallSumV = x.smallSumV;
-        tinyV = x.tinyV;
-
-    };
-
-
-    BinsT& operator =(const BinsT& x) //noexcept
-    {
-        veryBigSummV = x.veryBigSummV;
-        bigSummV = x.bigSummV;
-        smallSumV = x.smallSumV;
-        tinyV = x.tinyV;
-        return *this;
-    };
-
-
-    BinsT& operator += (const BinsT& rhs)
-    {
-        auto resRoundTiny = roundIt(tinyV +rhs.tinyV, TINY_C);
-        tinyV = resRoundTiny.second;       
-        auto smallRound = roundIt(smallSumV+ rhs.smallSumV+ resRoundTiny.first, SMALL);
-        smallSumV = smallRound.second;  
-        auto bigRound = roundIt(smallRound.first +bigSummV + rhs.bigSummV, BIG);
-        bigSummV = bigRound.second;
-        veryBigSummV = bigRound.first + veryBigSummV + rhs.veryBigSummV;
-
-        return *this;
-    }
-
-
-
-    double hsum()
-    {
-        auto lambdaBinSum = [this]() {return (((horizontal_add(tinyV)) + horizontal_add(smallSumV)) + horizontal_add(bigSummV)) + horizontal_add(veryBigSummV); };
-
-        return lambdaBinSum();
-    }
-};
-
-
 
 int main()
 {
@@ -195,8 +44,8 @@ int main()
   
     VecXX data(10000.0/3.0, SZ);
 
-    bool USE_BIG_CANCELLATION =  false;
-   // bool USE_BIG_CANCELLATION = true;
+   // bool USE_BIG_CANCELLATION =  false;
+    bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 
@@ -272,48 +121,10 @@ int main()
 
 
         auto sumKhan =  reduce(mixed, KhanAddV);
-
-
-
-        auto roundIt = [&](VecXX::INS X, VecXX::INS LEVEL)
-        {
-            auto INV_LEVEL = 1.0l / LEVEL;
-            auto big = (LEVEL * round(X * INV_LEVEL));
-            auto small = X - big;
-            return std::pair(big, small);
-        };
-
-
-        auto BinnedAdd = [&](auto& bin, auto x) mutable
-         {
-
- 
-            const VecXX::INS VerySmall = 1e-16;
-            const VecXX::INS SMALL = 1.0;
-            const VecXX::INS BIG = 1.0e16;
-            const VecXX::INS TINY_C = 1e-32; 
-
-  
-
-            auto resRoundVeryBig = roundIt(x, BIG);
-            auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-            auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-            auto tinyRound = roundIt(resRoundSmall.second, TINY_C);
-            bin.tinyV += (tinyRound.first + tinyRound.second);
-
-            bin.smallSumV += (resRoundSmall.first + tinyRound.first);
-            auto smallRound = roundIt(bin.smallSumV, SMALL);
-            bin.smallSumV = smallRound.second;
-            bin.bigSummV += resRoundBig.first + smallRound.first;
-            auto bigRound = roundIt(bin.bigSummV, BIG);
-            bin.bigSummV = bigRound.second;
-            bin.veryBigSummV += bigRound.first;
-            return  NULL_Vec;
-
-        };
-
-        // reduce with user defined accumulator  
-        auto lambdaBinSum2 = reduce< BinsT<VecXX::INS> >( mixed, BinnedAdd);
+    
+        // reduce with user defined accumulator
+        using BINNED_ACCUMULATOR =  BinsT<VecXX::INS>;
+        auto binned_Sum = reduce< BINNED_ACCUMULATOR >( mixed, BinnedAdd);
 
      
         std::cout << ++i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
@@ -321,7 +132,7 @@ int main()
                  << DRCubedAccum << "\t accumulate DR3 = \n" 
                  << sumPairwiseDr3 << "\t  sum pairwise = \n"
                  << sumKhan << " ,\t Kahan acc ,\n"
-                 << lambdaBinSum2 << "\t \t lambda bin sum acc, \n \n \n \n";
+                 << binned_Sum << "\t \t binned sum acc, \n \n \n \n";
            
     }
 }
