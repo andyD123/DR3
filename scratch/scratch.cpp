@@ -28,8 +28,6 @@ using namespace DRC::VecD8D;
 
 //using namespace DRC::VecLDb;
 
-//#include <iostream>
-
 #include <iostream>
 #include <algorithm>
 
@@ -194,29 +192,6 @@ int main()
 
     long SZ = 10 *1024 * 1024 +2;
     
- 
-    /*
-    auto roundIt2 = [&](auto X, auto LEVEL)
-    {
-     
-        auto integ = roundi(X / LEVEL);
-        auto exp_level = getExponent(LEVEL);
-        auto exp_X = getExponent(X);
-
-        auto zero = X;
-        zero = 0.0;
-
-        auto trunc = exp_X - exp_level;
-        auto bigger = max(zero, trunc);
-
-
-        auto big = LEVEL * to_double(integ);
-        auto small = X - big;
-
-        return std::pair(big, small);
-    };
-
-    */
   
     VecXX data(10000.0/3.0, SZ);
 
