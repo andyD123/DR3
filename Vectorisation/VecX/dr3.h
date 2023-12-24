@@ -606,6 +606,20 @@ typename InstructionTraits<INS_VEC>::FloatType reduceII(const ACCUMULATOR_TYPE< 
 }
 
 
+//user defined accumulator version
+/*
+ auto res = reduce< typename MyNewACCumulator>( data, operator)
+
+*/
+template< typename ACCUMULATOR_TYPE, template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduce( const VEC_TYPE<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	ACCUMULATOR_TYPE Bin;
+	return reduceII(Bin, rhs1, oper);
+};
+
+
+
 
 
 //unroll version

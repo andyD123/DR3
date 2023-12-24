@@ -32,7 +32,6 @@ using namespace DRC::VecD8D;
 
 #include <iostream>
 #include <algorithm>
-//#include <bits/stdc++.h>
 
 
 
@@ -44,13 +43,8 @@ struct BinsT
     auto roundIt(VecXX::INS X, VecXX::INS LEVEL)
         {
             auto INV_LEVEL = 1.0l / LEVEL;
-
-         //   auto correct = INV_LEVEL * LEVEL;
-           
-            auto big = (LEVEL * round(X * INV_LEVEL));//
-      //      big *= correct;
+            auto big = (LEVEL * round(X * INV_LEVEL));
             auto small = X - big;
-
             return std::pair(big, small);
 
         };
@@ -172,15 +166,11 @@ struct BinsT
     BinsT& operator += (const BinsT& rhs)
     {
         auto resRoundTiny = roundIt(tinyV +rhs.tinyV, TINY_C);
-        tinyV = resRoundTiny.second;
-         
+        tinyV = resRoundTiny.second;       
         auto smallRound = roundIt(smallSumV+ rhs.smallSumV+ resRoundTiny.first, SMALL);
-        smallSumV = smallRound.second;
-       
+        smallSumV = smallRound.second;  
         auto bigRound = roundIt(smallRound.first +bigSummV + rhs.bigSummV, BIG);
-
         bigSummV = bigRound.second;
-
         veryBigSummV = bigRound.first + veryBigSummV + rhs.veryBigSummV;
 
         return *this;
@@ -190,7 +180,7 @@ struct BinsT
 
     double hsum()
     {
-        auto lambdaBinSum = [this]() {return horizontal_add(tinyV) + horizontal_add(smallSumV) + horizontal_add(bigSummV) + horizontal_add(veryBigSummV); };
+        auto lambdaBinSum = [this]() {return (((horizontal_add(tinyV)) + horizontal_add(smallSumV)) + horizontal_add(bigSummV)) + horizontal_add(veryBigSummV); };
 
         return lambdaBinSum();
     }
@@ -201,41 +191,16 @@ struct BinsT
 int main()
 {
 
-    using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
-    //  int i = 32;
-    long SZ = 10 *1024 * 1024 +2;// +3;// +7;// +7;// +1;// //  *100;// *100;// 100000000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
 
-   // long SZ = 100000;///  512*512;// 63;// 900000;//512 * 512;// 1024 * 1024; // ///800;// 
-
-   //SZ = 8;
-
-  //  FLOAT a = 10.;
-    FLOAT b = 1.0 / 100.;
-    FLOAT  c = 1.0 / (b * b);
- //   FLOAT d = c * c;
-
-   // int n = 16;
-   // int m = 1;
-    /**/
-    //__m256d Number= { a,b,c,d };
-    //auto res = getExponent(Number);
-
-    //auto res2 = getMantissa(Number);//, n, m);
-
-
-    //Vec4d  number_t(Number);
-
-    //Vec4d resVCL = getExponent(number_t);
-
-
-    //Vec4d LVL = 32;
-    //Vec4d zero = 0.;
-
+    long SZ = 10 *1024 * 1024 +2;
+    
+ 
+    /*
     auto roundIt2 = [&](auto X, auto LEVEL)
     {
      
         auto integ = roundi(X / LEVEL);
-         auto exp_level = getExponent(LEVEL);
+        auto exp_level = getExponent(LEVEL);
         auto exp_X = getExponent(X);
 
         auto zero = X;
@@ -251,12 +216,12 @@ int main()
         return std::pair(big, small);
     };
 
-
+    */
   
     VecXX data(10000.0/3.0, SZ);
 
-   // bool USE_BIG_CANCELLATION =  false;
-    bool USE_BIG_CANCELLATION = true;
+    bool USE_BIG_CANCELLATION =  false;
+   // bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 
@@ -288,8 +253,6 @@ int main()
                 mixed[count - 1] = b;
                 mixed[count - 2] = a;
             }
-           
-
         }
 
 
@@ -338,12 +301,12 @@ int main()
 
 
         auto roundIt = [&](VecXX::INS X, VecXX::INS LEVEL)
-            {
-                auto INV_LEVEL = 1.0l / LEVEL;
-                auto big = (LEVEL * round(X * INV_LEVEL));
-                auto small = X - big;
-                return std::pair(big, small);
-            };
+        {
+            auto INV_LEVEL = 1.0l / LEVEL;
+            auto big = (LEVEL * round(X * INV_LEVEL));
+            auto small = X - big;
+            return std::pair(big, small);
+        };
 
 
         auto BinnedAdd = [&](auto& bin, auto x) mutable
@@ -353,7 +316,7 @@ int main()
             const VecXX::INS VerySmall = 1e-16;
             const VecXX::INS SMALL = 1.0;
             const VecXX::INS BIG = 1.0e16;
-            const VecXX::INS TINY_C = 1e-32; // ?
+            const VecXX::INS TINY_C = 1e-32; 
 
   
 
@@ -368,24 +331,14 @@ int main()
             bin.smallSumV = smallRound.second;
             bin.bigSummV += resRoundBig.first + smallRound.first;
             auto bigRound = roundIt(bin.bigSummV, BIG);
-
             bin.bigSummV = bigRound.second;
-
             bin.veryBigSummV += bigRound.first;
-
             return  NULL_Vec;
 
         };
 
-      
-
-
-
-       
-        BinsT< VecXX::INS> binsT;
-      
-
-        auto lambdaBinSum = reduceII(binsT, mixed, BinnedAdd);
+        // reduce with user defined accumulator  
+        auto lambdaBinSum2 = reduce< BinsT<VecXX::INS> >( mixed, BinnedAdd);
 
      
         std::cout << ++i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
@@ -393,7 +346,7 @@ int main()
                  << DRCubedAccum << "\t accumulate DR3 = \n" 
                  << sumPairwiseDr3 << "\t  sum pairwise = \n"
                  << sumKhan << " ,\t Kahan acc ,\n"
-                 << lambdaBinSum << "\t \t lambda bin sum acc, \n \n \n \n";
+                 << lambdaBinSum2 << "\t \t lambda bin sum acc, \n \n \n \n";
            
     }
 }
