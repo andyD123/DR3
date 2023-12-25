@@ -158,7 +158,7 @@ struct BinsT
 
 
 
-auto BinnedAdd = [](auto& bin, auto x) mutable
+static auto BinnedAdd = [](auto& bin, auto x) mutable
 {
 
     auto roundIt = [&](auto X, auto LEVEL)

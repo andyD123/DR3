@@ -18,15 +18,15 @@
 
 
 
-//using namespace DRC::VecDb;
-//using namespace DRC::VecD2D;
+//using namespace DRC::VecDb;  // broken
+//using namespace DRC::VecD2D; //broken
 //using namespace DRC::VecF4F;
-//using namespace DRC::VecD4D;
-using namespace DRC::VecD8D;
+using namespace DRC::VecD4D;
+//using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
-//using namespace DRC::VecLDb;
+//using namespace DRC::VecLDb; //broken
 
 #include <iostream>
 #include <algorithm>
@@ -39,27 +39,25 @@ int main()
 {
 
 
-    long SZ = 10 *1024 * 1024 +2;
+    long SZ = 10 *1024 * 1024 +3;
     
   
     VecXX data(10000.0/3.0, SZ);
 
-   // bool USE_BIG_CANCELLATION =  false;
-    bool USE_BIG_CANCELLATION = true;
+    bool USE_BIG_CANCELLATION =  false;
+    //bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 
     {
 
-
         auto mixed = data;
-
-
         long count = 0;
         for (auto& x : mixed)
         {
 
             count++;
+            x += count;
             auto a =  100000000000000000.l;
             auto b = -100000000000000000.l;
 
@@ -69,14 +67,15 @@ int main()
                 a = 0.0;
                 b = 0.0;
             }
-          
-            if ((count > 15) && (count % 15 == 0))
+ 
+            if ((count > 5) && (count % 5 == 0))
             {
                 auto c = mixed[count] + mixed[count - 1] + mixed[count - 2];
                 mixed[count] = c;
                 mixed[count - 1] = b;
                 mixed[count - 2] = a;
             }
+
         }
 
 
@@ -99,10 +98,10 @@ int main()
         
         auto DRCubedAccum =  ApplyAccumulate2UR_X(mixed, sumIt);
 
-        auto trad = 0.0l;
+        auto trad_for_loop = 0.0l;
         for (auto x : mixed)
         {
-            trad += x;
+            trad_for_loop += x;
         }
 
 
@@ -120,18 +119,19 @@ int main()
         };
 
 
-        auto sumKhan =  reduce(mixed, KhanAddV);
+        auto sumKahan =  reduce(mixed, KhanAddV);
     
         // reduce with user defined accumulator
         using BINNED_ACCUMULATOR =  BinsT<VecXX::INS>;
         auto binned_Sum = reduce< BINNED_ACCUMULATOR >( mixed, BinnedAdd);
 
      
-        std::cout << ++i << "\n" << std::setprecision(16) << trad << "\t for loop sum  trad = \n"
+        std::cout << ++i << "\n" << std::setprecision(16) 
+                 << trad_for_loop << "\t for loop sum  trad = \n"
                  << std_acc << "\t std::accumulate sum  trad = \n"
                  << DRCubedAccum << "\t accumulate DR3 = \n" 
                  << sumPairwiseDr3 << "\t  sum pairwise = \n"
-                 << sumKhan << " ,\t Kahan acc ,\n"
+                 << sumKahan << " ,\t Kahan acc ,\n"
                  << binned_Sum << "\t \t binned sum acc, \n \n \n \n";
            
     }
