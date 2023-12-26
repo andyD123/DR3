@@ -1361,6 +1361,7 @@
     <ClInclude Include="VecX\alloc_policy_imp.h" />
     <ClInclude Include="VecX\apply_operation.h" />
     <ClInclude Include="VecX\binary_unitary_operations.h" />
+    <ClInclude Include="VecX\binned_accumulator.h" />
     <ClInclude Include="VecX\boolean_operations.h" />
     <ClInclude Include="VecX\conditional_select_eval.h" />
     <ClInclude Include="VecX\dr3.h" />

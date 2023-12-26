@@ -92,6 +92,12 @@
     <ClInclude Include="VecX\scan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="intrinsic_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VecX\binned_accumulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VecX\vec.cpp">
