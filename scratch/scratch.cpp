@@ -39,13 +39,13 @@ int main()
 {
 
 
-    long SZ = 10 *1024 * 1024 +3;
-    
+    long SZ = 10 *1024 * 1024 +4;
+  //  SZ = 10 * 1024 + 4;
   
-    VecXX data(10000.0/3.0, SZ);
+    VecXX data(1.0/3.0, SZ);
 
-    //bool USE_BIG_CANCELLATION =  false;
-    bool USE_BIG_CANCELLATION = true;
+    bool USE_BIG_CANCELLATION =  false;
+   // bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 
@@ -57,7 +57,7 @@ int main()
         {
 
             count++;
-            x += count;
+            x += count;// *0.00001;
             auto a =  100000000000000000.l;
             auto b = -100000000000000000.l;
 

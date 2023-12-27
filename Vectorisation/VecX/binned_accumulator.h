@@ -1,13 +1,23 @@
 #pragma once
 #include "dr3.h"
 #include "instruction_traits.h"
+#include <type_traits>
 
 
 template<typename INS_T>
 struct BinsT
 {
 
-    auto roundIt(INS_T X, INS_T LEVEL)
+    inline static constexpr bool isDbl = std::is_same<double, typename InstructionTraits<INS_T>::FloatType >::value;
+
+    inline static const INS_T TINY_C{ isDbl ? 1e-32  : 1.0e-14} ;
+    inline static const INS_T VerySmall{isDbl ?  1e-16  : 1.0e-7};
+    inline static const INS_T SMALL{ isDbl ?  1.0  : 1.0 };
+    inline static const INS_T BIG{ isDbl ? 1.0e16  : 1.0e7 };
+  
+
+
+    static inline auto roundIt(INS_T X, INS_T LEVEL)
     {
         auto INV_LEVEL = 1.0l / LEVEL;
         auto big = (LEVEL * round(X * INV_LEVEL));
@@ -24,35 +34,11 @@ struct BinsT
     INS_T tinyV;// = 0.0l;
 
 
-    const INS_T VerySmall = 1e-16;
-    const INS_T SMALL = 1.0;
-    const INS_T BIG = 1.0e16;
-    const INS_T TINY_C = 1e-32;
-
-    BinsT() {}
+    BinsT(){}
 
 
     BinsT(INS_T x)
     {
-
-
-        const INS_T VerySmall = 1e-15;
-        const INS_T SMALL = 1.0;
-        const INS_T BIG = 1.0e15;
-        //    const INS_T TINY_C = 1e-30; // ?
-
-        auto roundIt = [&](auto X, auto LEVEL)
-            {
-                auto INV_LEVEL = 1.0l / LEVEL;
-
-                auto big = (LEVEL * round(X * INV_LEVEL));
-                auto small = X - big;
-
-                return std::pair(big, small);
-
-            };
-
-
 
         auto resRoundVeryBig = roundIt(x, BIG);
         auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
@@ -78,26 +64,6 @@ struct BinsT
 
     BinsT(double x)
     {
-
-
-        const INS_T VerySmall = 1e-15;
-        const INS_T SMALL = 1.0;
-        const INS_T BIG = 1.0e15;
-        //  const VecXX::INS TINY_C = 1e-30; // ?
-
-
-
-
-        auto roundIt = [&](auto X, auto LEVEL)
-            {
-                auto INV_LEVEL = 1.0l / LEVEL;
-                auto big = (LEVEL * round(X * INV_LEVEL));
-                auto small = X - big;
-                return std::pair(big, small);
-
-            };
-
-
 
         auto resRoundVeryBig = roundIt(x, BIG);
         auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
@@ -161,23 +127,15 @@ struct BinsT
 static auto BinnedAdd = [](auto& bin, auto x) mutable
 {
 
-    auto roundIt = [&](auto X, auto LEVEL)
-    {
-        auto INV_LEVEL = 1.0l / LEVEL;
-        auto big = (LEVEL * round(X * INV_LEVEL));
-        auto small = X - big;
-        return std::pair(big, small);
-    };
-
-
-
-
     using  INS_T =  decltype(x);
 
-    const INS_T VerySmall = 1e-16;
-    const INS_T SMALL = 1.0;
-    const INS_T BIG = 1.0e16;
-    const INS_T TINY_C = 1e-32;
+    auto roundIt = BinsT< INS_T>::roundIt;
+
+  
+    const auto  VerySmall = BinsT<INS_T>::VerySmall;
+    const auto  SMALL = BinsT<INS_T>::SMALL;
+    const auto  BIG = BinsT<INS_T>::BIG;
+    const auto  TINY_C = BinsT<INS_T>::TINY_C;
 
 
 
