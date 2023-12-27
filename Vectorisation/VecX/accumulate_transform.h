@@ -558,13 +558,13 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 			//initialise first set of registers
 			{
 				INS_VEC temp;
-				temp.load_a(pRhs1 + i);
+				temp.load(pRhs1 + i);
 				RES =temp;
-				temp.load_a(pRhs1 + i + width);
+				temp.load(pRhs1 + i + width);
 				RES1 =temp;
-				temp.load_a(pRhs1 + i + width * 2);
+				temp.load(pRhs1 + i + width * 2);
 				RES2 =temp;
-				temp.load_a(pRhs1 + i + width * 3);
+				temp.load(pRhs1 + i + width * 3);
 				RES3 =temp;
 			}
 			i += step;
@@ -575,16 +575,16 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 		long rhsSZ = static_cast<long>(rhs1.size());
 		for (; i <= (rhsSZ - step); i += step)
 		{
-			RHS1.load_a(pRhs1 + i);
+			RHS1.load(pRhs1 + i);
 			oper(RES, RHS1);
 
-			RHS2.load_a(pRhs1 + i + width);
+			RHS2.load(pRhs1 + i + width);
 			oper(RES1, RHS2);
 
-			RHS3.load_a(pRhs1 + i + width * 2);
+			RHS3.load(pRhs1 + i + width * 2);
 			oper(RES2, RHS3);
 
-			RHS4.load_a(pRhs1 + i + width * 3);
+			RHS4.load(pRhs1 + i + width * 3);
 			oper(RES3, RHS4);
 
 		}
@@ -592,8 +592,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 		// odd bits
 		for (; i <= rhsSZ - width; i += width)
 		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RES, RHS1);
+			RHS1.load(pRhs1 + i);
+			oper(RES, RHS1);
 		}
 
 		RES += RES1;
@@ -602,18 +602,17 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 	}
 	else
 	{
-		//TO DO
-
-		
-		ACC RES= InstructionTraits<INS_VEC>::nullValue;
-		RHS1.load_a(pRhs1);
-		RES = oper(RES, RHS1);
-		i += width;
-		// odd bits
-		for (; i <= sz - width; i += width)
+		if (sz > width)
 		{
-			RHS1.load_a(pRhs1 + i);
-			RES = oper(RES, RHS1);
+			RES = InstructionTraits<INS_VEC>::nullValue;
+			RHS1.load(pRhs1);
+			oper(RES, RHS1);
+			i += width;
+			for (; i <= sz - width; i += width)
+			{
+				RHS1.load(pRhs1 + i);
+				oper(RES, RHS1);
+			}
 		}
 
 	}
@@ -628,11 +627,10 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 		{
 			mask[k] = (k < maskSz) ? 1.0 : 0;
 		}
-
-		RHS1.load_a(pRhs1 + i);
-
 		INS_VEC MASK;
-		MASK.load_a(&mask[0]);
+		MASK.load(&mask[0]);
+
+		RHS1.load_a(pRhs1 + i);		
 		RHS1 = RHS1 * MASK;
 		oper(RES, RHS1);
 

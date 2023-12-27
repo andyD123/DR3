@@ -212,6 +212,7 @@
     <ClCompile Include="TestSpan.cpp" />
     <ClCompile Include="TestViews.cpp" />
     <ClCompile Include="Test_binary_unitary_operations.cpp" />
+    <ClCompile Include="test_precise_accumulation.cpp" />
     <ClCompile Include="Unroll_operators.cpp" />
   </ItemGroup>
   <ItemGroup>

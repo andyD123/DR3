@@ -1,4 +1,4 @@
-// GettingStarted.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// scratch.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include <algorithm>
 #include <random>
@@ -19,10 +19,10 @@
 
 
 //using namespace DRC::VecDb;  // broken
-//using namespace DRC::VecD2D; //broken
+//using namespace DRC::VecD2D; 
 //using namespace DRC::VecF4F;
-using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
+//using namespace DRC::VecD4D;
+using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
@@ -44,8 +44,8 @@ int main()
   
     VecXX data(10000.0/3.0, SZ);
 
-    bool USE_BIG_CANCELLATION =  false;
-    //bool USE_BIG_CANCELLATION = true;
+    //bool USE_BIG_CANCELLATION =  false;
+    bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 
