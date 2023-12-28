@@ -59,6 +59,26 @@ void doAdd()
 
     std::cout << std::setprecision(8) << "\n" << t << "\n" << std::endl;
 
+    //////////////////////////
+    FLOAT bigThird = oneThird * 1.e20;
+
+    BINNED_ACCUMULATOR bigbin;
+
+    initVal = bigbin.hsum();
+
+    bigbin += bigThird;
+    std::cout << std::setprecision(8) << bigbin.hsum();
+
+    bigbin += 100000.0f  *1.e20;
+
+    t = bigbin.hsum();
+
+    std::cout << std::setprecision(8) << "\n" << t << "\n" << std::endl;
+
+    bigbin += -100000.0f* 1.e20;
+    t = bigbin.hsum();
+
+    std::cout << std::setprecision(8) << "\n" << t << "\n" << std::endl;
 
 
 
