@@ -914,6 +914,7 @@
       <FSYCLDeadArgsOptimization>Default</FSYCLDeadArgsOptimization>
       <OptimizationDiagnosticLevel>Level2</OptimizationDiagnosticLevel>
       <Optimization>Full</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

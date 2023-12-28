@@ -22,9 +22,9 @@
 //using namespace DRC::VecD2D; 
 //using namespace DRC::VecF4F;
 //using namespace DRC::VecD4D;
-using namespace DRC::VecD8D;
+//using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
-//using namespace DRC::VecF8F;
+using namespace DRC::VecF8F;
 
 //using namespace DRC::VecLDb; //broken
 
@@ -33,16 +33,54 @@ using namespace DRC::VecD8D;
 
 
 
+void doAdd()
+{
+
+    using BINNED_ACCUMULATOR = BinsT<VecXX::INS>;
+    using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
+    FLOAT oneThird = static_cast<FLOAT>(1.0 / 3.0);
+    
+
+    BINNED_ACCUMULATOR bin;
+
+    auto initVal = bin.hsum();
+
+    bin += oneThird;
+    std::cout << std::setprecision(8) << bin.hsum();
+
+    bin += 100000.0f;
+
+    auto t = bin.hsum();
+
+    std::cout << std::setprecision(8)<< "\n" << t << "\n" << std::endl;
+
+    bin += -100000.0f;
+    t=bin.hsum();
+
+    std::cout << std::setprecision(8) << "\n" << t << "\n" << std::endl;
+
+
+
+
+
+
+
+
+
+
+}
 
 
 int main()
 {
+    doAdd();
 
-
-    long SZ = 10 *1024 * 1024 +4;
+    long SZ = 10 *1024 * 1024 +5;
   //  SZ = 10 * 1024 + 4;
-  
-    VecXX data(1.0/3.0, SZ);
+    using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
+    FLOAT initVal = static_cast<FLOAT>(1.0 / 3.0);
+    
+    VecXX data(initVal, SZ);
 
     bool USE_BIG_CANCELLATION =  false;
    // bool USE_BIG_CANCELLATION = true;
@@ -57,24 +95,25 @@ int main()
         {
 
             count++;
-            x += count;// *0.00001;
-            auto a =  100000000000000000.l;
-            auto b = -100000000000000000.l;
+            x += count * 0.0000001f;// *0.0;
+            FLOAT a = static_cast < FLOAT> (10000000.f);
+            FLOAT b = static_cast<FLOAT>( - 10000000.f);
 
-            
+  
             if (!USE_BIG_CANCELLATION)
             {
                 a = 0.0;
                 b = 0.0;
             }
- 
-            if ((count > 5) && (count % 5 == 0))
+            
+            if ((count > 17) && (count % 17 == 0))
             {
                 auto c = mixed[count] + mixed[count - 1] + mixed[count - 2];
                 mixed[count] = c;
                 mixed[count - 1] = b;
                 mixed[count - 2] = a;
             }
+          
 
         }
 
@@ -87,9 +126,10 @@ int main()
 
  
         std::shuffle(mixed.begin(), mixed.end(), g);
+        std::vector<float> obs= mixed;
 
   
-        auto std_acc =  std::accumulate(mixed.begin(), mixed.end(), 0.0l);
+        auto std_acc =  std::accumulate(mixed.begin(), mixed.end(), 0.0f);
 
 
         auto sumIt = [](auto x, auto y) {return x + y; };
@@ -98,7 +138,7 @@ int main()
         
         auto DRCubedAccum =  ApplyAccumulate2UR_X(mixed, sumIt);
 
-        auto trad_for_loop = 0.0l;
+        auto trad_for_loop = 0.0f;
         for (auto x : mixed)
         {
             trad_for_loop += x;

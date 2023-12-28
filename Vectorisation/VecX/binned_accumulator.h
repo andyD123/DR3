@@ -7,13 +7,15 @@
 template<typename INS_T>
 struct BinsT
 {
+    using  INS = INS_T;
+    //using FLOAT = InstructionTraits<INS_T>::FloatType;
 
     inline static constexpr bool isDbl = std::is_same<double, typename InstructionTraits<INS_T>::FloatType >::value;
 
-    inline static const INS_T TINY_C{ isDbl ? 1e-32  : 1.0e-14} ;
-    inline static const INS_T VerySmall{isDbl ?  1e-16  : 1.0e-7};
-    inline static const INS_T SMALL{ isDbl ?  1.0  : 1.0 };
-    inline static const INS_T BIG{ isDbl ? 1.0e16  : 1.0e7 };
+    inline static const INS_T TINY_C{ isDbl ? 1e-32  : 1.0e-14f} ;
+    inline static const INS_T VerySmall{isDbl ?  1e-16  : 1.0e-7f};
+    inline static const INS_T SMALL{ isDbl ?  1.0  : 1.0f };
+    inline static const INS_T BIG{ isDbl ? 1.0e16  : 1.0e7f };
   
 
 
@@ -28,18 +30,34 @@ struct BinsT
 
 
 
-    INS_T veryBigSummV;// = 0.0l;
-    INS_T bigSummV;// = 0.0l;
-    INS_T smallSumV; //= 0.0l;
-    INS_T tinyV;// = 0.0l;
+    INS_T veryBigSummV{ 0.0 };
+    INS_T bigSummV{ 0.0 };
+    INS_T smallSumV{ 0.0 };
+    INS_T tinyV{ 0.0 };
 
 
     BinsT(){}
 
 
-    BinsT(INS_T x)
+    BinsT(typename InstructionTraits<INS_T>::FloatType x)
     {
+        alignas(512) std::array< InstructionTraits<INS_T>::FloatType, InstructionTraits<INS_T>::width> msk;
 
+        //static alligned array for each type not quick fix below
+        for(size_t i=1; i < InstructionTraits<INS_T>::width;++i)
+        {
+            msk[i] = 0;
+        }
+        msk[0] = 1;
+        INS_T MASK;
+        MASK.load_a(&msk[0]);
+        set(MASK * x);
+
+    }
+
+
+    void set(INS_T x)
+    {
         auto resRoundVeryBig = roundIt(x, BIG);
         auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
         auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
@@ -48,7 +66,11 @@ struct BinsT
         bigSummV = resRoundBig.first;
         smallSumV = resRoundSmall.first;
         tinyV = resRoundSmall.second;
+    }
 
+    BinsT(INS_T x)
+    {
+        set(x);
     }
 
     BinsT& operator *(INS_T rhs)
@@ -61,20 +83,7 @@ struct BinsT
 
         return *this;
     }
-
-    BinsT(double x)
-    {
-
-        auto resRoundVeryBig = roundIt(x, BIG);
-        auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-        auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-
-        veryBigSummV = resRoundVeryBig.first;
-        bigSummV = resRoundBig.first;
-        smallSumV = resRoundSmall.first;
-        tinyV = resRoundSmall.second;
-
-    }
+  
 
     BinsT(BinsT&& x) noexcept
     {
@@ -111,14 +120,13 @@ struct BinsT
 
 
 
-    double hsum()
+    auto hsum()
     {
         auto lambdaBinSum = [this]() {return (((horizontal_add(tinyV)) + horizontal_add(smallSumV)) + horizontal_add(bigSummV)) + horizontal_add(veryBigSummV); };
-
         return lambdaBinSum();
     }
 
-    using  INS =  INS_T;
+   
 };
 
 
@@ -126,35 +134,9 @@ struct BinsT
 
 static auto BinnedAdd = [](auto& bin, auto x) mutable
 {
-
-    using  INS_T =  decltype(x);
-
-    auto roundIt = BinsT< INS_T>::roundIt;
-
-  
-    const auto  VerySmall = BinsT<INS_T>::VerySmall;
-    const auto  SMALL = BinsT<INS_T>::SMALL;
-    const auto  BIG = BinsT<INS_T>::BIG;
-    const auto  TINY_C = BinsT<INS_T>::TINY_C;
-
-
-
-    auto resRoundVeryBig = roundIt(x, BIG);
-    auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-    auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
-    auto tinyRound = roundIt(resRoundSmall.second, TINY_C);
-    bin.tinyV += (tinyRound.first + tinyRound.second);
-
-    bin.smallSumV += (resRoundSmall.first + tinyRound.first);
-    auto smallRound = roundIt(bin.smallSumV, SMALL);
-    bin.smallSumV = smallRound.second;
-    bin.bigSummV += resRoundBig.first + smallRound.first;
-    auto bigRound = roundIt(bin.bigSummV, BIG);
-    bin.bigSummV = bigRound.second;
-    bin.veryBigSummV += bigRound.first;
-
+    bin += x;
+    using  INS_T = decltype(x);
     auto NULL_Vec = INS_T(InstructionTraits<INS_T>::nullValue);
-
     return  NULL_Vec;
 
 };

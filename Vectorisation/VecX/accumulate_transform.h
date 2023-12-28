@@ -622,10 +622,11 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 
 	if (maskSz >0)
 	{
+		//nasty 
 		alignas(512)  std::array< typename InstructionTraits<INS_VEC>::FloatType, InstructionTraits<INS_VEC>::width> mask;
 		for (int k = 0; k < mask.size(); k++)
 		{
-			mask[k] = (k < maskSz) ? 1.0 : 0;
+			mask[k] = (k < maskSz) ? 1.0 : 0.;
 		}
 		INS_VEC MASK;
 		MASK.load(&mask[0]);

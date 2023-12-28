@@ -734,6 +734,7 @@
       <UseProcessorExtensions>None</UseProcessorExtensions>
       <ExceptionHandling>Sync</ExceptionHandling>
       <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

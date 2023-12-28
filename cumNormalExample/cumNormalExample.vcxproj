@@ -668,6 +668,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
       <FloatingPointModel>Precise</FloatingPointModel>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
