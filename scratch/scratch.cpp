@@ -22,9 +22,9 @@
 //using namespace DRC::VecD2D; 
 //using namespace DRC::VecF4F;
 //using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
+using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
-using namespace DRC::VecF8F;
+//using namespace DRC::VecF8F;
 
 //using namespace DRC::VecLDb; //broken
 
@@ -35,6 +35,8 @@ using namespace DRC::VecF8F;
 
 void doAdd()
 {
+
+    
 
     using BINNED_ACCUMULATOR = BinsT<VecXX::INS>;
     using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
@@ -60,7 +62,7 @@ void doAdd()
     std::cout << std::setprecision(8) << "\n" << t << "\n" << std::endl;
 
     //////////////////////////
-    FLOAT bigThird = oneThird * 1.e20;
+    FLOAT bigThird = oneThird * 1.e20f;
 
     BINNED_ACCUMULATOR bigbin;
 
@@ -69,13 +71,13 @@ void doAdd()
     bigbin += bigThird;
     std::cout << std::setprecision(8) << bigbin.hsum();
 
-    bigbin += 100000.0f  *1.e20;
+    bigbin += 100000.0f  *1.e20f;
 
     t = bigbin.hsum();
 
     std::cout << std::setprecision(8) << "\n" << t << "\n" << std::endl;
 
-    bigbin += -100000.0f* 1.e20;
+    bigbin += -100000.0f* 1.e20f;
     t = bigbin.hsum();
 
     std::cout << std::setprecision(8) << "\n" << t << "\n" << std::endl;
@@ -95,15 +97,20 @@ int main()
 {
     doAdd();
 
-    long SZ = 10 *1024 * 1024 +5;
-  //  SZ = 10 * 1024 + 4;
+    long SZ = 10000 * 1024 -1;// *1024 + 5;
+  //  SZ = 1000 * 1024 + 4;
     using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
     FLOAT initVal = static_cast<FLOAT>(1.0 / 3.0);
     
     VecXX data(initVal, SZ);
 
-    bool USE_BIG_CANCELLATION =  false;
-   // bool USE_BIG_CANCELLATION = true;
+    double scale = 1.0e3;// 1.e16;// 1.0e-3;// 200;// 0.005;// 1.0e-18; //problem for 1.0e-3 -ve
+    data *= scale;
+
+    
+
+    //bool USE_BIG_CANCELLATION =  false;
+    bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 
@@ -115,11 +122,11 @@ int main()
         {
 
             count++;
-            x += count * 0.0000001f;// *0.0;
-            FLOAT a = static_cast < FLOAT> (10000000.f);
-            FLOAT b = static_cast<FLOAT>( - 10000000.f);
+           // x += count * 0.0000001f;// *0.0;
+            FLOAT a = static_cast < FLOAT> (1000000000000.f);
+            FLOAT b = static_cast<FLOAT>( - 1000000000000.f);
 
-  
+  /*  */
             if (!USE_BIG_CANCELLATION)
             {
                 a = 0.0;
@@ -133,10 +140,11 @@ int main()
                 mixed[count - 1] = b;
                 mixed[count - 2] = a;
             }
-          
+        
 
         }
 
+        std::vector<double> scaledVec = mixed;
 
         for(int kkk = 0; kkk < 100; kkk++)
         {
@@ -146,10 +154,10 @@ int main()
 
  
         std::shuffle(mixed.begin(), mixed.end(), g);
-        std::vector<float> obs= mixed;
+        std::vector<FLOAT> obs= mixed;
 
   
-        auto std_acc =  std::accumulate(mixed.begin(), mixed.end(), 0.0f);
+        auto std_acc =  std::accumulate(mixed.begin(), mixed.end(), 0.0);
 
 
         auto sumIt = [](auto x, auto y) {return x + y; };
@@ -158,7 +166,7 @@ int main()
         
         auto DRCubedAccum =  ApplyAccumulate2UR_X(mixed, sumIt);
 
-        auto trad_for_loop = 0.0f;
+        FLOAT trad_for_loop = 0.0f;
         for (auto x : mixed)
         {
             trad_for_loop += x;
@@ -183,7 +191,13 @@ int main()
     
         // reduce with user defined accumulator
         using BINNED_ACCUMULATOR =  BinsT<VecXX::INS>;
-        auto binned_Sum = reduce< BINNED_ACCUMULATOR >( mixed, BinnedAdd);
+
+        BINNED_ACCUMULATOR Bin(0.0);// , 8.);
+     
+
+        auto binned_Sum = reduceWithAccumulator(Bin, mixed, BinnedAdd);
+
+        //auto binned_Sum = reduce< BINNED_ACCUMULATOR >( mixed, BinnedAdd,1.0e30);
 
      
         std::cout << ++i << "\n" << std::setprecision(16) 

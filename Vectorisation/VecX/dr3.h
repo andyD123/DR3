@@ -591,7 +591,7 @@ typename InstructionTraits<INS_VEC>::FloatType reduceI(const Vec<INS_VEC>& rhs1,
 
 //unroll user accumulator version
 template< template <class> typename ACCUMULATOR_TYPE, template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
-typename InstructionTraits<INS_VEC>::FloatType reduceWithAccumulator(const ACCUMULATOR_TYPE< INS_VEC>& acc,const VEC_TYPE<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+typename InstructionTraits<INS_VEC>::FloatType reduceWithAccumulator( ACCUMULATOR_TYPE< INS_VEC>& acc,const VEC_TYPE<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
 {
 	ignore(initVal);
 	ignore(singularInit);

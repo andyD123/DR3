@@ -59,3 +59,99 @@ TEST(TestPreciseAccumulator, simpleSummation)
 }
 
 
+TEST(TestBin, simpleSummation2)
+{
+	EXPECT_EQ(1, 1);
+	EXPECT_TRUE(true);
+
+
+	BinsT<VecXX::INS> bin; 
+
+
+
+    EXPECT_EQ(bin.veryBigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.bigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.smallSumV.extract(0), 0.0);
+	EXPECT_EQ(bin.tinyV.extract(0), 0.0);
+
+
+	VecXX::INS testVal =1.0e-16;
+	bin += testVal;
+
+	EXPECT_EQ(bin.veryBigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.bigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.smallSumV.extract(0), 0.0);
+	EXPECT_EQ(bin.tinyV.extract(0), 1.0e-16);
+
+	bin += testVal;
+
+	EXPECT_EQ(bin.veryBigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.bigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.smallSumV.extract(0), 0.0);
+	EXPECT_EQ(bin.tinyV.extract(0), 2.0e-16);
+
+
+	bin += testVal / 2;
+
+	EXPECT_EQ(bin.veryBigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.bigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.smallSumV.extract(0), 0.0);
+	EXPECT_EQ(bin.tinyV.extract(0), 2.5e-16);
+
+	//further tests for the other bins
+
+	testVal = 1.0;
+
+	bin += testVal;
+
+	EXPECT_EQ(bin.veryBigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.bigSummV.extract(0), 1.0);
+	EXPECT_EQ(bin.smallSumV.extract(0), 0.0);
+	EXPECT_EQ(bin.tinyV.extract(0), 2.5e-16);
+
+	bin += testVal;
+	EXPECT_EQ(bin.veryBigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.bigSummV.extract(0), 2.0);
+	EXPECT_EQ(bin.smallSumV.extract(0), 0.0);
+	EXPECT_EQ(bin.tinyV.extract(0), 2.5e-16);
+
+	bin += testVal / 2;
+	
+	EXPECT_EQ(bin.veryBigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin.bigSummV.extract(0), 2.0);
+//	EXPECT_EQ(bin.smallSumV.extract(0), 0.5); 
+//	EXPECT_EQ(bin.tinyV.extract(0), 2.5e-16);
+
+	
+
+
+
+	BinsT<VecXX::INS> bin2;
+
+	auto oneThird = 1.0 / 3.0;
+
+
+	bin2 += 1.0e-3 * oneThird;
+
+
+	EXPECT_EQ(bin2.veryBigSummV.extract(0), 0.0);
+	EXPECT_EQ(bin2.bigSummV.extract(0), 0.0);
+//	EXPECT_EQ(bin2.smallSumV.extract(0), 1.0/3.0 *1.0e-3);
+//	EXPECT_EQ(bin2.tinyV.extract(0), 0.0);
+
+	auto sum = bin2.hsum();
+
+	bin2 = bin2 *100000.0;
+
+	sum = bin2.hsum();
+
+	/*
+
+	//eval over multiple lengths
+	evalPrecAccumulate(957, 1043);
+
+	//eval over very small lengths
+	evalPrecAccumulate(3, 23);
+	*/
+}
+

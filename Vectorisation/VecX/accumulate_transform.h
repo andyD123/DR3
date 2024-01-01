@@ -509,9 +509,9 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 
 
 
-//unrolled version helps greatly with VC2019
+//we might need to get the updated accumulator
 template<  template <class> typename VEC_TYPE, typename INS_VEC, template <class> typename ACCUMULATOR_TYPE, typename OP>
-typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const ACCUMULATOR_TYPE< INS_VEC>& acc, const VEC_TYPE<INS_VEC>& rhs1, OP& oper, int  ZeroInitTag = 1)
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum( ACCUMULATOR_TYPE< INS_VEC>& acc, const VEC_TYPE<INS_VEC>& rhs1, OP& oper, int  ZeroInitTag = 1)
 {
 	check_vector(rhs1);
 	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
@@ -547,10 +547,14 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 		{
 			//initialise first set of registers
 			{
-				RES = InstructionTraits<INS_VEC>::nullValue;
-				RES1 = InstructionTraits<INS_VEC>::nullValue;
-				RES2 = InstructionTraits<INS_VEC>::nullValue;
-				RES3 = InstructionTraits<INS_VEC>::nullValue;
+				RES = acc; //passing in scaling etc
+				RES =  InstructionTraits<INS_VEC>::nullValue;
+				RES1 = acc;
+				RES1 =  InstructionTraits<INS_VEC>::nullValue;
+				RES2 = acc;
+				RES2 =  InstructionTraits<INS_VEC>::nullValue;
+				RES3 = acc;
+				RES3 =  InstructionTraits<INS_VEC>::nullValue;
 			}
 		}
 		else
@@ -636,6 +640,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum(const 
 		oper(RES, RHS1);
 
 	}
+
+	acc = RES;
 
 	return RES.hsum();
 

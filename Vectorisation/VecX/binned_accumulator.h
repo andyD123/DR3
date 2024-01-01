@@ -12,45 +12,77 @@ struct BinsT
 
     inline static constexpr bool isDbl = std::is_same<double, typename InstructionTraits<INS_T>::FloatType >::value;
 
-    inline static const INS_T TINY_C{ isDbl ? 1e-32  : 1.0e-14f} ;
-    inline static const INS_T VerySmall{isDbl ?  1e-16  : 1.0e-7f};
-    inline static const INS_T SMALL{ isDbl ?  1.0  : 1.0f };
-    inline static const INS_T BIG{ isDbl ? 1.0e16  : 1.0e7f };
-  
+    inline static const INS_T TINY_C{ isDbl ? 1e-30 : 1.0e-14f };
+    inline static const INS_T VERY_SMALL_C{ isDbl ? 1e-15 : 1.0e-7f };
+    inline static const INS_T SMALL_C{ isDbl ? 1.0 : 1.0f };
+    inline static const INS_T BIG_C{ isDbl ? 1.0e15 : 1.0e7f };
 
 
     static inline auto roundIt(INS_T X, INS_T LEVEL)
     {
+        INS_T ten = 10.0;
         auto INV_LEVEL = 1.0l / LEVEL;
-        auto big = (LEVEL * round(X * INV_LEVEL));
+        auto big = (LEVEL * truncate(X * INV_LEVEL));
         auto small = X - big;
+       
+        /*
+        auto smallOrig = small;
+        auto bigLog = iff(big >0.0, truncate(log10(big)),big);
+        auto places = 16.0 - bigLog;
+        auto multPow = pow(ten, places);
+
+        small *= multPow;
+        small = iff(big > 0.0, truncate(small) / multPow, smallOrig);
+        */
+
+       //auto truncatedSmall = truncate(small * INV_LEVEL*10.) * LEVEL;
+       // small = select(abs(big) > 0.0, truncatedSmall, small);
+
+
         return std::pair(big, small);
 
     };
 
 
-
-    INS_T veryBigSummV{ 0.0 };
-    INS_T bigSummV{ 0.0 };
-    INS_T smallSumV{ 0.0 };
-    INS_T tinyV{ 0.0 };
-
-
-    BinsT(){}
+    INS_T m_scaleFactor{ InstructionTraits<INS_T>::oneValue };
+    INS_T veryBigSummV{ InstructionTraits<INS_T>::nullValue };
+    INS_T bigSummV{ InstructionTraits<INS_T>::nullValue };
+    INS_T smallSumV{ InstructionTraits<INS_T>::nullValue };
+    INS_T tinyV{ InstructionTraits<INS_T>::nullValue };
 
 
-    BinsT(typename InstructionTraits<INS_T>::FloatType x)
+    INS_T TINY{ TINY_C };
+    INS_T VERY_SMALL{ VERY_SMALL_C };
+    INS_T SMALL{ SMALL_C };
+    INS_T BIG{ BIG_C };
+
+
+
+
+
+    BinsT() :
+        m_scaleFactor{ InstructionTraits<INS_T>::oneValue },
+        TINY{ m_scaleFactor * TINY_C },
+        VERY_SMALL{ m_scaleFactor * VERY_SMALL_C },
+        SMALL{ m_scaleFactor * SMALL_C },
+        BIG{ m_scaleFactor * BIG_C }
+    {}
+
+
+
+
+
+    BinsT(typename InstructionTraits<INS_T>::FloatType x, typename InstructionTraits<INS_T>::FloatType scaleFactor = InstructionTraits<INS_T>::oneValue) :
+        m_scaleFactor{ scaleFactor },
+        TINY{ m_scaleFactor * TINY_C },
+        VERY_SMALL{ m_scaleFactor * VERY_SMALL_C },
+        SMALL{ m_scaleFactor * SMALL_C },
+        BIG{ m_scaleFactor * BIG_C }
     {
-        alignas(512) std::array< InstructionTraits<INS_T>::FloatType, InstructionTraits<INS_T>::width> msk;
+    
+        INS_T MASK(InstructionTraits<INS_T>::nullValue);
+        MASK.insert(0, InstructionTraits<INS_T>::oneValue);
 
-        //static alligned array for each type not quick fix below
-        for(size_t i=1; i < InstructionTraits<INS_T>::width;++i)
-        {
-            msk[i] = 0;
-        }
-        msk[0] = 1;
-        INS_T MASK;
-        MASK.load_a(&msk[0]);
         set(MASK * x);
 
     }
@@ -60,7 +92,7 @@ struct BinsT
     {
         auto resRoundVeryBig = roundIt(x, BIG);
         auto resRoundBig = roundIt(resRoundVeryBig.second, SMALL);
-        auto resRoundSmall = roundIt(resRoundBig.second, VerySmall);
+        auto resRoundSmall = roundIt(resRoundBig.second, VERY_SMALL);
 
         veryBigSummV = resRoundVeryBig.first;
         bigSummV = resRoundBig.first;
@@ -92,23 +124,40 @@ struct BinsT
         smallSumV = x.smallSumV;
         tinyV = x.tinyV;
 
+        m_scaleFactor = x.m_scaleFactor;
+        TINY = x.TINY;
+        VERY_SMALL = x.VERY_SMALL;
+        SMALL = x.SMALL;
+        BIG = x.BIG;
+
+
     };
 
 
-    BinsT& operator =(const BinsT& x) //noexcept
+    BinsT& operator =(const BinsT& x) 
     {
         veryBigSummV = x.veryBigSummV;
         bigSummV = x.bigSummV;
         smallSumV = x.smallSumV;
         tinyV = x.tinyV;
+
+        m_scaleFactor = x.m_scaleFactor;
+        TINY = x.TINY;
+        VERY_SMALL = x.VERY_SMALL;
+        SMALL = x.SMALL;
+        BIG = x.BIG;
+
+
         return *this;
     };
 
 
     BinsT& operator += (const BinsT& rhs)
     {
-        auto resRoundTiny = roundIt(tinyV + rhs.tinyV, TINY_C);
+        auto resRoundTiny = roundIt(tinyV + rhs.tinyV, VERY_SMALL);
         tinyV = resRoundTiny.second;
+
+
         auto smallRound = roundIt(smallSumV + rhs.smallSumV + resRoundTiny.first, SMALL);
         smallSumV = smallRound.second;
         auto bigRound = roundIt(smallRound.first + bigSummV + rhs.bigSummV, BIG);
