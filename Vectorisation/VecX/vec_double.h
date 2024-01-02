@@ -192,6 +192,13 @@ public:
 		m_data[1] = rhs[1];
 	}
 
+	VecDouble(const VecDouble& rhs)
+	{
+		m_data[0] = rhs.m_data[0];
+		m_data[1] = rhs.m_data[1];
+		
+	}
+
 	operator VecBoolD() const
 	{
 		return	VecBoolD(m_data[0], m_data[1]);
@@ -655,7 +662,6 @@ public:
 
 	VecLDouble(long double const   d[2]) { m_data[0] = d[0];	m_data[1] = d[1]; }
 
-
 	VecLDouble(const VecBoolD& rhs)
 	{
 		m_data[0] = rhs[0];
@@ -671,6 +677,14 @@ public:
 	{
 		m_data[0] = rhs.m_data[0];	m_data[1] = rhs.m_data[1];
 		return *this;
+	}
+
+
+	VecLDouble(const VecLDouble& rhs) 
+	{
+		m_data[0] = rhs.m_data[0];
+		m_data[1] = rhs.m_data[1];
+		
 	}
 
 

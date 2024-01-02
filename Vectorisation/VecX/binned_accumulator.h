@@ -8,15 +8,8 @@ template<typename INS_T>
 struct BinsT
 {
     using  INS = INS_T;
-    //using FLOAT = InstructionTraits<INS_T>::FloatType;
-
+   
     inline static constexpr bool isDbl = std::is_same<double, typename InstructionTraits<INS_T>::FloatType >::value;
-/*
-    inline static const INS_T TINY_C{ isDbl ? 1e-30 : 1.0e-14f };
-    inline static const INS_T VERY_SMALL_C{ isDbl ? 1e-15 : 1.0e-7f };
-    inline static const INS_T SMALL_C{ isDbl ? 1.0 : 1.0f };
-    inline static const INS_T BIG_C{ isDbl ? 1.0e15 : 1.0e7f };
-*/
 
     inline static const INS_T TINY_C{ isDbl ? pow(1024.0 , -10.0) : 1.0e-14f };
     inline static const INS_T VERY_SMALL_C{ isDbl ?   pow(1024.0,-5.0) : 1.0e-7f };
@@ -26,25 +19,10 @@ struct BinsT
 
     static inline auto roundIt(INS_T X, INS_T LEVEL)
     {
-        INS_T ten = 10.0;
+       
         auto INV_LEVEL = 1.0l / LEVEL;
         auto big = (LEVEL * truncate(X * INV_LEVEL));
         auto small = X - big;
-       
-        /*
-        auto smallOrig = small;
-        auto bigLog = iff(big >0.0, truncate(log10(big)),big);
-        auto places = 16.0 - bigLog;
-        auto multPow = pow(ten, places);
-
-        small *= multPow;
-        small = iff(big > 0.0, truncate(small) / multPow, smallOrig);
-        */
-
-       //auto truncatedSmall = truncate(small * INV_LEVEL*10.) * LEVEL;
-       // small = select(abs(big) > 0.0, truncatedSmall, small);
-
-
         return std::pair(big, small);
 
     };
@@ -61,8 +39,6 @@ struct BinsT
     INS_T VERY_SMALL{ VERY_SMALL_C };
     INS_T SMALL{ SMALL_C };
     INS_T BIG{ BIG_C };
-
-
 
 
 
