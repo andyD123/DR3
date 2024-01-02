@@ -119,8 +119,8 @@ TEST(TestBin, simpleSummation2)
 	
 	EXPECT_EQ(bin.veryBigSummV.extract(0), 0.0);
 	EXPECT_EQ(bin.bigSummV.extract(0), 2.0);
-//	EXPECT_EQ(bin.smallSumV.extract(0), 0.5); 
-//	EXPECT_EQ(bin.tinyV.extract(0), 2.5e-16);
+	EXPECT_EQ(bin.smallSumV.extract(0), 0.5);
+	EXPECT_EQ(bin.tinyV.extract(0), 2.5e-16);
 
 	
 
@@ -136,8 +136,8 @@ TEST(TestBin, simpleSummation2)
 
 	EXPECT_EQ(bin2.veryBigSummV.extract(0), 0.0);
 	EXPECT_EQ(bin2.bigSummV.extract(0), 0.0);
-//	EXPECT_EQ(bin2.smallSumV.extract(0), 1.0/3.0 *1.0e-3);
-//	EXPECT_EQ(bin2.tinyV.extract(0), 0.0);
+	EXPECT_EQ(bin2.smallSumV.extract(0), 1.0/3.0 *1.0e-3);
+	EXPECT_EQ(bin2.tinyV.extract(0), 0.0);
 
 	auto sum = bin2.hsum();
 

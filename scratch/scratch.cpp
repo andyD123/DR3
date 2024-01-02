@@ -32,6 +32,44 @@ using namespace DRC::VecD8D;
 #include <algorithm>
 
 
+void doTrucate()
+{
+
+ VecXX::INS values = 1.0 / 7.0;
+
+ auto expon = truncate(log2(values));
+
+ auto lg2Vals = log2(values);
+
+ auto mant = lg2Vals- expon  ;
+
+ auto shft1 = exp2((mant+ expon));
+
+ auto x = truncate(lg2Vals + 10) - 10;
+ auto y = exp2(x);
+
+ auto z = values - x;
+
+
+
+
+ //trucate  1024 , 2^10  
+
+
+
+ auto expon1 = floor(log2(values)) -10;
+
+ auto  mant1 = lg2Vals + expon1;
+
+ auto shft = exp2(mant1);
+
+
+
+
+
+}
+
+
 
 void doAdd()
 {
@@ -95,6 +133,7 @@ void doAdd()
 
 int main()
 {
+    doTrucate();
     doAdd();
 
     long SZ = 10000 * 1024 -1;// *1024 + 5;
@@ -104,13 +143,13 @@ int main()
     
     VecXX data(initVal, SZ);
 
-    double scale = 1.0e3;// 1.e16;// 1.0e-3;// 200;// 0.005;// 1.0e-18; //problem for 1.0e-3 -ve
+    double scale = 1.0/1024.0 * 1.0 / 1024.0 * 1.0 / 1024.0;// 1 / (1024.0 * 1024.0 * 1024.);// 1.0e3;// 1.e16;// 1.0e-3;// 200;// 0.005;// 1.0e-18; //problem for 1.0e-3 -ve
     data *= scale;
 
     
 
-    //bool USE_BIG_CANCELLATION =  false;
-    bool USE_BIG_CANCELLATION = true;
+    bool USE_BIG_CANCELLATION =  false;
+   //bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 

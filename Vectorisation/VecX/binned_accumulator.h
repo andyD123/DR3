@@ -11,11 +11,17 @@ struct BinsT
     //using FLOAT = InstructionTraits<INS_T>::FloatType;
 
     inline static constexpr bool isDbl = std::is_same<double, typename InstructionTraits<INS_T>::FloatType >::value;
-
+/*
     inline static const INS_T TINY_C{ isDbl ? 1e-30 : 1.0e-14f };
     inline static const INS_T VERY_SMALL_C{ isDbl ? 1e-15 : 1.0e-7f };
     inline static const INS_T SMALL_C{ isDbl ? 1.0 : 1.0f };
     inline static const INS_T BIG_C{ isDbl ? 1.0e15 : 1.0e7f };
+*/
+
+    inline static const INS_T TINY_C{ isDbl ? pow(1024.0 , -10.0) : 1.0e-14f };
+    inline static const INS_T VERY_SMALL_C{ isDbl ?   pow(1024.0,-5.0) : 1.0e-7f };
+    inline static const INS_T SMALL_C{ isDbl ? 1.0 : 1.0f };
+    inline static const INS_T BIG_C{ isDbl ? pow(1024.0, 5.0) : 1.0e7f };
 
 
     static inline auto roundIt(INS_T X, INS_T LEVEL)
