@@ -148,8 +148,8 @@ int main()
 
     
 
-    bool USE_BIG_CANCELLATION =  false;
-   //bool USE_BIG_CANCELLATION = true;
+  //  bool USE_BIG_CANCELLATION =  false;
+   bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
 
@@ -165,7 +165,7 @@ int main()
             FLOAT a = static_cast < FLOAT> (1000000000000.f);
             FLOAT b = static_cast<FLOAT>( - 1000000000000.f);
 
-  /*  */
+
             if (!USE_BIG_CANCELLATION)
             {
                 a = 0.0;
