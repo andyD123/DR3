@@ -18,7 +18,7 @@
 
 
 
-//using namespace DRC::VecDb;  // broken
+
 //using namespace DRC::VecD2D; 
 //using namespace DRC::VecF4F;
 //using namespace DRC::VecD4D;
@@ -26,14 +26,10 @@ using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
-//using namespace DRC::VecLDb; //broken
+
 
 #include <iostream>
 #include <algorithm>
-
-
-
-
 
 void doAdd()
 {
@@ -114,28 +110,37 @@ void doAdd()
 
 */
 
+void setCancelInput(float& flt)
+{
+    flt = 100000.f;
+}
+
+void setCancelInput(double& dbl)
+{
+    dbl = 100000000000.0;
+}
+
+
 int main()
 {
    
     doAdd();
 
-    long SZ = 10000 * 1024 -1+1;// *1024 + 5;
+    long SZ = 10000 * 1024 ;
   
     using FLOAT = InstructionTraits<VecXX::INS>::FloatType;
     FLOAT initVal = static_cast<FLOAT>(1.0 / 3.0);
     
     VecXX data(initVal, SZ);
 
-    double scale = 1.0;// 1.0 / 1024.0 * 1.0 / 1024.0 * 1.0 / 1024.0;
+    double scale = 1.0;// us power of 2   eg 1.0 / 1024.0 * 1.0 / 1024.0 * 1.0 / 1024.0;
     data *= scale;
 
-    
-
-    bool USE_BIG_CANCELLATION =  false;
-   // bool USE_BIG_CANCELLATION = true;
+ 
+   // bool USE_BIG_CANCELLATION =  false;
+    bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
-
     {
 
         auto mixed = data;
@@ -144,10 +149,10 @@ int main()
         {
 
             count++;
-           // x += count * 0.0000001f;// *0.0;
-            FLOAT a = static_cast < FLOAT> (1000000000000.f);
-            FLOAT b = static_cast<FLOAT>( - 1000000000000.f);
-
+            x += count * 0.0001f;
+            FLOAT a;
+            setCancelInput(a);
+            FLOAT b = -a;
 
             if (!USE_BIG_CANCELLATION)
             {
@@ -166,7 +171,7 @@ int main()
             ignore(x);
         }
 
-        std::vector<double> scaledVec = mixed;
+        std::vector<FLOAT> scaledVec = mixed;
 
         for(int kkk = 0; kkk < 100; kkk++)
         {
@@ -179,7 +184,7 @@ int main()
         std::vector<FLOAT> obs= mixed;
 
   
-        auto std_acc =  std::accumulate(mixed.begin(), mixed.end(), 0.0);
+        auto std_acc =  std::accumulate(mixed.begin(), mixed.end(), static_cast<FLOAT>(0.0));
 
 
         auto sumIt = [](auto x, auto y) {return x + y; };
@@ -216,7 +221,7 @@ int main()
         auto sumPairwiseWithKahan = ApplyAccumulate2UR_X_pairwise(mixed, KhanAddV);
 
     
-        // reduce with user defined accumulator
+        // reduce with binned accumulator
         using BINNED_ACCUMULATOR =  BinsT<VecXX::INS>;
         BINNED_ACCUMULATOR Bin(0.0);     
 

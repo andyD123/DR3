@@ -8,23 +8,21 @@ template<typename INS_T>
 struct BinsT
 {
     using  INS = INS_T;
-   
+
     inline static constexpr bool isDbl = std::is_same<double, typename InstructionTraits<INS_T>::FloatType >::value;
 
-    inline static const INS_T TINY_C{ isDbl ? pow(1024.0 , -10.0) : 1.0e-14f };
-    inline static const INS_T VERY_SMALL_C{ isDbl ?   pow(1024.0,-5.0) : 1.0e-7f };
+    inline static const INS_T TINY_C{ isDbl ? pow(1024.0 , -10.0) : 1.0/ 8388608.0f * 1.0 / 8388608.0f }; 
+    inline static const INS_T VERY_SMALL_C{ isDbl ? pow(1024.0,-5.0) : 1.0 / 8388608.0f };
     inline static const INS_T SMALL_C{ isDbl ? 1.0 : 1.0f };
-    inline static const INS_T BIG_C{ isDbl ? pow(1024.0, 5.0) : 1.0e7f };
+    inline static const INS_T BIG_C{ isDbl ? pow(1024.0, 5.0) :  8388608.0f }; 
 
 
     static inline auto roundIt(INS_T X, INS_T LEVEL)
     {
-       
         auto INV_LEVEL = 1.0l / LEVEL;
         auto big = (LEVEL * truncate(X * INV_LEVEL));
         auto small = X - big;
         return std::pair(big, small);
-
     };
 
 
