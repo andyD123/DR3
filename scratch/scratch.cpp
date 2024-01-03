@@ -1,5 +1,8 @@
 // scratch.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
+
+#include "../Vectorisation/VecX/dr3.h"
+
 #include <algorithm>
 #include <random>
 #include <numeric>
@@ -9,27 +12,17 @@
 #include <chrono>
 #include <iomanip>  
 #include <functional>
-
 #include <utility>
-
-#include "../Vectorisation/VecX/dr3.h"
-
-#include "../Vectorisation/intrinsic_utils.h"
-
-
 
 
 //using namespace DRC::VecD2D; 
 //using namespace DRC::VecF4F;
-//using namespace DRC::VecD4D;
-using namespace DRC::VecD8D;
+using namespace DRC::VecD4D;
+//using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
 
-
-#include <iostream>
-#include <algorithm>
 
 void doAdd()
 {
@@ -93,15 +86,13 @@ void doAdd()
  with pairwise _reduce and  kahan, we tend to last digit level precision.
 
  However when we add pairs of large  +ve and -ve numbers which cancel each other
- they destroy accuracy of intermediate sums.   
-
- This is achieved by running using BIG_CANCELLATION  = true.
+ they destroy accuracy of intermediate sums.  This is achieved by running 
+ using BIG_CANCELLATION  = true.
 
  the cancelation flag does not change the theoretical value of the sum.
- and the sums should return the same result  as wehen CANCELLATION =false.
+ and the sums should return the same result  as when CANCELLATION =false.
 
  Binned arithmetic can achieve this sort of stability under the right circumstances.
-
 
  The input is randomly permuted  and re calculated. The  ideal result is that we get the same
  answer irrespective of the ordering.
