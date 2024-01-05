@@ -14,6 +14,7 @@
 #include "vec_bool.h"
 #include "vec_view.h"
 #include "transform.h"
+#include "binned_accumulator.h"
 
 #include "target_name_space.h"
 
@@ -570,6 +571,56 @@ typename InstructionTraits<INS_VEC>::FloatType reduce(const Vec<INS_VEC>& rhs1, 
 #endif
 	
 }
+
+//unroll version
+template< typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduceI(const Vec<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	ignore(initVal);
+	ignore(singularInit);
+#ifdef _VC_PERF_REG_
+	return ApplyAccumulate2UR_X(rhs1, oper,0);
+
+
+#else
+	return ApplyAccumulate2UR(rhs1, oper, initVal, singularInit);
+#endif
+
+}
+
+
+//unroll user accumulator version
+template< template <class> typename ACCUMULATOR_TYPE, template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduceWithAccumulator( ACCUMULATOR_TYPE< INS_VEC>& acc,const VEC_TYPE<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	ignore(initVal);
+	ignore(singularInit);
+#ifdef _VC_PERF_REG_
+
+	return ApplyAccumulate2UR_X_Accum(acc, rhs1, oper, 0);
+
+
+#else
+	return ApplyAccumulate2UR(rhs1, oper, initVal, singularInit);
+#endif
+
+}
+
+
+//user defined accumulator version
+/*
+ auto res = reduce< typename MyNewACCumulator>( data, operator)
+
+*/
+template< typename ACCUMULATOR_TYPE, template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType reduce( const VEC_TYPE<INS_VEC>& rhs1, OP& oper, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)
+{
+	ACCUMULATOR_TYPE Bin;
+	return reduceWithAccumulator(Bin, rhs1, oper);
+};
+
+
+
 
 
 //unroll version

@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include <tuple>
+#include <array>
 
 
 /*
@@ -392,7 +393,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR(const Vec<INS_
 
 //unrolled version helps greatly with VC2019
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP>
-typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TYPE<INS_VEC>& rhs1, OP& oper )
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TYPE<INS_VEC>& rhs1, OP& oper, int  ZeroInitTag = 1)
 {
 	check_vector(rhs1);
 	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
@@ -421,15 +422,31 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 
 	if (sz >= step * 2)
 	{
-		//initialise first set of registers
+	
+		if  (ZeroInitTag==0)
 		{
-			RES.load_a(pRhs1 + i);
-			RES1.load_a(pRhs1 + i + width);
-			RES2.load_a(pRhs1 + i + width * 2);
-			RES3.load_a(pRhs1 + i + width * 3);
+			//initialise first set of registers
+			{
+				RES = InstructionTraits<INS_VEC>::nullValue;
+				RES1 = InstructionTraits<INS_VEC>::nullValue;
+				RES2 = InstructionTraits<INS_VEC>::nullValue;
+				RES3 = InstructionTraits<INS_VEC>::nullValue;
+			}
+		}
+		else
+		{
+			//initialise first set of registers
+			{
+				RES.load_a(pRhs1 + i);
+				RES1.load_a(pRhs1 + i + width);
+				RES2.load_a(pRhs1 + i + width * 2);
+				RES3.load_a(pRhs1 + i + width * 3);
+			}
+			i += step;
 		}
 
-		i += step;
+		
+
 		long rhsSZ = static_cast<long>(rhs1.size());
 		for (; i <= (rhsSZ - step); i += step)
 		{
@@ -492,6 +509,149 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X(const VEC_TY
 
 
 
+//we might need to get the updated accumulator
+template<  template <class> typename VEC_TYPE, typename INS_VEC, template <class> typename ACCUMULATOR_TYPE, typename OP>
+typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_Accum( ACCUMULATOR_TYPE< INS_VEC>& acc, const VEC_TYPE<INS_VEC>& rhs1, OP& oper, int  ZeroInitTag = 1)
+{
+	check_vector(rhs1);
+	if (isScalar(rhs1)) // nothing to accumulate with so just return  value
+	{
+		return rhs1.getScalarValue();
+	}
+
+	long sz = static_cast<long>(rhs1.size());
+	auto pRhs1 = rhs1.start();
+	const long width = InstructionTraits<INS_VEC>::width;
+	long step = 4 * width;
+
+	using ACC = ACCUMULATOR_TYPE< INS_VEC>;
+	
+	INS_VEC RHS1;
+	ACC RES = InstructionTraits<INS_VEC>::nullValue;
+
+	INS_VEC RHS2;
+	ACC RES1;
+
+	INS_VEC RHS3;
+	ACC RES2;
+
+	INS_VEC RHS4;
+	ACC RES3;
+
+	long i = 0;
+
+	if (sz >= step * 2)
+	{
+
+		if (ZeroInitTag == 0)
+		{
+			//initialise first set of registers
+			{
+				RES = acc; //passing in scaling etc
+				RES =  InstructionTraits<INS_VEC>::nullValue;
+				RES1 = acc;
+				RES1 =  InstructionTraits<INS_VEC>::nullValue;
+				RES2 = acc;
+				RES2 =  InstructionTraits<INS_VEC>::nullValue;
+				RES3 = acc;
+				RES3 =  InstructionTraits<INS_VEC>::nullValue;
+			}
+		}
+		else
+		{
+			//initialise first set of registers
+			{
+				INS_VEC temp;
+				temp.load(pRhs1 + i);
+				RES =temp;
+				temp.load(pRhs1 + i + width);
+				RES1 =temp;
+				temp.load(pRhs1 + i + width * 2);
+				RES2 =temp;
+				temp.load(pRhs1 + i + width * 3);
+				RES3 =temp;
+			}
+			i += step;
+		}
+
+
+
+		long rhsSZ = static_cast<long>(rhs1.size());
+		for (; i <= (rhsSZ - step); i += step)
+		{
+			RHS1.load(pRhs1 + i);
+			oper(RES, RHS1);
+
+			RHS2.load(pRhs1 + i + width);
+			oper(RES1, RHS2);
+
+			RHS3.load(pRhs1 + i + width * 2);
+			oper(RES2, RHS3);
+
+			RHS4.load(pRhs1 + i + width * 3);
+			oper(RES3, RHS4);
+
+		}
+
+		// odd bits
+		for (; i <= rhsSZ - width; i += width)
+		{
+			RHS1.load(pRhs1 + i);
+			oper(RES, RHS1);
+		}
+
+		RES += RES1;
+		RES2 += RES3;
+		RES += RES2;
+	}
+	else
+	{
+		if (sz > width)
+		{
+			RES = InstructionTraits<INS_VEC>::nullValue;
+			RHS1.load(pRhs1);
+			oper(RES, RHS1);
+			i += width;
+			for (; i <= sz - width; i += width)
+			{
+				RHS1.load(pRhs1 + i);
+				oper(RES, RHS1);
+			}
+		}
+
+	}
+
+	long maskSz = sz - i;
+
+
+	if (maskSz >0)
+	{
+		//nasty 
+		alignas(512)  std::array< typename InstructionTraits<INS_VEC>::FloatType, InstructionTraits<INS_VEC>::width> mask;
+		for (int k = 0; k < mask.size(); k++)
+		{
+			mask[k] = (k < maskSz) ? 1.0 : 0.;
+		}
+		INS_VEC MASK;
+		MASK.load(&mask[0]);
+
+		RHS1.load_a(pRhs1 + i);		
+		RHS1 = RHS1 * MASK;
+		oper(RES, RHS1);
+
+	}
+
+	acc = RES;
+
+	return RES.hsum();
+
+
+}
+
+
+
+
+
 
 
 
@@ -530,20 +690,20 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 	auto accum_8 = [&](Float* pRhs1)
 	{
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
 		RES0 = oper(RHS0, RHS1);
 		RES1 = oper(RHS2, RHS3);
 
 		INS_VEC RES = oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 4);
-		RHS1.load_a(pRhs1 + width *5);
-		RHS2.load_a(pRhs1 + width * 6);
-		RHS3.load_a(pRhs1 + width * 7);
+		RHS0.load(pRhs1 + width * 4);
+		RHS1.load(pRhs1 + width *5);
+		RHS2.load(pRhs1 + width * 6);
+		RHS3.load(pRhs1 + width * 7);
 
 		RES0 = oper(RHS0, RHS1);
 		RES1 = oper(RHS2, RHS3);
@@ -557,38 +717,38 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 	auto accum_16 = [&](Float* pRhs1)
 	{
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
 		RES0 = oper(RHS0, RHS1);
 		RES1 = oper(RHS2, RHS3);
 		INS_VEC RES = oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 4);
-		RHS1.load_a(pRhs1 + width * 5);
-		RHS2.load_a(pRhs1 + width * 6);
-		RHS3.load_a(pRhs1 + width * 7);
+		RHS0.load(pRhs1 + width * 4);
+		RHS1.load(pRhs1 + width * 5);
+		RHS2.load(pRhs1 + width * 6);
+		RHS3.load(pRhs1 + width * 7);
 
 		RES0 = oper(RHS0, RHS1);
 		RES1 = oper(RHS2, RHS3);
 		RES =  oper(RES, oper(RES0, RES1));
 
 
-		RHS0.load_a(pRhs1 + width * 8);
-		RHS1.load_a(pRhs1 + width * 9);
-		RHS2.load_a(pRhs1 + width * 10);
-		RHS3.load_a(pRhs1 + width * 11);
+		RHS0.load(pRhs1 + width * 8);
+		RHS1.load(pRhs1 + width * 9);
+		RHS2.load(pRhs1 + width * 10);
+		RHS3.load(pRhs1 + width * 11);
 
 		RES0 = oper(RHS0, RHS1);
 		RES1 = oper(RHS2, RHS3);
 		INS_VEC RES_T =  oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 12);
-		RHS1.load_a(pRhs1 + width * 13);
-		RHS2.load_a(pRhs1 + width * 14);
-		RHS3.load_a(pRhs1 + width * 15);
+		RHS0.load(pRhs1 + width * 12);
+		RHS1.load(pRhs1 + width * 13);
+		RHS2.load(pRhs1 + width * 14);
+		RHS3.load(pRhs1 + width * 15);
 
 		RES0 = oper(RHS0, RHS1);
 		RES1 = oper(RHS2, RHS3);
@@ -603,10 +763,10 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 	auto accum_4 = [&](Float* pRhs1)
 	{
 		
-		RHS0.load_a(pRhs1 );
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1 );
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
 		RES0 = oper(RHS0, RHS1);
 		RES1 = oper(RHS2, RHS3);
@@ -619,8 +779,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 
 	auto accum_2 = [&](Float* pRhs1)
 	{
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
 		
 		RES0 = oper(RHS0, RHS1);	
 		return RES0;
@@ -656,6 +816,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 		RES = scanN(val, ZERO, oper);
 		whole_reg_sum += RES[remainder];
 		pRhs += remainder;
+
+		working_Size -= remainder;
 	}
 
 
@@ -688,6 +850,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 		return oper(LHS2, RHS2);
 
 	};
+
+
 
 
 	//working_Size

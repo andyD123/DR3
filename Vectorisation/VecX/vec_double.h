@@ -192,6 +192,13 @@ public:
 		m_data[1] = rhs[1];
 	}
 
+	VecDouble(const VecDouble& rhs)
+	{
+		m_data[0] = rhs.m_data[0];
+		m_data[1] = rhs.m_data[1];
+		
+	}
+
 	operator VecBoolD() const
 	{
 		return	VecBoolD(m_data[0], m_data[1]);
@@ -203,11 +210,7 @@ public:
 		return *this;
 	}
 
-	VecDouble(const VecDouble& rhs)
-	{
-		m_data[0] = rhs.m_data[0];
-		m_data[1] = rhs.m_data[1];	
-	}
+
 
 
 	VecDouble& load_a(const double* p)
@@ -277,6 +280,24 @@ public:
 
 
 
+/*****************************************************************************
+*
+*          Vector blend functions
+*
+*****************************************************************************/
+// permute and blend Vec2d
+/*
+template <int i0, int i1>
+static inline VecDouble blend2(VecDouble const a, VecDouble const b) 
+{
+	       
+	static_assert(i0 > -1 && i0 <3 && i1 >-1 && i1 < 3);
+	double  temp[] = { a[0], a[1],b[0],b[1] };
+
+	return { temp[i0],temp[i1] };
+
+}
+*/
 
 // permute and blend 
 //blends elements  from the 2 vectors together index 0 or 1 for a, and 2 or 3 from vec b
@@ -643,7 +664,6 @@ public:
 
 	VecLDouble(long double const   d[2]) { m_data[0] = d[0];	m_data[1] = d[1]; }
 
-
 	VecLDouble(const VecBoolD& rhs)
 	{
 		m_data[0] = rhs[0];
@@ -1006,6 +1026,12 @@ static inline VecLDouble abs(VecLDouble const& a)
 {
 	return VecLDouble(::fabs(a[0]), ::fabs(a[1]));
 }
+
+static inline VecLDouble round(VecLDouble const& a)
+{
+	return VecLDouble(::round(a[0]), ::round(a[1]));
+}
+
 
 
 static inline VecLDouble sqrt(VecLDouble const& a)
