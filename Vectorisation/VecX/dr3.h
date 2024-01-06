@@ -595,15 +595,7 @@ typename InstructionTraits<INS_VEC>::FloatType reduceWithAccumulator( ACCUMULATO
 {
 	ignore(initVal);
 	ignore(singularInit);
-#ifdef _VC_PERF_REG_
-
 	return ApplyAccumulate2UR_X_Accum(acc, rhs1, oper, 0);
-
-
-#else
-	return ApplyAccumulate2UR(rhs1, oper, initVal, singularInit);
-#endif
-
 }
 
 
