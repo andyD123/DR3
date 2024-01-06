@@ -128,8 +128,8 @@ int main()
     data *= scale;
 
  
-   // bool USE_BIG_CANCELLATION =  false;
-    bool USE_BIG_CANCELLATION = true;
+     bool USE_BIG_CANCELLATION =  false;
+    //bool USE_BIG_CANCELLATION = true;
 
     int i = 0;
     {
