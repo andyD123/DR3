@@ -15,8 +15,8 @@
 
 //using namespace DRC::VecD2D; 
 //using namespace DRC::VecF4F;
-using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
+//using namespace DRC::VecD4D;
+using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
 //using namespace DRC::VecF8F;
 
@@ -89,7 +89,7 @@ void setCancelInput(float& flt)
 
 void setCancelInput(double& dbl)
 {
-    dbl = 100000000000.0;
+    dbl = 1000000000000.0;
 }
 
 
@@ -142,6 +142,10 @@ int main()
             ignore(x);
         }
 
+
+        double multiplr = 1.0;// pow(1024., 4);
+        mixed *= multiplr;
+
         //std::vector<FLOAT> scaledVec = mixed; //for debug observation
         // run ten permutations of  data set and do summation
         for (int kkk = 0; kkk < 10; kkk++)
@@ -178,15 +182,42 @@ int main()
 
 
             auto sumKahan = reduce(mixed, KhanAddV);
+            auto KahanAddD = [cc = static_cast<FLOAT>(0.0)](auto sum, auto rhs)  mutable {
+                auto y = rhs - cc;
+                auto t = sum + y;
+                cc = (t - sum);
+                cc = cc - y;
+                sum = t;
+                return t;
+                };
+
+
+            double std_accumulate_Kahan = std::accumulate(mixed.begin(), mixed.end(), static_cast<FLOAT>(0.0), KahanAddD);
+            double std_reduce_Kahan = std::reduce(mixed.begin(), mixed.end(), static_cast<FLOAT>(0.0), KahanAddD);
 
             NULL_Vec = VecXX::INS(0.0);
             auto sumPairwiseWithKahan = ApplyAccumulate2UR_X_pairwise(mixed, KhanAddV);
 
             // reduce with binned accumulator
+            auto scale = 1.0;// pow(1024.0, 2);
             using BINNED_ACCUMULATOR = BinsT<VecXX::INS>;
-            BINNED_ACCUMULATOR Bin(0.0);
+            BINNED_ACCUMULATOR Bin(0.0, scale);// / BINNED_ACCUMULATOR.BIG_C[0]);
+
+            //auto mult = 1.0;// pow(1024, -1);
+            //auto mixedBig = mixed* mult;// *scale;// 1024.;
+            //scale
+            double len = static_cast<double>(mixed.size());
+            auto maxSize = [](auto lhs, auto rhs) { return max(abs(lhs), abs(rhs)); };
+            //auto minSize = [](auto lhs, auto rhs) { return min(abs(lhs), abs(rhs)); };
+
+            auto range = reduce(mixed, maxSize);
+
+           //Bin.m_scaleFactor = Bin.BIG_C;// / (range * len);
 
             auto binned_Sum = reduceWithAccumulator(Bin, mixed, BinnedAdd);
+
+
+            ///binned_Sum = mult;
 
             std::cout << "\nUsing Significant Cancellation Data = " << std::boolalpha << USE_BIG_CANCELLATION << "  \n";
             std::cout << "shuffled version " << ++i << "\n" << std::setprecision(16)
@@ -194,6 +225,8 @@ int main()
                       << std_acc << "\t std::accumulate sum  \n"
                       << std_reduce << "\t std::reduce  \n"
                       << DRCubedAccum << "\t accumulate DR3 \n"
+                      << std_accumulate_Kahan << "\t std_accumulate_Kahan \n"
+                      << std_reduce_Kahan << "\t std_reduce_Kahan \n"
                       << sumPairwiseDr3 << "\t sum pairwise  \n"
                       << sumKahan << "\t sum Kahan acc \n"
                       << sumPairwiseWithKahan << " \t pairwise_sum  using Kahan acc \n"
