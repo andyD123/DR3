@@ -722,6 +722,27 @@ reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1)
 }
 
 
+//////experimental unrolled  triple accumulation
+template< typename INS_VEC, typename OP, typename OP1, typename OP2>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP1& oper2)
+{
+	return ApplyAccumulate2UR_X2(rhs, oper, oper1, oper2);
+
+}
+
+
+//////experimental unrolled  quad accumulation
+template< typename INS_VEC, typename OP, typename OP1, typename OP2, typename OP3>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP1& oper2, OP1& oper3)
+{
+	return ApplyAccumulate2UR_X2(rhs, oper, oper1, oper2, oper3);
+
+}
+
+
+
 
 
 //unitary transform
