@@ -725,7 +725,7 @@ reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1)
 //////experimental unrolled  triple accumulation
 template< typename INS_VEC, typename OP, typename OP1, typename OP2>
 typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
-reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP1& oper2)
+reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP2& oper2)
 {
 	return ApplyAccumulate2UR_X2(rhs, oper, oper1, oper2);
 
@@ -735,9 +735,71 @@ reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP1& oper2)
 //////experimental unrolled  quad accumulation
 template< typename INS_VEC, typename OP, typename OP1, typename OP2, typename OP3>
 typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
-reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP1& oper2, OP1& oper3)
+reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP2& oper2, OP3& oper3)
 {
 	return ApplyAccumulate2UR_X2(rhs, oper, oper1, oper2, oper3);
+
+}
+
+////////////////////////////// better dispatch to do 
+//////experimental unrolled  double accumulation
+template< typename INS_VEC, typename OP, typename OP1>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM1(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1)
+{
+	return ApplyAccumulate2UR_X2_1(rhs, oper, oper1);
+
+}
+
+
+//////experimental unrolled  triple accumulation
+template< typename INS_VEC, typename OP, typename OP1, typename OP2>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM1(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP2& oper2)
+{
+	return ApplyAccumulate2UR_X2_1(rhs, oper, oper1, oper2);
+
+}
+
+
+//////experimental unrolled  quad accumulation
+template< typename INS_VEC, typename OP, typename OP1, typename OP2, typename OP3>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM1(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP2& oper2, OP3& oper3)
+{
+	return ApplyAccumulate2UR_X2_1(rhs, oper, oper1, oper2, oper3);
+
+}
+
+//////////////////////////////////////////
+
+////////////////////////////// better dispatch to do 
+//////experimental unrolled  double accumulation
+template< typename INS_VEC, typename OP, typename OP1>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM2(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1)
+{
+	return ApplyAccumulate2UR_X2_2(rhs, oper, oper1);
+
+}
+
+
+//////experimental unrolled  triple accumulation
+template< typename INS_VEC, typename OP, typename OP1, typename OP2>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM2(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP2& oper2)
+{
+	return ApplyAccumulate2UR_X2_2(rhs, oper, oper1, oper2);
+
+}
+
+
+//////experimental unrolled  quad accumulation
+template< typename INS_VEC, typename OP, typename OP1, typename OP2, typename OP3>
+typename std::tuple<typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType, typename InstructionTraits<INS_VEC>::FloatType>
+reduceM2(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP2& oper2, OP3& oper3)
+{
+	return ApplyAccumulate2UR_X2_2(rhs, oper, oper1, oper2, oper3);
 
 }
 
@@ -745,6 +807,7 @@ reduceM(const Vec<INS_VEC>& rhs, OP& oper, OP1& oper1, OP1& oper2, OP1& oper3)
 
 
 
+//////////////////////////////////
 //unitary transform
 template< typename INS_VEC, typename OPT, typename OP>
 typename InstructionTraits<INS_VEC>::FloatType transformReduce1(const Vec<INS_VEC>& rhs1, OPT& operTransform, OP& operAcc, typename InstructionTraits<INS_VEC>::FloatType initVal = InstructionTraits<INS_VEC>::nullValue, bool singularInit = true)

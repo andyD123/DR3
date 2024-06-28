@@ -2087,6 +2087,269 @@ TEST(TestDR3, testReduce_Views)
 	testReduce_Vw(65);
 }
 
+////////////////////////////
+
+void testReduce_VecM_2(int SZ)
+{
+
+
+	std::vector<Numeric> input(SZ, asNumber(0.0));
+	std::iota(begin(input), end(input), asNumber(0.0));
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+	VecXX negTestVec = -testVec + asNumber(SZ / 2);
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto SUM2 = [](auto x, auto y) { return x + y; };
+	auto MAX = [](auto x, auto y) { return iff((x > y), x, y); };
+	auto MIN = [](auto x, auto y) { return iff((x < y), x, y); };
+	auto SUM_SQR = [](auto x, auto y) { return x + y*y; };
+
+	double smSqr = 0.0;
+	for (auto x : input)
+	{
+		smSqr += SUM_SQR(smSqr, x);
+	}
+
+	auto resMulti_2 = reduceM(testVec, SUM, MAX);
+	auto SUM_M = std::get<0>(resMulti_2);
+	auto MAX_M = std::get<1>(resMulti_2);
+	auto expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(SUM_M, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(MAX_M, asNumber(asNumber(SZ - 1)));
+
+
+	//auto resMulti_3 = reduceM(testVec, SUM, MAX, MIN);
+	auto resMulti_3 = reduceM(testVec, SUM, MAX, MIN);
+	 auto res_lambda_0 = std::get<0>(resMulti_3);
+	 auto res_lambda_1 = std::get<1>(resMulti_3);
+	 auto res_lambda_2 = std::get<2>(resMulti_3);
+	 expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(res_lambda_0, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_1, asNumber(asNumber(SZ - 1)));
+	EXPECT_NUMERIC_EQ(res_lambda_2, asNumber(0)); 
+
+
+	////////////////////
+	
+	auto resMulti_4 = reduceM(testVec, SUM, MAX, MIN, SUM2);
+	auto res_lambda_0_4 = std::get<0>(resMulti_4);
+	auto res_lambda_1_4 = std::get<1>(resMulti_4);
+	auto res_lambda_2_4 = std::get<2>(resMulti_4);
+	auto res_lambda_3_4 = std::get<3>(resMulti_4);
+	expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(res_lambda_3_4, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_0_4, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_1_4, asNumber(asNumber(SZ - 1)));
+	EXPECT_NUMERIC_EQ(res_lambda_2_4, asNumber(0));
+	
+}
+
+void testReduce_VecM_1(int SZ)
+{
+
+
+	std::vector<Numeric> input(SZ, asNumber(0.0));
+	std::iota(begin(input), end(input), asNumber(0.0));
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+	VecXX negTestVec = -testVec + asNumber(SZ / 2);
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto SUM2 = [](auto x, auto y) { return x + y; };
+	auto MAX = [](auto x, auto y) { return iff((x > y), x, y); };
+	auto MIN = [](auto x, auto y) { return iff((x < y), x, y); };
+	auto SUM_SQR = [](auto x, auto y) { return x + y * y; };
+
+	double smSqr = 0.0;
+	for (auto x : input)
+	{
+		smSqr += SUM_SQR(smSqr, x);
+	}
+
+	auto resMulti_2 = reduceM1(testVec, SUM, MAX);
+	auto SUM_M = std::get<0>(resMulti_2);
+	auto MAX_M = std::get<1>(resMulti_2);
+	auto expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(SUM_M, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(MAX_M, asNumber(asNumber(SZ - 1)));
+
+
+	//auto resMulti_3 = reduceM(testVec, SUM, MAX, MIN);
+	auto resMulti_3 = reduceM1(testVec, SUM, MAX, MIN);
+	auto res_lambda_0 = std::get<0>(resMulti_3);
+	auto res_lambda_1 = std::get<1>(resMulti_3);
+	auto res_lambda_2 = std::get<2>(resMulti_3);
+	expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(res_lambda_0, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_1, asNumber(asNumber(SZ - 1)));
+	EXPECT_NUMERIC_EQ(res_lambda_2, asNumber(0));
+
+
+	////////////////////
+
+	auto resMulti_4 = reduceM1(testVec, SUM, MAX, MIN, SUM2);
+	auto res_lambda_0_4 = std::get<0>(resMulti_4);
+	auto res_lambda_1_4 = std::get<1>(resMulti_4);
+	auto res_lambda_2_4 = std::get<2>(resMulti_4);
+	auto res_lambda_3_4 = std::get<3>(resMulti_4);
+	expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(res_lambda_3_4, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_0_4, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_1_4, asNumber(asNumber(SZ - 1)));
+	EXPECT_NUMERIC_EQ(res_lambda_2_4, asNumber(0));
+
+}
+
+
+void testReduce_VecM_22(int SZ)
+{
+
+
+	std::vector<Numeric> input(SZ, asNumber(0.0));
+	std::iota(begin(input), end(input), asNumber(0.0));
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+	VecXX testVec(input);
+	VecXX negTestVec = -testVec + asNumber(SZ / 2);
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto SUM2 = [](auto x, auto y) { return x + y; };
+	auto MAX = [](auto x, auto y) { return iff((x > y), x, y); };
+	auto MIN = [](auto x, auto y) { return iff((x < y), x, y); };
+	auto SUM_SQR = [](auto x, auto y) { return x + y * y; };
+
+	double smSqr = 0.0;
+	for (auto x : input)
+	{
+		smSqr += SUM_SQR(smSqr, x);
+	}
+
+	auto resMulti_2 = reduceM2(testVec, SUM, MAX);
+	auto SUM_M = std::get<0>(resMulti_2);
+	auto MAX_M = std::get<1>(resMulti_2);
+	auto expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(SUM_M, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(MAX_M, asNumber(asNumber(SZ - 1)));
+
+
+	//auto resMulti_3 = reduceM(testVec, SUM, MAX, MIN);
+	auto resMulti_3 = reduceM2(testVec, SUM, MAX, MIN);
+	auto res_lambda_0 = std::get<0>(resMulti_3);
+	auto res_lambda_1 = std::get<1>(resMulti_3);
+	auto res_lambda_2 = std::get<2>(resMulti_3);
+	expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(res_lambda_0, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_1, asNumber(asNumber(SZ - 1)));
+	EXPECT_NUMERIC_EQ(res_lambda_2, asNumber(0));
+
+
+	////////////////////
+
+	auto resMulti_4 = reduceM2(testVec, SUM, MAX, MIN, SUM2);
+	auto res_lambda_0_4 = std::get<0>(resMulti_4);
+	auto res_lambda_1_4 = std::get<1>(resMulti_4);
+	auto res_lambda_2_4 = std::get<2>(resMulti_4);
+	auto res_lambda_3_4 = std::get<3>(resMulti_4);
+	expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+	EXPECT_NUMERIC_EQ(res_lambda_3_4, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_0_4, asNumber(expectedSum));
+	EXPECT_NUMERIC_EQ(res_lambda_1_4, asNumber(asNumber(SZ - 1)));
+	EXPECT_NUMERIC_EQ(res_lambda_2_4, asNumber(0));
+
+}
+
+
+
+
+/*
+tests mult with x4 unroll
+*/
+TEST(TestDR3, testReduceM_VecXX)
+{
+
+	testReduce_VecM_2(2);
+	testReduce_VecM_2(3);
+	testReduce_VecM_2(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testReduce_VecM_2(SZ);
+	}
+
+	testReduce_VecM_2(34);
+	testReduce_VecM_2(63);
+	testReduce_VecM_2(64);
+	testReduce_VecM_2(65);
+	
+
+	////
+
+	//TO DO TEST with unroll x2
+	//	and unrol x1
+	
+}
+///////////////////////////////////
+
+
+
+/*
+tests mult with x1 unroll
+*/
+TEST(TestDR3, testReduceM1_VecXX)
+{
+	testReduce_VecM_1(32);
+	testReduce_VecM_1(8);
+	testReduce_VecM_1(2);
+	testReduce_VecM_1(3);
+	testReduce_VecM_1(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testReduce_VecM_1(SZ);
+	}
+	
+	testReduce_VecM_1(34);
+	testReduce_VecM_1(63);
+	testReduce_VecM_1(64);
+	testReduce_VecM_1(65);
+}
+
+
+TEST(TestDR3, testReduceM2_VecXX)
+{
+	testReduce_VecM_22(32);
+	testReduce_VecM_22(8);
+	testReduce_VecM_22(2);
+	testReduce_VecM_22(3);
+	testReduce_VecM_22(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testReduce_VecM_22(SZ);
+	}
+
+	testReduce_VecM_22(34);
+	testReduce_VecM_22(63);
+	testReduce_VecM_22(64);
+	testReduce_VecM_22(65);
+}
+
+
+
+
+
 
 void testTransformReduceUnitary_Vec(int SZ)
 {
