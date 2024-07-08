@@ -14,5 +14,5 @@ add_subdirectory(dancingAVX512)
 add_subdirectory(lattice)
 add_subdirectory(GettingStarted)
 add_subdirectory(scratch)
-add_subdirectory(VariadicReducrion)
+add_subdirectory(VariadicReduction)
 
