@@ -61,7 +61,6 @@ using namespace DRC::VecD8D;  //avx512 double
 using FLOAT = typename InstructionTraits<VecXX::INS>::FloatType;
 
 
-//AllAllocatorsGuard<FLOAT> allocGuard;
 
 const double billion = 1000000000.0;
 
@@ -252,29 +251,29 @@ public:
 
 
 auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
+{
+
+	RunResults results;
+
+	for (int j = 0; j < testRepeats; ++j)
 	{
-
-		RunResults results;
-
-		for (int j = 0; j < testRepeats; ++j)
+		int VEC_SZ = vec_start_size;
+		for (; VEC_SZ < vec_maxSZ; VEC_SZ += vec_stepSZ)
 		{
-			int VEC_SZ = vec_start_size;
-			for (; VEC_SZ < vec_maxSZ; VEC_SZ += vec_stepSZ)
+			auto res = func(VEC_SZ, testLoopSZ);
+			auto calculation_rate = res.second;
+			auto calc_value = res.first;
+			results.m_raw_results[VEC_SZ].push_back(calculation_rate);
+			if (j == 0)
 			{
-				auto res = func(VEC_SZ, testLoopSZ);
-				auto calculation_rate = res.second;
-				auto calc_value = res.first;
-				results.m_raw_results[VEC_SZ].push_back(calculation_rate);
-				if (j == 0)
-				{
-					results.m_calc_results[VEC_SZ] = static_cast<FLOAT>(calc_value);
-				}
+				results.m_calc_results[VEC_SZ] = static_cast<FLOAT>(calc_value);
 			}
 		}
-		return results;
-	};
+	}
+	return results;
+};
 
-
+/*
 auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
 	{
 
@@ -301,41 +300,34 @@ auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, i
 		return results;
 	};
 
-
+*/
 
 auto performanceStats = [](const Mapped_Performance_Results& raw_results)
+{
+
+	Mapped_Stats stats;
+
+	for (const auto& item : raw_results)
 	{
-
-		Mapped_Stats stats;
-
-		for (const auto& item : raw_results)
+		double sum = 0;
+		double sum_sqrd = 0;
+		double N = 0.0;
+		for (const auto run_rate : item.second)
 		{
-			double sum = 0;
-			double sum_sqrd = 0;
-			double N = 0.0;
-			for (const auto run_rate : item.second)
-			{
-				sum += run_rate;
-				sum_sqrd += (run_rate * run_rate);
-				N++;
-			}
-
-			double avg = sum / N;
-			double varSqrd = sum_sqrd + (avg * avg * N) - (2.0 * avg * sum);
-			double var = std::sqrt(varSqrd / (N - 1.));
-
-			stats[item.first] = { avg ,var };
-
+			sum += run_rate;
+			sum_sqrd += (run_rate * run_rate);
+			N++;
 		}
-		return stats;
-	};
 
+		double avg = sum / N;
+		double varSqrd = sum_sqrd + (avg * avg * N) - (2.0 * avg * sum);
+		double var = std::sqrt(varSqrd / (N - 1.));
 
+		stats[item.first] = { avg ,var };
 
-
-//example functions fwd decl
-//void    doMultiStats(int);
-
+	}
+	return stats;
+};
 
 
 
@@ -354,79 +346,84 @@ void doMultiStats(int runType =7)
 
 
 		auto accumulate_run = [&](int VEC_SZ, long TEST_LOOP_SZ)
+		{
+			double time = 0.;
+			double res = 0.;
+			double res_min = 0.;
+			volatile  double total = 0.;  //sum to prevent optimizing out
+		
+			auto v1 = getRandomShuffledVector(VEC_SZ, 0);
+
+			auto sum_vals = [](double accumulate, double val) {return accumulate + val; };
+			auto sumSqr = [](double accumulate, double val) {return accumulate + val * val; };
+			auto sumCube = [](double accumulate, double val) {return accumulate + val * val * val; };
+			auto sumQuart = [](double accumulate, double val) {return accumulate + val * val * val * val; };
+
+			//warm up
+			for (long l = 0; l < 100; l++)
 			{
-				double time = 0.;
-				double res = 0.;
-				double res_min = 0.;
-
-				volatile  double total = 0.;
-				volatile  double totalSqr = 0.;
-
-
-				auto v1 = getRandomShuffledVector(VEC_SZ, 0);
+				auto sum_val = std::reduce( v1.begin(), v1.end(), 0.0, sum_vals);
+				auto sum_val1 = std::reduce( v1.begin(), v1.end(), 0.0, sumSqr);
+				auto sum_val2 = std::reduce( v1.begin(), v1.end(), 0.0, sumCube);
+				auto sum_val3 = std::reduce( v1.begin(), v1.end(), 0.0, sumQuart);
+				
+				total = sum_val + sum_val1 + sum_val2 + sum_val3;
+			}
 
 
-				auto sum_vals = [](double accumulate, double val) {return accumulate + val; };
-				auto sumSqr = [](double accumulate, double val) {return accumulate + val * val; };
-				auto sumCube = [](double accumulate, double val) {return accumulate + val * val * val; };
-				auto sumQuart = [](double accumulate, double val) {return accumulate + val * val * val * val; };
-
-
-
-				double sum_val = 0.0;
-				//warm up
-				for (long l = 0; l < 100; l++)
+			{
+				TimerGuard timer(time);
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
 				{
+
 					auto sum_val = std::reduce( v1.begin(), v1.end(), 0.0, sum_vals);
 					auto sum_val1 = std::reduce( v1.begin(), v1.end(), 0.0, sumSqr);
 					auto sum_val2 = std::reduce( v1.begin(), v1.end(), 0.0, sumCube);
 					auto sum_val3 = std::reduce( v1.begin(), v1.end(), 0.0, sumQuart);
-				
-					total = sum_val + sum_val1 + sum_val2 + sum_val3;
+
+
+					total = sum_val + sum_val1 + sum_val2 + sum_val3; 
+					//compute combined value over all results  to check tests and stop short circuit
 				}
+			}
+
+			ignore(total);
+			ignore(res_min);
+
+			return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
+		};
 
 
-				{
-					TimerGuard timer(time);
-					for (long l = 0; l < TEST_LOOP_SZ; l++)
-					{
-
-						auto sum_val = std::reduce( v1.begin(), v1.end(), 0.0, sum_vals);
-						auto sum_val1 = std::reduce( v1.begin(), v1.end(), 0.0, sumSqr);
-						auto sum_val2 = std::reduce( v1.begin(), v1.end(), 0.0, sumCube);
-						auto sum_val3 = std::reduce( v1.begin(), v1.end(), 0.0, sumQuart);
-
-
-						total = sum_val + sum_val1 + sum_val2 + sum_val3; //compute combined value over all results  to check tests and stop short circuit
-					}
-				}
-
-				ignore(res_min);
-
-				return  std::make_pair(res, numOps(TEST_LOOP_SZ, VEC_SZ) / time);
-
-
-			};
 
 		auto DR3_accumulate = [&](int SZ, long TEST_LOOP_SZ)
+		{
+			double time = 0.;
+			volatile  double res = 0.;
+		
+
+			auto sum = [](auto accumulate, auto val) {return accumulate + val; };
+			auto sumSqr = [](auto accumulate, auto val) {return accumulate + val * val; };
+			auto sumCube = [](auto accumulate, auto val) {return accumulate + val * val * val; };
+			auto sumQuart = [](auto accumulate, auto val) {return accumulate + val * val * val * val; };
+
+			auto v1 = getRandomShuffledVector(SZ, 0); // std stl vector double or float 
+			VecXX vec(v1);
+
+
+			for (long l = 0; l < 100; l++)
 			{
-				double time = 0.;
-				volatile  double res = 0.;
-				// generic lambda for max either calling a max instruction or doing a selection with iff
+				double sum_mnn = reduce(vec, sum);
+				double sumSqr_mnn = reduce(vec, sumSqr);
+				double sum_Cube = reduce(vec, sumCube);
+				double sum_Qrt = reduce(vec, sumQuart);
 
-				//auto mxDbl = [](auto lhs, auto rhs) { return iff(lhs > rhs, lhs, rhs); }; //using iff fastest 
-				//auto minDbl = [](auto lhs, auto rhs) { return iff(lhs < rhs, lhs, rhs); }; //using iff fastest 
-
-				auto sum = [](auto accumulate, auto val) {return accumulate + val; };
-				auto sumSqr = [](auto accumulate, auto val) {return accumulate + val * val; };
-				auto sumCube = [](auto accumulate, auto val) {return accumulate + val * val * val; };
-				auto sumQuart = [](auto accumulate, auto val) {return accumulate + val * val * val * val; };
-
-				auto v1 = getRandomShuffledVector(SZ, 0); // std stl vector double or float 
-				VecXX vec(v1);
+				res = 0.5 * (sum_mnn + sumSqr_mnn + sum_Cube + sum_Qrt);
+			}
 
 
-				for (long l = 0; l < 100; l++)
+			{
+				TimerGuard timer(time);
+				for (long l = 0; l < TEST_LOOP_SZ; l++)
 				{
 					double sum_mnn = reduce(vec, sum);
 					double sumSqr_mnn = reduce(vec, sumSqr);
@@ -435,24 +432,11 @@ void doMultiStats(int runType =7)
 
 					res = 0.5 * (sum_mnn + sumSqr_mnn + sum_Cube + sum_Qrt);
 				}
+			}
 
+			return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
 
-				{
-					TimerGuard timer(time);
-					for (long l = 0; l < TEST_LOOP_SZ; l++)
-					{
-						double sum_mnn = reduce(vec, sum);
-						double sumSqr_mnn = reduce(vec, sumSqr);
-						double sum_Cube = reduce(vec, sumCube);
-						double sum_Qrt = reduce(vec, sumQuart);
-
-						res = 0.5 * (sum_mnn + sumSqr_mnn + sum_Cube + sum_Qrt);
-					}
-				}
-
-				return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
-
-			};
+		};
 
 		auto DR3_accumulate_multi = [&](int SZ, long TEST_LOOP_SZ)
 			{
@@ -491,32 +475,19 @@ void doMultiStats(int runType =7)
 				}
 
 				return std::make_pair(res, numOps(TEST_LOOP_SZ, SZ) / time);
-
 			};
 
 
-//		if (runType & 1 )
-//		{
 			auto run_res_stl = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, accumulate_run, TEST_LOOP_SZ);
 			auto stats_stl = performanceStats(run_res_stl.m_raw_results);
-//		}
 
-//		if (runType & 2 )
-//		{
 			auto dr3_raw_results = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate, TEST_LOOP_SZ);
 			auto stats_DR3_perf = performanceStats(dr3_raw_results.m_raw_results);
-//		}
 
-//		if (runType & 4 )
-//		{
 
 			auto dr3_raw_results_mult = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate_multi, TEST_LOOP_SZ);
 			auto stats_DR3_perf_mult = performanceStats(dr3_raw_results_mult.m_raw_results);
-//		}
 
-/**/
-		if ((runType & 1) && (runType & 2) && (runType & 4))
-		{
 
 			//print out results
 			for (const auto& perf_stl : stats_stl)
@@ -530,10 +501,6 @@ void doMultiStats(int runType =7)
 					<< "\t \t DR3 reduce_mult, size " << perf_stl.first << ", " << stats_DR3_perf_mult[perf_stl.first].first << ",  + - ," << stats_DR3_perf_mult[perf_stl.first].second
 					<< ", numerical check : " << strMatch << "\n";
 			}
-		}
-		
-
-
 	
 }
 
@@ -545,55 +512,4 @@ int main()
 	return 0;
 }
 
-/*
-void example(const VecXX& vec)
-{
-	
-	auto sum = [](auto accumulate, auto val) {return accumulate + val; };
-	auto sumSqared = [](auto accumulate, auto val) {return accumulate + val * val; };
-	auto sumCubed = [](auto accumulate, auto val) {return accumulate + val * val * val; };
-	auto sumQuartic = [](auto accumulate, auto val) {return accumulate + val * val * val * val; };
 
-	auto result = reduceM(vec, sum, sumSqared, sumCubed, sumQuartic);
-
-	double sum_total = std::get<0>(result);
-	double sumSquared_total = std::get<1>(result);
-	double sum_Cubed_total = std::get<2>(result);
-	double sum_Quartic_total = std::get<3>(result);
-}
-
-
-
-void example(const VecXX& vec)
-{
-
-	auto sum = [](auto accumulate, auto val) {return accumulate + val; };
-	auto sumSqared = [](auto accumulate, auto val) {return accumulate + val * val; };
-	auto sumCubed = [](auto accumulate, auto val) {return accumulate + val * val * val; };
-	auto sumQuartic = [](auto accumulate, auto val) {return accumulate + val * val * val * val; };
-
-
-	double sum_total = reduce(vec, sum);
-	double sumSquared_total = reduce(vec, sumSqared);
-	double sum_Cubed_total = reduce(vec, sumCubed);
-	double sum_Quartic_total = reduce(vec,  sumQuartic);
-}
-
-
-
-void example(const std::vector<double>& vec)
-{
-
-	auto sum = [](auto accumulate, auto val) {return accumulate + val; };
-	auto sumSqared = [](auto accumulate, auto val) {return accumulate + val * val; };
-	auto sumCubed = [](auto accumulate, auto val) {return accumulate + val * val * val; };
-	auto sumQuartic = [](auto accumulate, auto val) {return accumulate + val * val * val * val; };
-
-	auto sum_total =		reduce(begin(vec), end(vec), 0.0,sum);
-	auto sumSquared_total = reduce(begin(vec), end(vec), 0.0, sumSqared);
-	auto sum_Cubed_total =	reduce(begin(vec), end(vec), 0.0, sumCubed);
-	auto sum_Quartic_total = reduce(begin(vec), end(vec), 0.0, sumQuartic);
-	
-}
-
-*/

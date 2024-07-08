@@ -48,6 +48,7 @@
     <ProjectGuid>{271cf3d5-72ff-4657-9325-4206b8d5c84f}</ProjectGuid>
     <RootNamespace>VariadicReducrion</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>VariadicReduction</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -336,7 +337,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="VariadicReducrion.cpp" />
+    <ClCompile Include="VariadicReduction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vectorisation\Vectorisation.vcxproj">
