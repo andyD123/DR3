@@ -273,35 +273,6 @@ auto runFunctionOverDifferentSize = [](int testRepeats, int vec_start_size, int 
 	return results;
 };
 
-/*
-auto runFunctionOverDifferentSizeVec = [](int testRepeats, int vec_start_size, int vec_stepSZ, int vec_maxSZ, const auto& func, long testLoopSZ)
-	{
-
-		RunResultsVec results;
-
-		for (int j = 0; j < testRepeats; ++j)
-		{
-			int VEC_SZ = vec_start_size;
-			for (; VEC_SZ < vec_maxSZ; VEC_SZ += vec_stepSZ)
-			{
-				auto res = func(VEC_SZ, testLoopSZ);
-				auto calculation_rate = res.second;
-				auto calc_value = res.first;
-				results.m_raw_results[VEC_SZ].push_back(calculation_rate);
-
-				if (j == 0)
-				{
-					std::vector<FLOAT> tmp = res.first;
-					results.m_calc_results[VEC_SZ] = tmp;
-				}
-
-			}
-		}
-		return results;
-	};
-
-*/
-
 auto performanceStats = [](const Mapped_Performance_Results& raw_results)
 {
 
@@ -496,7 +467,7 @@ void doMultiStats(int runType =7)
 				auto  valStl = run_res_stl.m_calc_results[perf_stl.first];
 				auto  valDr3Mult = dr3_raw_results_mult.m_calc_results[perf_stl.first];
 				auto strMatch = valuesAreEqual(valDr3, valStl, valDr3Mult) ? "calcs match" : "cal difference";
-				std::cout << "  std::max_element, size " << perf_stl.first << ", " << perf_stl.second.first << ", + - ," << perf_stl.second.second
+				std::cout << "  std::reduce, size " << perf_stl.first << ", " << perf_stl.second.first << ", + - ," << perf_stl.second.second
 					<< "\t \t DR3 reduce, size " << perf_stl.first << ", " << stats_DR3_perf[perf_stl.first].first << ",  + - ," << stats_DR3_perf[perf_stl.first].second
 					<< "\t \t DR3 reduce_mult, size " << perf_stl.first << ", " << stats_DR3_perf_mult[perf_stl.first].first << ",  + - ," << stats_DR3_perf_mult[perf_stl.first].second
 					<< ", numerical check : " << strMatch << "\n";
