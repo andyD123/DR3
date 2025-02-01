@@ -201,18 +201,9 @@ int main()
             // reduce with binned accumulator
             auto scale = 1.0;// pow(1024.0, 2);
             using BINNED_ACCUMULATOR = BinsT<VecXX::INS>;
-            BINNED_ACCUMULATOR Bin(0.0, scale);// / BINNED_ACCUMULATOR.BIG_C[0]);
+            BINNED_ACCUMULATOR Bin(0.0, scale);//
 
-            //auto mult = 1.0;// pow(1024, -1);
-            //auto mixedBig = mixed* mult;// *scale;// 1024.;
-            //scale
-            double len = static_cast<double>(mixed.size());
-            auto maxSize = [](auto lhs, auto rhs) { return max(abs(lhs), abs(rhs)); };
-            //auto minSize = [](auto lhs, auto rhs) { return min(abs(lhs), abs(rhs)); };
 
-            auto range = reduce(mixed, maxSize);
-
-           //Bin.m_scaleFactor = Bin.BIG_C;// / (range * len);
 
             auto binned_Sum = reduceWithAccumulator(Bin, mixed, BinnedAdd);
 

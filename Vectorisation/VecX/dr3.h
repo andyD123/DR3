@@ -959,3 +959,35 @@ Vec<INS_VEC> scan(const Vec<INS_VEC>& rhs1, OP& oper)
 {
 	return ApplyScan(rhs1, oper);
 }
+
+///*
+////////////////  variadic reduction
+// Helper function to call a single lambda with the current state and value
+template<std::size_t Index, typename Tuple, typename State, typename Value>
+auto applyLambda(const Tuple& lambdas, State state, Value value) {
+	return std::get<Index>(lambdas)(state, value);
+}
+
+// Recursive case: apply the lambdas to each value in the sequence
+template<typename Tuple, typename InIt, typename... States, std::size_t... Indices>
+auto applyLambdasImpl(const Tuple& lambdas, InIt first, InIt last, std::tuple<States...> states, std::index_sequence<Indices...>)
+{
+	for (; first != last; ++first)
+	{
+		states = std::make_tuple(applyLambda<Indices>(lambdas, std::get<Indices>(states), *first)...);
+	}
+	return states;
+}
+
+// Main function to apply multiple lambdas to each value in the sequence
+template<typename InIt, typename... Lambdas, typename... States>
+auto reduceM(InIt first, InIt last, const std::tuple<Lambdas...>& lambdas, std::tuple<States...> initStates)
+{
+	if (first == last)
+	{
+		throw std::invalid_argument("Input range cannot be empty");
+	}
+	return applyLambdasImpl(lambdas, first, last, initStates, std::index_sequence_for<Lambdas...>{});
+}
+
+//*/
