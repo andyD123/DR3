@@ -2241,7 +2241,6 @@ void testReduce_VecM_22(int SZ)
 	EXPECT_NUMERIC_EQ(MAX_M, asNumber(asNumber(SZ - 1)));
 
 
-	//auto resMulti_3 = reduceM(testVec, SUM, MAX, MIN);
 	auto resMulti_3 = reduceM2(testVec, SUM, MAX, MIN);
 	auto res_lambda_0 = std::get<0>(resMulti_3);
 	auto res_lambda_1 = std::get<1>(resMulti_3);
@@ -2267,6 +2266,80 @@ void testReduce_VecM_22(int SZ)
 
 }
 
+
+
+void testReduce_GeneralVariadic(int SZ) 
+{
+
+
+	std::vector<Numeric> input(SZ, asNumber(0.0));
+	std::iota(begin(input), end(input), asNumber(0.0));
+
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(begin(input), end(input), g);
+
+
+	auto SUM = [](auto x, auto y) { return x + y; };
+	auto SUM2 = [](auto x, auto y) { return x*x + y; };
+	auto SUM_SQR = [](auto x, auto y) { return x + y * y; };
+
+	double smSqr = 0.0;
+	double sm = 0.0;
+	double sm2 = 0.0;
+
+	smSqr = std::reduce(input.begin(), input.end(), 0.0, SUM_SQR);
+	sm = std::reduce(input.begin(), input.end(), 0.0, SUM);
+	sm2 = std::reduce(input.begin(), input.end(), 0.0, SUM2);
+
+
+	auto lambdas_3 = std::make_tuple(SUM, SUM2, SUM_SQR); //tupple of lambdas
+
+	//create initial value tuples
+	double nill =  0.0 ;
+	auto init_values_3 = std::make_tuple(nill, nill, nill);
+
+	auto resMulti_3 = reduceM(input.begin(), input.end(),   lambdas_3, init_values_3);
+
+
+	double SUM_RES = std::get<0>(resMulti_3);
+	auto SUM2_RES = std::get<1>(resMulti_3);
+	auto SUM_SQR_RES = std::get<2>(resMulti_3);
+	auto expectedSum = asNumber((SZ - (long)(1)) * (SZ / 2.0));
+
+	EXPECT_NUMERIC_EQ(SUM_RES, sm);
+	EXPECT_NUMERIC_EQ(SUM2_RES, sm2);
+	EXPECT_NUMERIC_EQ(SUM_SQR_RES, smSqr);
+
+}
+
+
+
+
+/*
+test gteneral multi reduce 
+*/
+TEST(TestDR3, testReduce_GeneralVariadic)
+{
+
+	testReduce_GeneralVariadic(2);
+	testReduce_GeneralVariadic(3);
+	testReduce_GeneralVariadic(4);
+
+
+	for (int SZ = 3; SZ < 33; SZ++)
+	{
+		testReduce_GeneralVariadic(SZ);
+	}
+
+
+	testReduce_GeneralVariadic(34);
+	testReduce_GeneralVariadic(63);
+	testReduce_GeneralVariadic(64);
+	testReduce_GeneralVariadic(65);
+
+
+}
 
 
 
