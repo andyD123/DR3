@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34202.233
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VariadicReduction", "VariadicReduction.vcxproj", "{271CF3D5-72FF-4657-9325-4206B8D5C84F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		clang-cl23|x64 = clang-cl23|x64
+		clang-cl23|x86 = clang-cl23|x86
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		ICC2023|x64 = ICC2023|x64
+		ICC2023|x86 = ICC2023|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+		Release-23|x64 = Release-23|x64
+		Release-23|x86 = Release-23|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.clang-cl23|x64.ActiveCfg = clang-cl23|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.clang-cl23|x64.Build.0 = clang-cl23|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.clang-cl23|x86.ActiveCfg = clang-cl23|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.clang-cl23|x86.Build.0 = clang-cl23|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Debug|x64.ActiveCfg = Debug|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Debug|x64.Build.0 = Debug|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Debug|x86.ActiveCfg = Debug|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Debug|x86.Build.0 = Debug|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.ICC2023|x64.ActiveCfg = ICC2023|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.ICC2023|x64.Build.0 = ICC2023|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.ICC2023|x86.ActiveCfg = ICC2023|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.ICC2023|x86.Build.0 = ICC2023|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Release|x64.ActiveCfg = Release|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Release|x64.Build.0 = Release|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Release|x86.ActiveCfg = Release|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Release|x86.Build.0 = Release|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Release-23|x64.ActiveCfg = Release-23|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Release-23|x64.Build.0 = Release-23|x64
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Release-23|x86.ActiveCfg = Release-23|Win32
+		{271CF3D5-72FF-4657-9325-4206B8D5C84F}.Release-23|x86.Build.0 = Release-23|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {347FE8D5-D275-4584-8F15-DD105566C258}
+	EndGlobalSection
+EndGlobal
