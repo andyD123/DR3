@@ -19,9 +19,9 @@
 //using namespace DRC::VecD2D; 
 //using namespace DRC::VecF4F;
 //using namespace DRC::VecD4D;
-//using namespace DRC::VecD8D;
+using namespace DRC::VecD8D;
 //using namespace DRC::VecF16F;
-using namespace DRC::VecF8F;
+//using namespace DRC::VecF8F;
 
 
 
@@ -49,59 +49,65 @@ int main()
 
   const auto  startTme = std::chrono::high_resolution_clock::now();
 
-    auto MULT = [](auto x, auto y) { return x * y; };
-    auto SUM = [](auto x, auto y) { return x + y; };
-    auto SQR = [](auto x) {return x * x; };
+  for (int LOOP = 0; LOOP < 200; LOOP++)
+  {
+      auto MULT = [](auto x, auto y) { return x * y; };
+      auto SUM = [](auto x, auto y) { return x + y; };
+      auto SQR = [](auto x) {return x * x; };
 
-    auto S_x = reduce(data_X,SUM);
-    auto S_y = reduce(data_Y, SUM);
+      auto S_x = reduce(data_X, SUM);
+      auto S_y = reduce(data_Y, SUM);
 
-    auto S_xx = transformReduce(data_X, SQR, SUM);
+      auto S_xx = transformReduce(data_X, SQR, SUM);
 
-    auto S_xy = transformReduce(data_X, data_Y, MULT, SUM);
+      auto S_xy = transformReduce(data_X, data_Y, MULT, SUM);
 
-    auto SX_loo = S_x - data_X;
+      auto SX_loo = S_x - data_X;
 
- //   debg = SX_loo;
+      //   debg = SX_loo;
 
-    auto SY_loo = S_y - data_Y;
+      auto SY_loo = S_y - data_Y;
 
-//    debg = SY_loo;
+      //    debg = SY_loo;
 
-    auto data_X_squared  = data_X * data_X;
-    auto SXxx_loo = S_xx - data_X_squared;
+      auto data_X_squared = data_X * data_X;
+      auto SXxx_loo = S_xx - data_X_squared;
 
- //   debg = SXxx_loo;
+      //   debg = SXxx_loo;
 
-    auto data_X_Y = data_X * data_Y;
-    auto SXY_loo = S_xy - data_X_Y;
+      auto data_X_Y = data_X * data_Y;
+      auto SXY_loo = S_xy - data_X_Y;
 
-  //  debg = SXY_loo;
+      //  debg = SXY_loo;
 
 
-    ///
-    double lambda = 0.0;// 0.1;
-    double Sz = data_X.size()-1.0;
+        ///
+      double lambda = 0.0;// 0.1;
+      double Sz = data_X.size() - 1.0;
 
-    auto denominator = (Sz * (SXxx_loo + lambda)) - (SX_loo * SX_loo);
+      auto denominator = (Sz * (SXxx_loo + lambda)) - (SX_loo * SX_loo);
 
-    auto Beta_0_numerator = (SXxx_loo + lambda) * SY_loo - SX_loo * SXY_loo;
+      auto Beta_0_numerator = (SXxx_loo + lambda) * SY_loo - SX_loo * SXY_loo;
 
-    auto Beta_0 = Beta_0_numerator / denominator;
+      auto Beta_0 = Beta_0_numerator / denominator;
 
-    auto Beta_1_numerator = Sz * SXY_loo - (SX_loo * SY_loo);
+      auto Beta_1_numerator = Sz * SXY_loo - (SX_loo * SY_loo);
 
-    auto Beta_1 = Beta_1_numerator / denominator;
+      auto Beta_1 = Beta_1_numerator / denominator;
 
- //   debg = denominator;
- //   debg = Beta_0_numerator;
- //  debg = Beta_1_numerator;
 
- //   std::vector<double> offset = Beta_0;
- //   std::vector<double> slope = Beta_1;
- //   std::vector<double> x = data_X;
- //   std::vector<double> y = data_Y;
 
+      //   debg = denominator;
+      //   debg = Beta_0_numerator;
+      //  debg = Beta_1_numerator;
+
+      //   std::vector<double> offset = Beta_0;
+      //   std::vector<double> slope = Beta_1;
+      //   std::vector<double> x = data_X;
+      //   std::vector<double> y = data_Y;
+
+
+  }
 
    const auto endTme = std::chrono::high_resolution_clock::now();
    
