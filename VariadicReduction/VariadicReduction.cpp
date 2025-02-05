@@ -1,4 +1,4 @@
-// VariadicReducrion.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// VariadicReduction.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 #include <algorithm>
@@ -13,6 +13,14 @@
 #include <map>
 #include <cstring>
 #include <execution>
+
+
+#include <iomanip>
+#include <stdexcept>
+#include <tuple>
+#include <type_traits>
+#include <unordered_map>
+
 
 
 #include "../Vectorisation/VecX/dr3.h"
@@ -63,6 +71,263 @@ using FLOAT = typename InstructionTraits<VecXX::INS>::FloatType;
 
 
 const double billion = 1000000000.0;
+
+
+
+
+
+// Helper function to call a single lambda with the current state and value
+template <std::size_t Index, typename Tuple, typename State, typename Value>
+auto applyLambdaX(const Tuple& lambdas, State state, Value value) {
+	return std::get<Index>(lambdas)(state, value);
+}
+
+// Recursive case: apply the lambdas to each value in the sequence
+template <typename Tuple, typename InIt, typename... States,
+	std::size_t... Indices>
+auto applyLambdasImplX(const Tuple& lambdas, InIt first, InIt last,
+	std::tuple<States...> states,
+	std::index_sequence<Indices...>) {
+	for (; first != last; ++first) {
+		states = std::make_tuple(applyLambdaX<Indices>(
+			lambdas, std::get<Indices>(states), *first)...);
+	}
+	return states;
+}
+
+// Main function to apply multiple lambdas to each value in the sequence
+template <typename InIt, typename... Lambdas, typename... States>
+auto reduceVariadic(InIt first, InIt last, const std::tuple<Lambdas...>& lambdas,
+	std::tuple<States...> initStates) {
+	if (first == last) {
+		throw std::invalid_argument("Input range cannot be empty");
+	}
+	return applyLambdasImplX(lambdas, first, last, initStates,
+		std::index_sequence_for<Lambdas...>{});
+}
+
+// timing size constants
+constexpr unsigned TIMING_SZ = 10;// 1000;  // number of loops used for timing
+constexpr const long SZ = 1000000l;   // size of data
+
+// container utils
+template <typename T>
+void update(T& map) {
+	for (long l = 0; l < SZ; ++l) {
+		map.emplace(l, static_cast<double>(l));
+	}
+}
+
+void updateVec(std::vector<double>& vec) {
+	for (long l = 0; l < SZ; ++l) {
+		vec.emplace_back(static_cast<double>(l));
+	}
+}
+
+// Example 1: variadic reduction over an unordered map
+
+void runMap() {
+	std::unordered_map<long, double> testMap;
+	// set up map
+	update(testMap);
+
+	// define reduction lambdas
+	auto sum = [](auto lhs, auto rhs) {
+		lhs.second += rhs.second;
+		return lhs;
+		};
+
+	auto sum1 = [](auto lhs, auto rhs) {
+		lhs.second += rhs.second * rhs.second;
+		return lhs;
+		};
+
+	auto sum2 = [](auto lhs, auto rhs) {
+		lhs.second += rhs.second * rhs.second * rhs.second;
+		return lhs;
+		};
+
+	auto sum3 = [](auto lhs, auto rhs) {
+		lhs.second += rhs.second * rhs.second * rhs.second * rhs.second;
+		return lhs;
+		};
+
+	auto sum4 = [](auto lhs, auto rhs) {
+		lhs.second +=
+			rhs.second * rhs.second * rhs.second * rhs.second * rhs.second;
+		return lhs;
+		};
+
+	std::pair<long, double> nil = { 0L, 0.0 };
+
+	auto result = std::reduce(begin(testMap), end(testMap), nil, sum);
+	auto result1 = std::reduce(begin(testMap), end(testMap), nil, sum1);
+	auto result2 = std::reduce(begin(testMap), end(testMap), nil, sum2);
+	auto result3 = std::reduce(begin(testMap), end(testMap), nil, sum3);
+	auto result4 = std::reduce(begin(testMap), end(testMap), nil, sum4);
+
+	volatile auto db = result1.second;
+
+	auto start = std::chrono::system_clock::now();  // start timer
+
+	// reduce over the data vector separately for each lambda
+	for (int u = 0; u < TIMING_SZ; u++) {
+		result = std::reduce(begin(testMap), end(testMap), nil, sum);
+		result1 = std::reduce(begin(testMap), end(testMap), nil, sum1);
+		result2 = std::reduce(begin(testMap), end(testMap), nil, sum2);
+		result3 = std::reduce(begin(testMap), end(testMap), nil, sum3);
+		result4 = std::reduce(begin(testMap), end(testMap), nil, sum4);
+	}
+
+	auto last = std::chrono::system_clock::now();  // stop timer
+	auto elapsed_seconds =
+		std::chrono::duration_cast<std::chrono::microseconds>(last - start)
+		.count();
+
+	std::cout << std::setprecision(12);
+	std::cout << "\n running reducing over map with sum and sum1, sum2, sum3 "
+		"sum 4 time = "
+		<< elapsed_seconds / 1000000.0 << "\n";
+	std::cout << "\n";
+
+	std::cout << result.second << "   ,  " << result1.second << "   ,  "
+		<< result2.second << "   ,  " << result3.second << "   ,  "
+		<< result4.second << "\n ";
+
+	// VARIADIC reduction
+	// create lambda tuples
+	auto lambdas = std::make_tuple(sum, sum1, sum2, sum3, sum4);
+	// create initial value tuples
+	auto init_values = std::make_tuple(nil, nil, nil, nil, nil);
+
+	// call variadic reduce
+	auto tuple_result =
+		reduceVariadic(begin(testMap), end(testMap), lambdas, init_values);
+
+	auto start2 = std::chrono::system_clock::now();
+
+	// run the timing loop
+	for (int u = 0; u < TIMING_SZ; u++) {
+		tuple_result =
+			reduceVariadic(begin(testMap), end(testMap), lambdas, init_values);
+	}
+	auto last2 = std::chrono::system_clock::now();
+
+	auto elapsed_seconds2 =
+		std::chrono::duration_cast<std::chrono::microseconds>(last2 - start2)
+		.count();
+
+	std::cout << std::setprecision(12);
+	std::cout << "\n running variadic reduce over map with sum and sum1, sum2, "
+		"sum3 sum4 time = "
+		<< elapsed_seconds2 / 1000000.0 << "\n";
+	std::cout << "\n";
+
+	std::cout << std::get<0>(tuple_result).second << ",   ";
+	std::cout << std::get<1>(tuple_result).second << ",   ";
+	std::cout << std::get<2>(tuple_result).second << ",   ";
+	std::cout << std::get<3>(tuple_result).second << ",   ";
+	std::cout << std::get<4>(tuple_result).second << ",   ";
+
+	std::cout << "\n variadic reduce is faster by "
+		<< (double)elapsed_seconds / elapsed_seconds2 << "\n";
+}
+
+// Example 2: variadic reduction over a vector
+void runVector() {
+	std::vector<double> vec;
+	vec.reserve(SZ);
+
+	for (long ll = 0l; ll < SZ; ++ll) {
+		double val = static_cast<double>(ll);
+		vec.push_back(val);
+	}
+
+	auto sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+
+	auto sum1 = [](double lhs, double rhs) { return lhs + (rhs * rhs); };
+
+	auto sum2 = [](auto lhs, auto rhs) -> decltype(lhs) {
+		return lhs + rhs * rhs * rhs;
+		};
+
+	auto sum3 = [](auto lhs, auto rhs) -> decltype(lhs) {
+		return lhs + rhs * rhs * rhs * rhs;
+		};
+
+	auto sum4 = [](auto lhs, auto rhs) -> decltype(lhs) {
+		return lhs + rhs * rhs * rhs * rhs * rhs;
+		};
+
+	const double nil = { 0.0 };
+
+	auto start = std::chrono::system_clock::now();
+
+	double result = .0;
+	double result1 = 0.;
+	double result2 = 0.0;
+	double result3 = 0.0;
+	double result4 = 0.0;
+
+	for (int u = 0; u < TIMING_SZ; u++) {
+		result = std::accumulate(begin(vec), end(vec), nil, sum);
+		result1 = std::accumulate(begin(vec), end(vec), nil, sum1);
+		result2 = std::accumulate(begin(vec), end(vec), nil, sum2);
+		result3 = std::accumulate(begin(vec), end(vec), nil, sum3);
+		result4 = std::accumulate(begin(vec), end(vec), nil, sum4);
+	}
+
+	auto last = std::chrono::system_clock::now();
+	auto elapsed_seconds =
+		std::chrono::duration_cast<std::chrono::microseconds>(last - start)
+		.count();
+
+	std::cout << std::setprecision(12);
+	std::cout << "\n running reducing over vector with sum and sum1, sum2, "
+		"sum3 sum 4 time = "
+		<< elapsed_seconds / 1000000.0 << "\n";
+	std::cout << "\n";
+
+	std::cout << result << "   ,  " << result1 << "   ,  " << result2
+		<< "   ,  " << result3 << "   ,  " << result4 << "\n ";
+
+	auto lambdas = std::make_tuple(sum, sum1, sum2, sum3, sum4);
+	const auto init_values = std::make_tuple(nil, nil, nil, nil, nil);
+
+	auto tuple_result = reduceVariadic(begin(vec), end(vec), lambdas, init_values);
+
+	auto start2 = std::chrono::system_clock::now();
+
+	for (int u = 0; u < TIMING_SZ; u++) {
+		tuple_result = reduceVariadic(begin(vec), end(vec), lambdas, init_values);
+	}
+
+	auto last2 = std::chrono::system_clock::now();
+	auto elapsed_seconds2 =
+		std::chrono::duration_cast<std::chrono::microseconds>(last2 - start2)
+		.count();
+
+	std::cout << std::setprecision(12);
+
+	std::cout << "\n running variadic reduce over vector with sum and sum1, "
+		"sum2, sum3 sum4 time = "
+		<< elapsed_seconds2 / 1000000.0 << "\n";
+	std::cout << "\n";
+
+	std::cout << std::get<0>(tuple_result) << ",   ";
+	std::cout << std::get<1>(tuple_result) << ",   ";
+	std::cout << std::get<2>(tuple_result) << ",   ";
+	std::cout << std::get<3>(tuple_result) << ",   ";
+	std::cout << std::get<4>(tuple_result) << ",   ";
+
+	// std::cout << db << "\n";
+
+	std::cout << "variadic reduce is faster by "
+		<< (double)elapsed_seconds / elapsed_seconds2 << "\n";
+}
+
+
+
 
 
 template<typename T>
@@ -459,7 +724,7 @@ void doMultiStats(int runType =7)
 			auto dr3_raw_results_mult = runFunctionOverDifferentSize(repeatRuns, minVectorSize, vectorStepSize, maxVectorSize, DR3_accumulate_multi, TEST_LOOP_SZ);
 			auto stats_DR3_perf_mult = performanceStats(dr3_raw_results_mult.m_raw_results);
 
-
+			std::cout << std::setprecision(8);
 			//print out results
 			for (const auto& perf_stl : stats_stl)
 			{
@@ -477,8 +742,18 @@ void doMultiStats(int runType =7)
 
 
 
+
+////variadic reduce driver//////////////////
+
 int main()
 {
+	// variadic reduction over map
+	runMap();
+
+	//variadic reduction over std vector
+	runVector();
+
+	//multiple reductions over SIMD vector VecXX
 	doMultiStats(7);
 	return 0;
 }
