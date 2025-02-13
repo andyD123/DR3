@@ -216,13 +216,20 @@ void fastLOO()
         double Sz = data_X.size() - 1.0;
 
         // Compute the fit parameters
-        auto denominator = (Sz * (SXX_loo + lambda)) - (SX_loo * SX_loo);
+        auto SXX_loo_plus_lambda = SXX_loo + lambda;
+       // 
 
-        auto Beta_0_numerator = (SXX_loo + lambda) * SY_loo - SX_loo * SXY_loo;
-        auto Beta_0 = Beta_0_numerator / denominator; //vector of fits for Beta 0 offsets
+       auto denominator = (Sz * SXX_loo_plus_lambda) - (SX_loo * SX_loo);
+       auto inv_denominator = 1.0 / denominator;
+       // auto inv_denominator = 1.0 / ((Sz * SXX_loo_plus_lambda) - (SX_loo * SX_loo));
+
+        auto Beta_0_numerator = SXX_loo_plus_lambda * SY_loo - SX_loo * SXY_loo;
+        auto Beta_0 = Beta_0_numerator * inv_denominator;// / denominator; //vector of fits for Beta 0 offsets
 
         auto Beta_1_numerator = Sz * SXY_loo - (SX_loo * SY_loo);
-        auto Beta_1 = Beta_1_numerator / denominator;  //vector of Beta_1   slopes
+        auto Beta_1 = Beta_1_numerator * inv_denominator;// / denominator;  //vector of Beta_1   slopes
+
+
 
     }
 
