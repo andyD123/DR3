@@ -147,7 +147,6 @@ auto leaveOneOutRidgeCV(const std::vector<double>& x,
 
 
 
-
 //switch the use of different instruction sets
 
 //using namespace DRC::VecD2D;   // sse2 double
