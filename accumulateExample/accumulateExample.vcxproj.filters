@@ -18,9 +18,6 @@
     <ClCompile Include="accumulate_example.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AVX512Dance.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\Vectorisation\intel_Libs\libirc.lib" />

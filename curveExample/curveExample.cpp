@@ -19,6 +19,9 @@
 
 #include <chrono>
 
+#include <random>
+#include <algorithm>  // For std::shuffle
+
 #include "curve.h"
 
 
@@ -133,7 +136,13 @@ struct CashFlowsSOA
 	  std::vector<double>   days_tmp(number, repeat_period_days);
 	  std::inclusive_scan(begin(days_tmp), end(days_tmp), begin(days_tmp));
 
-	  std::transform(begin(days_tmp), end(days_tmp), begin(days_tmp), std::roundf);
+	 std::transform(begin(days_tmp), end(days_tmp), begin(days_tmp), std::roundf);
+
+
+	//  for (auto& x : days_tmp)
+	//  {
+	//	  x = std::roundf(x);
+	//  }
 
 	  days.resize(number);
 	  for (const auto& dy : days_tmp)
@@ -412,15 +421,24 @@ void doCurve2()
 
 	using cashFlow = std::pair< long, double>;
 
-	using swap = cashFlow[40];
+	//using swap = cashFlow[40];
+
+	using swap = std::vector<cashFlow>;
 
 	// using  instruments = std::vector<swap>;
 
 	using PF = std::vector<swap>;
 
 	//auto bigPF = PF(1000000);
-	auto bigPF = PF(999999);// 00000);
+
+
+	//auto bigPF = PF(999999);// 00000);
+
+
+	PF bigPF(999999);
 	// double stepSz = 0.25;
+
+	//PF bigPF;
 
 
 	double count = 0;
@@ -581,14 +599,18 @@ void doCurve2A()
 		
 		using cashFlow = std::pair< long, double>;
 
-		using swap = cashFlow[40];
+		//using swap = cashFlow[40];
+		//using swap = cashFlow[40] ;
+
+		using swap = std::vector<cashFlow>;
 
 		
 		using PF = std::vector<swap>;
 
-		//auto bigPF = PF(1000000);
-		auto bigPF = PF(999999);// 00000);
+		PF bigPF;// = PF;// (1000000);
+		//auto bigPF = PF(999999);// 00000);
 		// double stepSz = 0.25;
+		//PF bigPF;
 
 		/**/
 		double count = 0;
@@ -872,6 +894,211 @@ void sensiCurve()
 
 
 
+
+
+
+void doCurve2A_shuffled()
+{
+	try
+	{
+
+		std::vector<double>  values = { 0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11. };
+		std::vector <long>   dates = { 0,1,2,3,4,5,6,7,8,9,10,50 };
+		std::vector <double>   datesD = { 0,1,2,3,4,5,6,7,8,9,10 };
+
+		int KRVSZ = 200;// 00;
+		std::vector< VecXX>  vecVals;
+		for (int i = 0; i < 12; i++)
+		{
+			VecXX vals(i * 0.001 + 0.06, KRVSZ);
+			//if (i > 0)
+			//{
+
+			for (int k = 1; k < KRVSZ; k++)
+			{
+				vals[k] += 0.0001 * k + 0.01 * i;
+			}
+			//}
+
+			vecVals.push_back(vals);
+
+
+		}
+
+		auto makeYears = [](auto x) { return x * 365; };
+		std::transform(begin(dates), end(dates), begin(dates), makeYears);
+
+
+		//Curve2<double, VecXX, ZeroInterpCached<double, VecXX>>  testCurve2(KRVSZ);
+		Curve2<long, VecXX, ZeroInterpCached<long, VecXX>>  testCurve2(KRVSZ);
+		//	testCurve2.setValues(begin(datesD), end(datesD), begin(vecVals), end(vecVals));
+		testCurve2.setValues(begin(dates), end(dates), begin(vecVals), end(vecVals));
+
+		auto valV = testCurve2.valueAt(0.0);
+
+		//auto valV2 = testCurve2.valueAt(0.5);
+
+
+		using cashFlow = std::pair< long, double>;
+
+		using swap = cashFlow[40];
+
+
+		using PF = std::vector<swap>;
+
+		//auto bigPF = PF(1000000);
+	//	auto bigPF = PF(999999);// 00000);
+
+		long BIG_PF_SIZE = 999999;
+
+		BIG_PF_SIZE = 20999;
+
+		//auto bigPF = PF(20999);// 00000);
+
+		//auto bigPF = PF(BIG_PF_SIZE);// 00000);
+
+		PF bigPF;
+		// double stepSz = 0.25;
+
+		/**/
+		double count = 0;
+		for (auto& swp : bigPF)
+		{
+			long date = 0.0;
+			double period = 0.25 * 365;
+
+			//double offset = int(count / 30000.0) * 0.03 * 365.0;
+			long offset = int(count / (BIG_PF_SIZE / 365));
+			for (auto& cf : swp)
+			{
+				cf.first = date + offset;
+				date += period;
+				cf.second = 0.1;
+			}
+			count++;
+		}
+
+
+		std::cout << "starting shuffle" << std::endl;
+
+		std::random_device rd;
+		std::mt19937 g(rd());
+		shuffle(bigPF.begin(), bigPF.end(), g);
+		//return shuffled_path;
+
+
+		std::cout << "end shuffle" << std::endl;
+
+		auto results = new double[1000000 * KRVSZ];
+
+
+		std::cout << "starting pricing" << std::endl;
+
+		auto startTme = std::chrono::high_resolution_clock::now();
+
+
+		//auto results=  new double[100000*200];
+
+		//std::vector<VecXX> allPrices[1000000];
+
+		// VecXX prices(0.0, 200);
+
+
+		auto dfsFixed = testCurve2.valueAt(60);
+
+		int j = 0;
+
+		std::vector<  const VecXX*> last_dfs(1000, nullptr);
+		std::vector< long>  last_dates(1000, -1);
+
+
+		for (auto& swp : bigPF)
+		{
+
+			VecXX prices(0.0, KRVSZ);
+			SpanXX prc(prices.begin(), KRVSZ);
+
+
+			int pos = -1;
+
+			for (auto& cf : swp)
+			{
+
+				pos++;
+				const VecXX* pdfs = nullptr;
+				if (last_dates[pos] == cf.first)
+				{
+					pdfs = last_dfs[pos];
+				}
+				else
+				{
+					//local check
+					if (last_dates[pos + 1] == cf.first)
+					{
+						pdfs = last_dfs[pos + 1];
+					}
+					else
+					{
+						auto pdfs_lu = testCurve2.valueAt(cf.first);
+
+						last_dates.insert(last_dates.begin() + pos, cf.first);
+						last_dfs.insert(last_dfs.begin() + pos, &pdfs_lu);
+						pdfs = &pdfs_lu;
+					}
+				}
+
+
+				const VecXX& dfs = *pdfs;
+				SpanXX spnDf(dfs.begin(), dfs.size());
+
+				VecXX::INS  cashflow = cf.second;
+
+				auto priceAndAccumulateCashFlow = [cashflow](auto price, auto  df)
+					{
+						return mul_add(cashflow, df, price);
+					};
+
+
+				transformM(priceAndAccumulateCashFlow, prices, dfs);
+
+			}
+
+			auto basePrice = prices[0];
+			auto risk = prices - basePrice;
+			//allPrices[j] =prices;
+	   //	 count++;
+
+			/* */
+
+			for (int kk = 0; kk < KRVSZ; kk++)
+			{
+				results[j * KRVSZ + kk] = risk[kk];
+			}
+			j++;
+
+
+
+
+		}
+
+		std::cout << "run \n";
+
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto runtime = endTime - startTme;
+		std::cout << "run time 1M swaps " << KRVSZ << " buckets = " << runtime.count() / 1000000000.0 << std::endl;
+
+	}
+	catch (std::exception& expt)
+	{
+		std::cout << "exception thrown" << expt.what() << "\n";
+	}
+}
+
+
+
+
+
+
 int main()
 {
 
@@ -887,7 +1114,9 @@ int main()
 	for (int i = 0; i < 15; i++)
 	{
 
-		doCurve2A();
+	//	doCurve2A();
+
+		doCurve2A_shuffled();
 	}
 
 	//do_curve3();
