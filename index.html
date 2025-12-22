@@ -9,29 +9,11 @@
 </head>
 <body>
     <div class="container">
-
-        <!-- Title row + Godbolt pills -->
-        <div class="header-row">
-            <h1>Matrix Chain Multiplication</h1>
-
-            <div class="header-links">
-                <a class="pill-link"
-                   href="https://godbolt.org/z/4MenTYK6E"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    Compiler Explorer ↗
-                </a>
-
-                <a class="pill-link"
-                   href="https://godbolt.org/z/b3x3ao14K"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    Runtime comparison ↗
-                </a>
-            </div>
-        </div>
-
-        <p class="subtitle">Interactive Dynamic Programming Visualization</p>
+        <h1>Matrix Chain Multiplication</h1>
+        <p class="subtitle">Interactive Dynamic Programming Visualization | 
+            <a href="https://godbolt.org/z/4MenTYK6E" target="_blank" rel="noopener noreferrer">Compiler Explorer ↗</a> | 
+            <a href="https://godbolt.org/z/b3x3ao14K" target="_blank" rel="noopener noreferrer">Runtime comparison ↗</a>
+        </p>
 
         <div class="controls">
             <div class="control-group">
@@ -245,9 +227,9 @@
                 const box = document.createElement('div');
                 box.className = 'matrix-box';
                 box.innerHTML = `
-                    <div class="matrix-name">A${i + 1}</div>
-                    <div class="matrix-dims">${p[i]} × ${p[i + 1]}</div>
-                `;
+                <div class="matrix-name">A${i + 1}</div>
+                <div class="matrix-dims">${p[i]} × ${p[i + 1]}</div>
+            `;
                 container.appendChild(box);
             }
         }
