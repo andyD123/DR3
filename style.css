@@ -42,6 +42,37 @@ h1 {
     letter-spacing: 0.2px;
 }
 
+.title-row {
+    margin-bottom: 8px;
+}
+
+.pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--text);
+    background: rgba(0, 217, 255, 0.12);
+    border: 1px solid rgba(0, 217, 255, 0.35);
+    transition: all 0.15s ease;
+}
+
+    .pill:hover {
+        background: rgba(0, 217, 255, 0.18);
+        border-color: rgba(0, 217, 255, 0.55);
+        transform: translateY(-1px);
+    }
+
 .subtitle {
     margin: 8px 0 18px;
     color: var(--muted);
