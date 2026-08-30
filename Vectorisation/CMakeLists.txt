@@ -2,15 +2,21 @@ add_library(Vectorisation STATIC
             VecX/alloc_policy.cpp
             VecX/vec.cpp)
 
-if (MSVC)    
-    # add_compile_options(/W4 /WX)
+if(MSVC)
+    dr3_apply_isa(Vectorisation)
 else()
-    target_compile_options(Vectorisation PUBLIC "-march=native")
-
-    #  or -mavx/-mavx2/-mavx512f (and -march= options that imply them with relevant tuning settings)
-    #target_compile_options(Vectorisation PUBLIC "--std=c++17")
-    #target_compile_options(Vectorisation PUBLIC "-mavx2")
-    #target_compile_options(Vectorisation PUBLIC "-mfma")
+    # Keep historical GCC/Clang behaviour so AVX512 examples still compile
+    # on machines where -march=native includes those instructions.
+    if(DR3_ISA STREQUAL "AVX512")
+        target_compile_options(Vectorisation PUBLIC -mavx512f -mfma)
+    elseif(DR3_ISA STREQUAL "SSE2")
+        target_compile_options(Vectorisation PUBLIC -msse2)
+    else()
+        target_compile_options(Vectorisation PUBLIC -march=native)
+    endif()
 endif()
+
+target_include_directories(Vectorisation PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}")
 
             
