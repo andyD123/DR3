@@ -12,6 +12,7 @@
 #pragma once
 #include <algorithm>
 #include <iterator>
+#include <stdexcept>
 #include "vec.h"
 #include "vec_bool.h"
 
@@ -21,6 +22,18 @@ template <typename INS_VEC>
 class VecD
 {
 private:
+    static void validateShape(const Vec<INS_VEC>& value, const Vec<INS_VEC>& derivative)
+    {
+        if (value.isScalar() != derivative.isScalar()) {
+            throw std::invalid_argument(
+                "VecD: primal and derivative must both be scalar or both be vectors");
+        }
+        if (!value.isScalar() && value.size() != derivative.size()) {
+            throw std::invalid_argument(
+                "VecD: primal and derivative logical sizes must match");
+        }
+    }
+
 public:
 
 	Vec< INS_VEC> val;
@@ -68,16 +81,12 @@ public:
 
 	static VecD< INS_VEC> makeDVecOnesV(const typename InstructionTraits<INS_VEC>::FloatType&  value, int sz)
 	{
-		Vec< INS_VEC> values(value, sz);
-		std::vector< typename InstructionTraits<INS_VEC>::FloatType> ones(value.size(), InstructionTraits<INS_VEC>::oneValue);
-		return VecD(values, ones);
+		return makeDVecOnes(value, sz);
 	}
 
 	static VecD< INS_VEC> makeDVecZeroV(const typename InstructionTraits<INS_VEC>::FloatType&  value, int sz)
 	{
-		Vec< INS_VEC> values(value, sz);
-		std::vector< typename InstructionTraits<INS_VEC>::FloatType> nulls(value.size(), InstructionTraits<INS_VEC>::nullValue);
-		return VecD(values, nulls);
+		return makeDVecZero(value, sz);
 	}
 
 	explicit VecD(typename InstructionTraits<INS_VEC>::FloatType scalarVal)
@@ -102,13 +111,17 @@ public:
 
 
 	VecD(const Vec<INS_VEC>&  value, const Vec<INS_VEC>&  derivative) : val(value), deriv(derivative)
-	{}
+    {
+        validateShape(val, deriv);
+    }
 
 
 	VecD(Vec<INS_VEC>&&  value, Vec<INS_VEC>&&  derivative) :
 		val(std::forward< Vec<INS_VEC>>(value)),
 		deriv(std::forward<Vec<INS_VEC>>(derivative))
-	{}
+	{
+        validateShape(val, deriv);
+    }
 
 
 	VecD(Vec<INS_VEC>&&  value) :
@@ -116,11 +129,11 @@ public:
 	{
 		if (!val.isScalar())
 		{
-			deriv(InstructionTraits<INS_VEC>::nullVal, value.size());
+			deriv = Vec<INS_VEC>(InstructionTraits<INS_VEC>::nullValue, val.size());
 		}
 		else
 		{
-			deriv(InstructionTraits<INS_VEC>::nullVal);
+			deriv = InstructionTraits<INS_VEC>::nullValue;
 		}
 	}
 
@@ -128,6 +141,7 @@ public:
 	VecD(Vec<INS_VEC>&&  value, const Vec<INS_VEC>&  d) :
 		val(std::forward< Vec<INS_VEC>>(value)), deriv(d)
 	{
+		validateShape(val, deriv);
 	}
 
 
@@ -237,4 +251,3 @@ VecD<INS_VEC> C(const Vec<INS_VEC>& rhs)
 {
 	return VecD<INS_VEC>::makeDVecZero(rhs);
 }
-

@@ -14,6 +14,9 @@
 #include "apply_operation.h"
 #include "math_ops.h"
 
+#include <stdexcept>
+#include <string>
+
 
 //forward declarations
 
@@ -659,8 +662,19 @@ VecBool<INS_VEC> operator != (typename InstructionTraits<INS_VEC>::FloatType lhs
 }
 
 template<typename INS_VEC>
+void requireCompatibleForwardAD(
+	const VecD<INS_VEC>& lhs, const VecD<INS_VEC>& rhs, const char* operation)
+{
+	if (!lhs.isScalar() && !rhs.isScalar() && lhs.size() != rhs.size()) {
+		throw std::invalid_argument(
+			std::string("forward AD ") + operation + ": mismatched logical sizes");
+	}
+}
+
+template<typename INS_VEC>
 VecD<INS_VEC> operator + (const VecD<INS_VEC>& lhs, const VecD<INS_VEC>& rhs)
 {
+	requireCompatibleForwardAD(lhs, rhs, "operator+");
 	return VecD<INS_VEC>(lhs.value()+ rhs.value(),lhs.derivative()+rhs.derivative() );
 }
 
@@ -693,6 +707,7 @@ const VecD<INS_VEC>& operator += (VecD<INS_VEC>& lhs, typename InstructionTraits
 template<typename INS_VEC>
 VecD<INS_VEC> operator - (const VecD<INS_VEC>& lhs, const VecD<INS_VEC>& rhs)
 {
+	requireCompatibleForwardAD(lhs, rhs, "operator-");
 	return VecD<INS_VEC>(lhs.value() - rhs.value(),lhs.derivative()- rhs.derivative());
 
 }
@@ -706,7 +721,7 @@ VecD<INS_VEC> operator - (const VecD<INS_VEC>& lhs, typename InstructionTraits<I
 template<typename INS_VEC>
 VecD<INS_VEC> operator - (typename InstructionTraits<INS_VEC>::FloatType lhs, const VecD<INS_VEC>& rhs)
 {
-	return VecD<INS_VEC>(lhs -rhs.value() , rhs.derivative());
+	return VecD<INS_VEC>(lhs -rhs.value() , -rhs.derivative());
 }
 
 template<typename INS_VEC>
@@ -725,6 +740,7 @@ const VecD<INS_VEC>&  operator -= (VecD<INS_VEC>& lhs, typename InstructionTrait
 template<typename INS_VEC>
 VecD<INS_VEC>operator * (const VecD<INS_VEC>& lhs, const VecD<INS_VEC>& rhs)
 {
+	requireCompatibleForwardAD(lhs, rhs, "operator*");
 	return VecD<INS_VEC>(lhs.value()* rhs.value(), 
 		lhs.value()* rhs.derivative() + rhs.value()* lhs.derivative() 	);
 }
@@ -763,6 +779,7 @@ const VecD<INS_VEC>&   operator *= (VecD<INS_VEC>& lhs, typename InstructionTrai
 template<typename INS_VEC>
 VecD<INS_VEC>operator / (const VecD<INS_VEC>& lhs, const VecD<INS_VEC>& rhs)
 {
+	requireCompatibleForwardAD(lhs, rhs, "operator/");
 	return VecD<INS_VEC>(lhs.value()/ rhs.value(),
 		((lhs.derivative() - lhs.value()* rhs.derivative() / rhs.value()) / rhs.value() )  );
 }
@@ -888,6 +905,3 @@ VecD<INS_VEC>min(typename InstructionTraits<INS_VEC>::FloatType lhs, const VecD<
 {
 	return VecD<INS_VEC>(min(lhs.value(), rhs), select((lhs < rhs), (lhs.derivative(), 0.0)));
 }
-
-
-
