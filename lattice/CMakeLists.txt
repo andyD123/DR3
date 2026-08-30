@@ -1,19 +1,26 @@
-add_executable(lattice lattice.cpp
-  americanCrankNicholsonPricer.cpp
-  americanFinitDiffPricer.cpp
-  americanImplicitFiniteDiff.cpp
-  americanTrinomialPricer.cpp
-  americanTrinomialPricerUpAndOut.cpp
-  europeanBinomialPricer.cpp
-  euroTrinomial.cpp
-  euroTrinomialPricerWithInit.cpp
-  lattice_tools.cpp
-  )
+add_library(dr3_lattice STATIC
+    american_trinomial.cpp
+    barrier_trinomial.cpp
+    european_binomial.cpp
+    european_trinomial.cpp
+    tree_pricer_detail.cpp
+)
 
-target_link_libraries(lattice PUBLIC Vectorisation)
+target_link_libraries(dr3_lattice PUBLIC Vectorisation)
+target_include_directories(dr3_lattice PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+dr3_apply_isa(dr3_lattice)
 
-target_include_directories(lattice PUBLIC
-                           "${PROJECT_BINARY_DIR}"
-                           )
+if(DR3_BUILD_EXAMPLES)
+    add_executable(latticeExample lattice_example.cpp)
+    target_link_libraries(latticeExample PRIVATE dr3_lattice)
+endif()
 
-        
+if(DR3_BUILD_TESTS)
+    add_executable(LatticeTest tests/TestTreePricers.cpp)
+    target_link_libraries(LatticeTest PRIVATE dr3_lattice GTest::gtest GTest::gtest_main)
+    dr3_apply_isa(LatticeTest)
+    if(MSVC)
+        target_compile_options(LatticeTest PRIVATE /EHsc)
+    endif()
+    add_test(NAME LatticeTest COMMAND $<TARGET_FILE:LatticeTest>)
+endif()
