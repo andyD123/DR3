@@ -10,6 +10,10 @@
 * Apache License version 2.0 or later.
 *****************************************************************************/
 #pragma once
+#include <algorithm>
+#include <memory>
+#include <mutex>
+#include <stdexcept>
 #include <vector>
 #include <unordered_map>
 
@@ -53,7 +57,7 @@ public:
 
 	T* alloc()
 	{
-		if (m_pos < (m_sz - 1))
+		if (m_pos < m_sz)
 		{
 			T* ret = m_memPool[m_pos];
 			m_pos++;
@@ -70,9 +74,15 @@ public:
 
 	void free(T* pToFree)
 	{
-		//typically this should be next one down from top of stack
-		if ((m_pos <= 0) || (nullptr == pToFree))
+		if (nullptr == pToFree)
 		{
+			return;
+		}
+
+		//typically this should be next one down from top of stack
+		if (m_pos <= 0)
+		{
+			reportInvalidFree(pToFree);
 			return;
 		}
 
@@ -84,12 +94,8 @@ public:
 		}
 
 		//search for values of i > 0
-		int i = m_pos;
-		if (i >= static_cast<int>(m_memPool.size()))
-		{
-			i = static_cast<int>(m_memPool.size()) - 1;
-		}
-		int maxPos = i;
+		int i = static_cast<int>(m_pos) - 1;
+		const int maxPos = static_cast<int>(m_pos);
 
 		for (; i > -1; i--)
 		{
@@ -106,25 +112,35 @@ public:
 			}
 		}
 
+		reportInvalidFree(pToFree);
 	}
 
 
 	void addToPool(int numElements)
 	{
-		//m_vecSize for double 64 byte align ie cache line
-		size_t offsetAlgn = ByteAllignment;// 64;//   16;
-		std::vector<T>* pVecsMem = new std::vector<T>((long)(numElements)*m_vecSize + offsetAlgn);
-		m_allocatedVecs.push_back(pVecsMem);
+		constexpr size_t offsetAlgn = ByteAllignment;
+		// Reserve every potentially throwing container growth before publishing
+		// the new block into the pool.
+		m_allocatedVecs.reserve(m_allocatedVecs.size() + 1);
+		m_memPool.reserve(m_memPool.size() + static_cast<size_t>(numElements));
+		auto storage = std::make_unique<std::vector<T>>(
+			static_cast<size_t>(numElements) * static_cast<size_t>(m_vecSize)
+			+ ByteAllignment);
 
-		T* pstrtPt = &((*pVecsMem)[0]);
+		T* pstrtPt = storage->data();
 		while ((reinterpret_cast<long long>(pstrtPt)) % offsetAlgn) pstrtPt++;
+		std::vector<T*> newEntries;
+		newEntries.reserve(static_cast<size_t>(numElements));
 
 		for (int i = 0; i < numElements; i++)
 		{
-			m_memPool.push_back(pstrtPt);
+			newEntries.push_back(pstrtPt);
 			pstrtPt += m_vecSize;
 		}
 
+		m_allocatedVecs.push_back(storage.get());
+		m_memPool.insert(m_memPool.end(), newEntries.begin(), newEntries.end());
+		storage.release();
 		m_sz += numElements;
 
 	}
@@ -141,10 +157,24 @@ public:
 
 	const std::vector<std::vector<T>* >& getAllocVecs() const
 	{
-		m_allocatedVecs;
+		return m_allocatedVecs;
 	}
 
 private:
+	void reportInvalidFree(T* pointer) const
+	{
+		if (!dr3AllocatorDiagnosticsEnabled())
+		{
+			return;
+		}
+		const auto entry = std::find(m_memPool.begin(), m_memPool.end(), pointer);
+		if (entry != m_memPool.end())
+		{
+			throw std::logic_error("double free returned to allocator pool");
+		}
+		throw std::logic_error("pointer does not belong to allocator pool");
+	}
+
 	long m_pos;
 	long m_sz;
 	std::vector<T*>  m_memPool;
@@ -189,6 +219,11 @@ public:
 		m_pool->free(pElement);
 	}
 
+	inline long liveCount() const
+	{
+		return m_pool->pos();
+	}
+
 };
 
 
@@ -198,17 +233,45 @@ class AllAllocators
 {
 	static int lastSize_N;
 	static AllocPolicy<T>* pAllocPolicy;
-	static std::unordered_map<int, AllocPolicy<T>*>  m_map_sizeToAllocPolicy;
 
-
-	static 	void setUpPolicy(int size_N)
+	// Heap-allocated so the map outlives AllAllocatorsGuard destructors in
+	// other TUs. Static std::unordered_map members are destroyed in an
+	// unspecified order relative to those guards and caused heap-use-after-free
+	// / segfault after gtest had already reported all tests passed.
+	static std::unordered_map<int, AllocPolicy<T>*>& policies()
 	{
-		auto itr = m_map_sizeToAllocPolicy.find(size_N);
-		if (m_map_sizeToAllocPolicy.end() == itr)
+		static auto* map = new std::unordered_map<int, AllocPolicy<T>*>();
+		return *map;
+	}
+
+	// Heap allocation deliberately keeps the mutex alive through process
+	// teardown, including AllAllocatorsGuard destructors in other TUs.
+	static std::mutex& registryMutex()
+	{
+		static auto* mutex = new std::mutex();
+		return *mutex;
+	}
+
+
+	static AllocPolicy<T>* setUpPolicy(int size_N)
+	{
+		auto& map = policies();
+		auto itr = map.find(size_N);
+		if (map.end() != itr)
 		{
-			pAllocPolicy = new AllocPolicy<T>(size_N);
-			m_map_sizeToAllocPolicy[size_N] = pAllocPolicy;
+			return itr->second;
 		}
+
+		// Do not publish the cache pointer until map insertion succeeds. If
+		// allocation or insertion throws, unique_ptr releases the new policy
+		// and the registry/cache remain unchanged.
+		auto newPolicy = std::make_unique<AllocPolicy<T>>(size_N);
+		auto inserted = map.emplace(size_N, newPolicy.get());
+		if (inserted.second)
+		{
+			newPolicy.release();
+		}
+		return inserted.first->second;
 	}
 
 
@@ -217,36 +280,57 @@ public:
 
 	static 	void removePolicy(int size_N)
 	{
-		auto itr = m_map_sizeToAllocPolicy.find(size_N);
-		if (m_map_sizeToAllocPolicy.end() != itr)
+		std::lock_guard<std::mutex> lock(registryMutex());
+		auto& map = policies();
+		auto itr = map.find(size_N);
+		if (map.end() != itr)
 		{
-			auto policyPtr = m_map_sizeToAllocPolicy[size_N];
+			auto policyPtr = itr->second;
+			if (policyPtr->liveCount() != 0)
+			{
+				throw std::logic_error("cannot remove allocator pool while blocks are live");
+			}
+			if (pAllocPolicy == policyPtr)
+			{
+				pAllocPolicy = nullptr;
+				lastSize_N = -1;
+			}
 			delete policyPtr;
-			m_map_sizeToAllocPolicy.erase(itr);
+			map.erase(itr);
 		}
 		
 	}
 
 	static 	void freeAll()
 	{
-		for (auto& item : m_map_sizeToAllocPolicy)
+		std::lock_guard<std::mutex> lock(registryMutex());
+		auto& map = policies();
+		for (const auto& item : map)
+		{
+			if (item.second->liveCount() != 0)
+			{
+				throw std::logic_error("cannot clean allocator pools while blocks are live");
+			}
+		}
+		for (auto& item : map)
 		{
 			delete item.second;
 		}
-		m_map_sizeToAllocPolicy.clear();
+		map.clear();
+		pAllocPolicy = nullptr;
+		lastSize_N = -1;
 	}
 
 
 	static T* alloc(int size_N)
 	{
+		std::lock_guard<std::mutex> lock(registryMutex());
 		if (lastSize_N == size_N)
 		{
 			return  pAllocPolicy->alloc();
 		}
 
-		setUpPolicy(size_N);
-
-		pAllocPolicy = m_map_sizeToAllocPolicy[size_N];
+		pAllocPolicy = setUpPolicy(size_N);
 		lastSize_N = size_N;
 		return pAllocPolicy->alloc();
 	}
@@ -255,15 +339,24 @@ public:
 
 	static void  free(size_t size_N, T* pMem)
 	{
-		int sz_N = static_cast<int>(size_N);
-
-		if (lastSize_N == sz_N)
+		std::lock_guard<std::mutex> lock(registryMutex());
+		if (nullptr == pMem)
 		{
-			return  pAllocPolicy->free(pMem);
+			return;
+		}
+		int sz_N = static_cast<int>(size_N);
+		auto& map = policies();
+		auto policy = map.find(sz_N);
+		if (map.end() == policy)
+		{
+			if (dr3AllocatorDiagnosticsEnabled())
+			{
+				throw std::logic_error("no allocator pool exists for returned block size");
+			}
+			return;
 		}
 
-		setUpPolicy(sz_N);
-		pAllocPolicy = m_map_sizeToAllocPolicy[sz_N];
+		pAllocPolicy = policy->second;
 		lastSize_N = sz_N;
 		return pAllocPolicy->free(pMem);
 
@@ -317,12 +410,19 @@ template <typename T = double>
 class AllAllocatorsGuard
 {
 public:
-	~AllAllocatorsGuard()
+	~AllAllocatorsGuard() noexcept
 	{
-		freeAllAllocators(T());
+		// Explicit cleanup reports live blocks to callers, but static teardown
+		// must never allow that diagnostic to escape a destructor. The registry
+		// and mutex intentionally have process lifetime, so leaving a live pool
+		// for the operating system to reclaim is safe at process exit.
+		try
+		{
+			freeAllAllocators(T());
+		}
+		catch (const std::logic_error&)
+		{
+		}
 	}
 
 };
-
-
-
