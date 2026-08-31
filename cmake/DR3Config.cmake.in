@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+set(DR3_BUILT_ISA "@DR3_ISA@")
+set(DR3_RELEASE_VERSION "@DR3_RELEASE_VERSION@")
+
+include("${CMAKE_CURRENT_LIST_DIR}/DR3Targets.cmake")
+
+check_required_components(DR3)

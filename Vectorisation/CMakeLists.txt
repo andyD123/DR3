@@ -1,16 +1,33 @@
 add_library(Vectorisation STATIC
             VecX/alloc_policy.cpp
             VecX/vec.cpp)
+add_library(DR3::Vectorisation ALIAS Vectorisation)
 
-if (MSVC)    
-    # add_compile_options(/W4 /WX)
-else()
-    target_compile_options(Vectorisation PUBLIC "-march=native")
+dr3_apply_isa(Vectorisation)
 
-    #  or -mavx/-mavx2/-mavx512f (and -march= options that imply them with relevant tuning settings)
-    #target_compile_options(Vectorisation PUBLIC "--std=c++17")
-    #target_compile_options(Vectorisation PUBLIC "-mavx2")
-    #target_compile_options(Vectorisation PUBLIC "-mfma")
-endif()
+set_target_properties(Vectorisation PROPERTIES
+    POSITION_INDEPENDENT_CODE ON)
 
-            
+target_compile_features(Vectorisation PUBLIC cxx_std_17)
+
+target_include_directories(Vectorisation PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+
+install(TARGETS Vectorisation
+    EXPORT DR3Targets
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+
+install(DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/VecX"
+    "${CMAKE_CURRENT_SOURCE_DIR}/VCL"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.hpp")
+
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/VCL/LICENSE"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/DR3"
+    RENAME VCL-LICENSE)
