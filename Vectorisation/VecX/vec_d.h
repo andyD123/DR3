@@ -12,6 +12,8 @@
 #pragma once
 #include <algorithm>
 #include <iterator>
+#include <stdexcept>
+#include <utility>
 #include "vec.h"
 #include "vec_bool.h"
 
@@ -21,15 +23,39 @@ template <typename INS_VEC>
 class VecD
 {
 private:
-public:
+    Vec<INS_VEC> m_value;
+    Vec<INS_VEC> m_derivative;
 
-	Vec< INS_VEC> val;
-	Vec< INS_VEC> deriv;
+    static void validateShape(const Vec<INS_VEC>& value, const Vec<INS_VEC>& derivative)
+    {
+        if (value.isScalar() != derivative.isScalar()) {
+            throw std::invalid_argument(
+                "VecD: primal and derivative must both be scalar or both be vectors");
+        }
+        if (!value.isScalar() && value.size() != derivative.size()) {
+            throw std::invalid_argument(
+                "VecD: primal and derivative logical sizes must match");
+        }
+    }
 
 public:
 
 	VecD()
 	{}
+
+	VecD(const VecD&) = default;
+	VecD(VecD&&) noexcept = default;
+
+	VecD& operator=(const VecD& rhs)
+	{
+		if (this != &rhs)
+		{
+			replaceValueAndDerivative(rhs.m_value, rhs.m_derivative);
+		}
+		return *this;
+	}
+
+	VecD& operator=(VecD&&) noexcept = default;
 
 	static VecD< INS_VEC> makeDVecZero(const Vec<INS_VEC>&  value)
 	{
@@ -68,77 +94,85 @@ public:
 
 	static VecD< INS_VEC> makeDVecOnesV(const typename InstructionTraits<INS_VEC>::FloatType&  value, int sz)
 	{
-		Vec< INS_VEC> values(value, sz);
-		std::vector< typename InstructionTraits<INS_VEC>::FloatType> ones(value.size(), InstructionTraits<INS_VEC>::oneValue);
-		return VecD(values, ones);
+		return makeDVecOnes(value, sz);
 	}
 
 	static VecD< INS_VEC> makeDVecZeroV(const typename InstructionTraits<INS_VEC>::FloatType&  value, int sz)
 	{
-		Vec< INS_VEC> values(value, sz);
-		std::vector< typename InstructionTraits<INS_VEC>::FloatType> nulls(value.size(), InstructionTraits<INS_VEC>::nullValue);
-		return VecD(values, nulls);
+		return makeDVecZero(value, sz);
 	}
 
 	explicit VecD(typename InstructionTraits<INS_VEC>::FloatType scalarVal)
-		:val(scalarVal), deriv(InstructionTraits<INS_VEC>::nullValue)
+		:m_value(scalarVal), m_derivative(InstructionTraits<INS_VEC>::nullValue)
 	{
 
 	}
 
 
 	VecD(typename InstructionTraits<INS_VEC>::FloatType scalarVal, typename InstructionTraits<INS_VEC>::FloatType derivVal)
-		:val(scalarVal), deriv(derivVal)
+		:m_value(scalarVal), m_derivative(derivVal)
 	{
 
 	}
 
 
 
-	VecD(const std::vector< typename InstructionTraits<INS_VEC>::FloatType> & ctr) :val(ctr), deriv(InstructionTraits<INS_VEC>::nullValue, ctr.size())
+	VecD(const std::vector< typename InstructionTraits<INS_VEC>::FloatType> & ctr)
+		:m_value(ctr),
+		 m_derivative(InstructionTraits<INS_VEC>::nullValue, ctr.size())
 	{
 
 	}
 
 
-	VecD(const Vec<INS_VEC>&  value, const Vec<INS_VEC>&  derivative) : val(value), deriv(derivative)
-	{}
+	VecD(const Vec<INS_VEC>&  value, const Vec<INS_VEC>&  derivative)
+		:m_value(value), m_derivative(derivative)
+    {
+        validateShape(m_value, m_derivative);
+    }
 
 
 	VecD(Vec<INS_VEC>&&  value, Vec<INS_VEC>&&  derivative) :
-		val(std::forward< Vec<INS_VEC>>(value)),
-		deriv(std::forward<Vec<INS_VEC>>(derivative))
-	{}
+		m_value(std::forward< Vec<INS_VEC>>(value)),
+		m_derivative(std::forward<Vec<INS_VEC>>(derivative))
+	{
+        validateShape(m_value, m_derivative);
+    }
 
 
 	VecD(Vec<INS_VEC>&&  value) :
-		val(std::forward< Vec<INS_VEC>>(value))
+		m_value(std::forward< Vec<INS_VEC>>(value))
 	{
-		if (!val.isScalar())
+		if (!m_value.isScalar())
 		{
-			deriv(InstructionTraits<INS_VEC>::nullVal, value.size());
+			m_derivative = Vec<INS_VEC>(
+				InstructionTraits<INS_VEC>::nullValue, m_value.size());
 		}
 		else
 		{
-			deriv(InstructionTraits<INS_VEC>::nullVal);
+			m_derivative = InstructionTraits<INS_VEC>::nullValue;
 		}
 	}
 
 
 	VecD(Vec<INS_VEC>&&  value, const Vec<INS_VEC>&  d) :
-		val(std::forward< Vec<INS_VEC>>(value)), deriv(d)
+		m_value(std::forward< Vec<INS_VEC>>(value)), m_derivative(d)
 	{
+		validateShape(m_value, m_derivative);
 	}
 
 
 	//explicit
 	VecD(const Vec<INS_VEC>& value) :
-		val(value), deriv(value.isScalar()? InstructionTraits<INS_VEC>::nullValue : Vec< INS_VEC>(InstructionTraits<INS_VEC>::nullValue,value.size()  ) )
+		m_value(value),
+		m_derivative(value.isScalar()
+			? Vec<INS_VEC>(InstructionTraits<INS_VEC>::nullValue)
+			: Vec<INS_VEC>(InstructionTraits<INS_VEC>::nullValue, value.size()))
 	{
 	}
 	
 
-	explicit VecD(size_t sz) :val(sz), deriv(sz)
+	explicit VecD(size_t sz) :m_value(sz), m_derivative(sz)
 	{
 
 	}
@@ -146,79 +180,92 @@ public:
 
 	typename InstructionTraits<INS_VEC>::FloatType& operator[](size_t pos)
 	{
-		return val[pos];
+		return m_value[pos];
 	}
 
 	typename InstructionTraits<INS_VEC>::FloatType operator[](size_t pos) const
 	{
-		return val[pos];
+		return m_value[pos];
 	}
 
 
 	inline typename InstructionTraits<INS_VEC>::FloatType* start() const
 	{
-		return val.start();
+		return m_value.start();
 	}
 
 
 	inline size_t size() const
 	{
-		return val.size();
+		return m_value.size();
 	}
 
 
 
 	inline int  paddedSize() const
 	{
-		return static_cast<int>(val.paddedSize());
+		return static_cast<int>(m_value.paddedSize());
 	}
 
 	inline bool isScalar() const
 	{
-		return val.isScalar();
+		return m_value.isScalar();
 	}
 
 	inline typename InstructionTraits<INS_VEC>::FloatType getScalarValue() const
 	{
-		return val.getScalarValue();
+		return m_value.getScalarValue();
 	}
 
 	inline void setScalarValue(typename InstructionTraits<INS_VEC>::FloatType newVal)
 	{
-		val.setScalarValue(newVal);
+		m_value.setScalarValue(newVal);
 	}
 
 
 	inline typename InstructionTraits<INS_VEC>::FloatType getScalarDeriv() const
 	{
-		return deriv.getScalarValue();
+		return m_derivative.getScalarValue();
 	}
 
 	inline void setScalarDeriv(typename InstructionTraits<INS_VEC>::FloatType newVal)
 	{
-		deriv.setScalarValue(newVal);
+		m_derivative.setScalarValue(newVal);
 	}
 
 
 
-	inline const Vec< INS_VEC>& value() const
+	// Shape-bearing storage is read-only to callers. Use the validated
+	// replacement methods below when either side must change.
+	inline const Vec<INS_VEC>& value() const
 	{
-		return val;
+		return m_value;
 	}
 
-	inline const Vec< INS_VEC>& derivative() const
+	inline const Vec<INS_VEC>& derivative() const
 	{
-		return deriv;
+		return m_derivative;
 	}
 
-	inline  Vec< INS_VEC>& value()
+	void replaceValue(Vec<INS_VEC> value)
 	{
-		return val;
+		validateShape(value, m_derivative);
+		m_value = std::move(value);
 	}
 
-	inline  Vec< INS_VEC>& derivative()
+	void replaceDerivative(Vec<INS_VEC> derivative)
 	{
-		return deriv;
+		validateShape(m_value, derivative);
+		m_derivative = std::move(derivative);
+	}
+
+	void replaceValueAndDerivative(
+		Vec<INS_VEC> value, Vec<INS_VEC> derivative)
+	{
+		// A paired replacement may change the logical shape atomically.
+		validateShape(value, derivative);
+		m_value = std::move(value);
+		m_derivative = std::move(derivative);
 	}
 
 
@@ -237,4 +284,3 @@ VecD<INS_VEC> C(const Vec<INS_VEC>& rhs)
 {
 	return VecD<INS_VEC>::makeDVecZero(rhs);
 }
-
