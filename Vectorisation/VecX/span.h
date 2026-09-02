@@ -77,7 +77,7 @@ struct Span
 
 	bool empty() const
 	{
-		return m_extent = 0;
+		return m_extent == 0;
 	}
 
 	T* start() const
@@ -219,7 +219,7 @@ struct StridedSpan
 
 	bool empty() const
 	{
-		return m_extent = 0;
+		return m_extent == 0;
 	}
 
 	T* start() const
