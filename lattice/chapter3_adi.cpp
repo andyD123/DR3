@@ -99,6 +99,74 @@ Chapter3AdiResult measureAdiResult(
 }
 } // namespace
 
+Chapter3AdiTransform chapter3AdiTransform(
+    double sigma1,
+    double sigma2,
+    double rho,
+    double nu1,
+    double nu2,
+    double rate)
+{
+    if (sigma1 <= 0.0 || sigma2 <= 0.0)
+        throw std::invalid_argument("Chapter 3 ADI transform requires positive volatilities");
+    if (rho <= -1.0 || rho >= 1.0)
+        throw std::invalid_argument("Chapter 3 ADI transform requires -1 < rho < 1");
+
+    // Equation (3.64): symmetric covariance matrix in log-asset coordinates.
+    const double a = sigma1 * sigma1;
+    const double b = rho * sigma1 * sigma2;
+    const double d = sigma2 * sigma2;
+
+    const double mean = 0.5 * (a + d);
+    const double radius = std::sqrt(0.25 * (a - d) * (a - d) + b * b);
+    const double lambda1 = mean + radius;
+    const double lambda2 = mean - radius;
+
+    if (lambda2 <= 0.0)
+        throw std::invalid_argument("Chapter 3 ADI covariance matrix is not positive definite");
+
+    // Normalised eigenvector for lambda1; the orthogonal complement is lambda2.
+    double e11 = b;
+    double e12 = lambda1 - a;
+    if (std::abs(e11) + std::abs(e12) < 1.0e-15)
+    {
+        e11 = 1.0;
+        e12 = 0.0;
+    }
+    const double norm = std::sqrt(e11 * e11 + e12 * e12);
+    e11 /= norm;
+    e12 /= norm;
+
+    const double e21 = -e12;
+    const double e22 = e11;
+
+    // Equation (3.65): drift in the uncorrelated coordinates.
+    const double alpha1 = e11 * nu1 + e12 * nu2;
+    const double alpha2 = e21 * nu1 + e22 * nu2;
+
+    // Equations (3.67)-(3.70).
+    const double a1 = -alpha1 / lambda1;
+    const double a2 = -alpha2 / lambda2;
+    const double a3 = alpha1 * alpha1 / (2.0 * lambda1)
+        + alpha2 * alpha2 / (2.0 * lambda2)
+        + rate;
+    const double y2Scale = std::sqrt(lambda1 / lambda2);
+
+    // E * covariance * E^T should be diagonal.
+    const double rotatedOffDiagonal =
+        e11 * (a * e21 + b * e22)
+        + e12 * (b * e21 + d * e22);
+
+    return {
+        lambda1, lambda2,
+        e11, e12, e21, e22,
+        alpha1, alpha2,
+        a1, a2, a3,
+        y2Scale,
+        rotatedOffDiagonal
+    };
+}
+
 Chapter3AdiResult chapter3AdiReference(
     int gridPoints,
     int timeSteps,
