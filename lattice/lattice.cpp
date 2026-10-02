@@ -230,15 +230,14 @@ void doAmericanTrinomialPricerUpAndOut()
     double rate = 0.06;
     double T = 1;
     int N = 1000;// 500;
-    double H = 3.;
+    double H = 130.;
     double rebate = 0.0;
     {
         TimerGuard timer(time);
 		res = americanTrinomialPricerUpAndOut(S, K, vol, rate, T, H, rebate, N);
 	}
-    auto expected = blackScholes(S, K, T, rate, vol);
-    std::cout << std::setprecision(12) << "americanTrinomialPricerUpAndOut price " << res << " expected = " <<   expected.getScalarValue()  ;
-    std::cout << "steps = "<< N  <<" takes secs " << time << "\n";
+    std::cout << std::setprecision(12) << "americanTrinomialPricerUpAndOut (put) price " << res;
+    std::cout << " H = " << H << " steps = " << N << " takes secs " << time << "\n";
 }
 
 
