@@ -1270,3 +1270,96 @@ TEST(TestSpan, basic_2D_SPAN)
 }
 
 
+
+
+TEST(TestSpan, MDSpan_rectangular_row_major_views)
+{
+	using MAT = Layout2D<Numeric, 8, 0>;
+	constexpr size_t rows = 3;
+	constexpr size_t cols = 5;
+	constexpr size_t padded_cols = 8;
+
+	std::vector<Numeric> storage(rows * padded_cols, asNumber(-1.0));
+	MDSpan<Numeric, MAT> mat(storage.data(), rows, cols);
+
+	for (size_t r = 0; r < rows; ++r)
+		for (size_t c = 0; c < cols; ++c)
+			mat(r, c) = asNumber(100.0 * r + c);
+
+	EXPECT_EQ(mat.rows(), rows);
+	EXPECT_EQ(mat.cols(), cols);
+	EXPECT_EQ(mat.rowStride(), padded_cols);
+	EXPECT_EQ(mat.columnStride(), 1u);
+	EXPECT_EQ(mat.storageSize(), rows * padded_cols);
+
+	auto row = getRowSpan<VecXX::INS>(mat, 1);
+	EXPECT_EQ(row.size(), cols);
+	for (size_t c = 0; c < cols; ++c)
+		EXPECT_NUMERIC_EQ(row[c], asNumber(100.0 + c));
+
+	auto col = getColumnSpan<VecXX::INS>(mat, 2);
+	EXPECT_EQ(col.logicalSize(), rows);
+	EXPECT_EQ(col.stride(), padded_cols);
+	for (size_t r = 0; r < rows; ++r)
+		EXPECT_NUMERIC_EQ(col[r], asNumber(100.0 * r + 2.0));
+
+	auto legacy_row = getSpan<VecXX::INS>(mat, 1);
+	auto legacy_col = getStridedSpan<VecXX::INS>(mat, 0, 2);
+	EXPECT_EQ(legacy_row.size(), cols);
+	EXPECT_EQ(legacy_col.logicalSize(), rows);
+}
+
+
+TEST(TestSpan, MDSpan_rectangular_column_major_views)
+{
+	using MAT = Layout2D<Numeric, 8, 1>;
+	constexpr size_t rows = 3;
+	constexpr size_t cols = 5;
+	constexpr size_t padded_rows = 8;
+
+	std::vector<Numeric> storage(cols * padded_rows, asNumber(-1.0));
+	MDSpan<Numeric, MAT> mat(storage.data(), rows, cols);
+
+	for (size_t r = 0; r < rows; ++r)
+		for (size_t c = 0; c < cols; ++c)
+			mat(r, c) = asNumber(100.0 * r + c);
+
+	EXPECT_EQ(mat.rows(), rows);
+	EXPECT_EQ(mat.cols(), cols);
+	EXPECT_EQ(mat.rowStride(), 1u);
+	EXPECT_EQ(mat.columnStride(), padded_rows);
+	EXPECT_EQ(mat.storageSize(), cols * padded_rows);
+
+	auto row = getRowSpan<VecXX::INS>(mat, 1);
+	EXPECT_EQ(row.logicalSize(), cols);
+	EXPECT_EQ(row.stride(), padded_rows);
+	for (size_t c = 0; c < cols; ++c)
+		EXPECT_NUMERIC_EQ(row[c], asNumber(100.0 + c));
+
+	auto col = getColumnSpan<VecXX::INS>(mat, 2);
+	EXPECT_EQ(col.size(), rows);
+	for (size_t r = 0; r < rows; ++r)
+		EXPECT_NUMERIC_EQ(col[r], asNumber(100.0 * r + 2.0));
+
+	auto legacy_col = getSpan<VecXX::INS>(mat, 2);
+	auto legacy_row = getStridedSpan<VecXX::INS>(mat, 0, 1);
+	EXPECT_EQ(legacy_col.size(), rows);
+	EXPECT_EQ(legacy_row.logicalSize(), cols);
+}
+
+
+TEST(TestSpan, StridedSpan_logical_size)
+{
+	std::vector<Numeric> values(64, asNumber(0.0));
+	StrdSpanXX span(values.data(), 1 + 4 * 8, 8);
+
+	EXPECT_EQ(span.size(), 33u);
+	EXPECT_EQ(span.physicalExtent(), 33u);
+	EXPECT_EQ(span.logicalSize(), 5u);
+
+	auto first3 = span.first<3>();
+	auto last2 = span.last<2>();
+	EXPECT_EQ(first3.logicalSize(), 3u);
+	EXPECT_EQ(last2.logicalSize(), 2u);
+	EXPECT_EQ(last2.start(), values.data() + 3 * 8);
+}
