@@ -17,6 +17,7 @@ struct Chapter3RegressionSummary
     double adi_exact_center = 0.0;
     double adi_reference_max_error = 0.0;
     double adi_dr3_max_error = 0.0;
+    double adi_transform_off_diagonal = 0.0;
 };
 
 Chapter3RegressionSummary runChapter3Regression(std::ostream& out);
