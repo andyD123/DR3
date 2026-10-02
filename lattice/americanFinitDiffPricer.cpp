@@ -2,10 +2,13 @@
 #include "../Vectorisation/VecX/dr3.h"
 #include "utils.h"
 #include "pricers.h"
+#include <stdexcept>
 
 
 double americanFiniteDiffPricer(double S, double K, double sig, double r, double T, int N)
 {
+	if (N <= 0 || (N % 2) != 0)
+		throw std::invalid_argument("americanFiniteDiffPricer requires a positive even N");
 
 	//dividend yield
 	double y = 0.0;
@@ -71,20 +74,20 @@ double americanFiniteDiffPricer(double S, double K, double sig, double r, double
 	for (; k < N; k += 2)
 	{
 
-		transform(odd_slice, even_slice, trinomialRollBack, sampler, 0, J);
+		transform(odd_slice, even_slice, trinomialRollBack, sampler, 0, J + 1);
 
 		//apply boundary condition
-		even_slice[0] = even_slice[1] + terminalAssetPrices[1] - terminalAssetPrices[0];
-		even_slice[J] = even_slice[J - 1];
+		even_slice[0] = even_slice[1];
+		even_slice[J] = even_slice[J - 1] + terminalAssetPrices[J] - terminalAssetPrices[J - 1];
 		// transform to get early excercise for american exercise , iderntity sampler just passes values straight through
-		transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, 0, J);
+		transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, 0, J + 1);
 
 
-		transform(even_slice, odd_slice, trinomialRollBack, sampler, 0, J);
+		transform(even_slice, odd_slice, trinomialRollBack, sampler, 0, J + 1);
 		//boundary condition
-		odd_slice[0] = odd_slice[1] + terminalAssetPrices[1] - terminalAssetPrices[0];
-		odd_slice[J] = odd_slice[J - 1];
-		transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, 0, J);
+		odd_slice[0] = odd_slice[1];
+		odd_slice[J] = odd_slice[J - 1] + terminalAssetPrices[J] - terminalAssetPrices[J - 1];
+		transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, 0, J + 1);
 
 	}
 
