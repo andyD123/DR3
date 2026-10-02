@@ -358,7 +358,7 @@ struct Layout2D
 	}
 
 
-	 inline size_t getArrayPos(size_t  row, size_t col)
+	 inline size_t getArrayPos(size_t row, size_t col) const
 	{
 		 if constexpr  (aligned_extent == 0)
 		{
