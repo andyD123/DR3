@@ -576,11 +576,11 @@ void doMatrix()
 		}
 
 
-		Span< VecXX::INS>  spn = getSpan<VecXX::INS>(mat, 0);
+		Span< VecXX::INS>  spn = getRowSpan<VecXX::INS>(mat, 0);
 
 		std::vector<FLOAT> vdbg = spn;
 
-		Span< VecXX::INS>  spn2 = getSpan<VecXX::INS>(mat, 1);
+		Span< VecXX::INS>  spn2 = getRowSpan<VecXX::INS>(mat, 1);
 
 		std::vector<FLOAT> vdbg2 = spn2;
 
@@ -589,11 +589,9 @@ void doMatrix()
 
 		FLOAT sum1 = 0;
 
-		const size_t extent = 1;
-
 		for (size_t pos = 0; pos < 10; pos++)
 		{
-			auto  strd_spn = getStridedSpan<VecXX::INS>(mat, extent, pos);
+			auto strd_spn = getColumnSpan<VecXX::INS>(mat, pos);
 
 			std::vector<FLOAT> vdbg_strd = strd_spn;
 

@@ -1,11 +1,14 @@
 #include "../Vectorisation/VecX/dr3.h"
 #include "utils.h"
 #include "pricers.h"
+#include <stdexcept>
 
 
-//still broken ???
+// Crank-Nicolson American option example.
 double americanCrankNicholsonPricer(double S, double K, double sig, double r, double T, int N)
 {
+	if (N <= 0 || (N % 2) != 0)
+		throw std::invalid_argument("americanCrankNicholsonPricer requires a positive even N");
 
 	//dividend yield
 	double y = 0.;// 0.03;// 0.0;// 0.03;// 0.03; //div yield
@@ -44,8 +47,8 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 
 
 	//derivative boundary condition
-	double  lambda_L = -1. * (terminalAssetPrices[1] - terminalAssetPrices[0]);
-	double  lambda_U = 0.0;
+	double  lambda_L = 0.0;
+	double  lambda_U = terminalAssetPrices[2 * N] - terminalAssetPrices[2 * N - 1];
 
 	auto odd_slice = excerciseValue;
 
@@ -59,7 +62,7 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 	VecXX pmp(1.0, J + 1);
 	VecXX pp(1.0, J + 1);
 
-	for (; k <= N; k += 2)
+	for (; k < N; k += 2)
 	{
 
 		// SOLVE IMPLICIT TRIDIAGONAL  IN LINE //SUB BOUNDARY CONDITION AT J = -n INTO  J = -n+1
@@ -80,21 +83,18 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 
 
 		// back substitution
-		for (int j = J - 1; j >= 0; j--)
+		for (int j = J - 2; j != 0; j--)
 		{
 			even_slice[j] = (pp[j] - pu * even_slice[j + 1]) / pmp[j];
 		}
 
 
-		even_slice[0] = odd_slice[0];
-		//vdbg = even_slice;
-/*
+		even_slice[0] = even_slice[1] - lambda_L;
 		//american condition
-		for (int j = 0; j < (J+1); j++)
+		for (int j = 0; j < (J + 1); j++)
 		{
 			even_slice[j] = std::max(even_slice[j], excerciseValue[j]);
 		}
-*/
 
 //	vdbg = even_slice;
 
@@ -122,19 +122,17 @@ double americanCrankNicholsonPricer(double S, double K, double sig, double r, do
 
 
 		// back substitution
-		for (int j = J - 1; j >= 0; j--)
+		for (int j = J - 2; j != 0; j--)
 		{
 			odd_slice[j] = (pp[j] - pu * odd_slice[j + 1]) / pmp[j];
 		}
 
-		odd_slice[0] = even_slice[0];
-		/*
+		odd_slice[0] = odd_slice[1] - lambda_L;
 		//american condition
 		for (int j = 0; j < (J + 1); j++)
 		{
 			odd_slice[j] = std::max(odd_slice[j], excerciseValue[j]);
 		}
-			*/
 
 			//	vdbg = odd_slice;
 			//	vdbg = even_slice;

@@ -2,11 +2,14 @@
 
 #include "utils.h"
 #include "pricers.h"
+#include <stdexcept>
 
 
 
 double europeanTrinomialPricer(double S, double K, double sig, double r, double T, int N)
 {
+	if (N <= 0 || (N % 2) != 0)
+		throw std::invalid_argument("europeanTrinomialPricer requires a positive even N");
 
 	double y = 0.0;// 0.03; //div yield
 
@@ -31,9 +34,9 @@ double europeanTrinomialPricer(double S, double K, double sig, double r, double 
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
 
-		auto X1 = sampler.X_Minus_1.value;
-		auto X0 = sampler.X_0.value;
-		auto X_1 = sampler.X_1.value;
+		const auto& X1 = sampler.X_1.value;
+		const auto& X0 = sampler.X_0.value;
+		const auto& X_1 = sampler.X_Minus_1.value;
 
 		return disc * (X1 * pu + X0 * pm + X_1 * pd);
 	};
@@ -53,7 +56,7 @@ double europeanTrinomialPricer(double S, double K, double sig, double r, double 
 	auto odd_slice = transform(payOffFunc, terminalAssetPrices);
 	auto even_slice = odd_slice;
 
-	int j = 2 * N + 1 - 1;
+	int j = 2 * N + 1;
 	int i = 0;
 	for (; i < N; i += 2)
 	{
@@ -69,6 +72,8 @@ double europeanTrinomialPricer(double S, double K, double sig, double r, double 
 
 double europeanTrinomialPricer1(double S, double K, double sig, double r, double T, int N)
 {
+	if (N <= 0 || (N % 2) != 0)
+		throw std::invalid_argument("europeanTrinomialPricer1 requires a positive even N");
 
 	double y = 0.0;// 0.03; //div yield
 
@@ -127,7 +132,7 @@ double europeanTrinomialPricer1(double S, double K, double sig, double r, double
 
 	auto even_slice = odd_slice;
 
-	int j = 2 * N + 1 - 1;
+	int j = 2 * N + 1;
 	int i = 0;
 	for (; i < N; i += 2)
 	{

@@ -2,10 +2,13 @@
 
 #include "utils.h"
 #include "pricers.h"
+#include <stdexcept>
 
 
 double euroTrinomialPricerWithInit(double S, double K, double sig, double r, double T, int N)
 {
+	if (N < 2 || (N % 2) != 0)
+		throw std::invalid_argument("euroTrinomialPricerWithInit requires an even N >= 2");
 
 	double y = 0.0;// 0.03; //div yield
 	VecXX terminalAssetPrices(1.0, 2 * N + 1);
@@ -86,7 +89,7 @@ double euroTrinomialPricerWithInit(double S, double K, double sig, double r, dou
 
 	};
 
-	int j = 2 * N + 1 - 1;
+	int j = 2 * N + 1;
 	int i = 0;
 
 	//use BS transform and normal for first pair of slices

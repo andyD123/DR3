@@ -7,6 +7,8 @@ add_executable(lattice lattice.cpp
   europeanBinomialPricer.cpp
   euroTrinomial.cpp
   euroTrinomialPricerWithInit.cpp
+  chapter3_examples.cpp
+  chapter3_adi.cpp
   lattice_tools.cpp
   )
 

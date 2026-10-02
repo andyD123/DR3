@@ -1,10 +1,13 @@
 #include "../Vectorisation/VecX/dr3.h"
 #include "utils.h"
 #include "pricers.h"
+#include <stdexcept>
 
 
 double europeanBinomialPricer(double S, double K, double sig, double r, double T, int N)
 {
+	if (N <= 0 || (N % 2) != 0)
+		throw std::invalid_argument("europeanBinomialPricer requires a positive even N");
 
 	VecXX terminalAssetPrices(1.0, N + 1);
 
