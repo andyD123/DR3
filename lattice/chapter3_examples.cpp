@@ -320,8 +320,9 @@ Chapter3RegressionSummary runChapter3Regression(std::ostream& out)
     const bool p4 = nearPrinted(r.implicit_american_put, 4.9221);
     const bool p5 = nearPrinted(r.crank_nicolson_american_put, 5.4184);
 
+    // The DR3 realization may be instantiated with either float or double lanes.
     const bool adiAgreement =
-        std::abs(r.adi_reference_center - r.adi_dr3_center) <= 1.0e-12;
+        std::abs(r.adi_reference_center - r.adi_dr3_center) <= 2.0e-6;
     const bool adiAccuracy = r.adi_reference_max_error <= 3.0e-4
         && r.adi_dr3_max_error <= 3.0e-4;
 
