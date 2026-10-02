@@ -305,6 +305,12 @@ Chapter3RegressionSummary runChapter3Regression(std::ostream& out)
     r.implicit_american_put = chapter3ImplicitAmericanPut();
     r.crank_nicolson_american_put = chapter3CrankNicolsonAmericanPut();
 
+    // Section 3.10 first diagonalises the correlated two-asset diffusion.
+    // These parameters are an audit case, not a numerical example quoted by the book.
+    const double nu1 = 0.06 - 0.03 - 0.5 * 0.2 * 0.2;
+    const double nu2 = 0.06 - 0.04 - 0.5 * 0.3 * 0.3;
+    const auto adiTransform = chapter3AdiTransform(0.2, 0.3, 0.5, nu1, nu2, 0.06);
+
     const auto adiReference = chapter3AdiReference();
     const auto adiDr3 = chapter3AdiDr3();
 
@@ -313,6 +319,7 @@ Chapter3RegressionSummary runChapter3Regression(std::ostream& out)
     r.adi_exact_center = adiReference.exact_center;
     r.adi_reference_max_error = adiReference.max_abs_error;
     r.adi_dr3_max_error = adiDr3.max_abs_error;
+    r.adi_transform_off_diagonal = adiTransform.rotated_off_diagonal;
 
     const bool p1 = nearPrinted(r.trinomial_european_call, 8.4253);
     const bool p2 = nearPrinted(r.explicit_european_call, 8.5455);
@@ -325,6 +332,9 @@ Chapter3RegressionSummary runChapter3Regression(std::ostream& out)
         std::abs(r.adi_reference_center - r.adi_dr3_center) <= 2.0e-6;
     const bool adiAccuracy = r.adi_reference_max_error <= 3.0e-4
         && r.adi_dr3_max_error <= 3.0e-4;
+    const bool adiTransformPass =
+        adiTransform.lambda1 > 0.0 && adiTransform.lambda2 > 0.0
+        && std::abs(r.adi_transform_off_diagonal) <= 1.0e-14;
 
     out << "\nChapter 3 source-fidelity regressions\n";
     printCheck(out, "trinomial European call", r.trinomial_european_call, 8.4253, p1);
@@ -333,7 +343,12 @@ Chapter3RegressionSummary runChapter3Regression(std::ostream& out)
     printCheck(out, "implicit FD American put", r.implicit_american_put, 4.9221, p4);
     printCheck(out, "Crank-Nicolson American put", r.crank_nicolson_american_put, 5.4184, p5);
 
-    out << "  ADI equation (3.71) manufactured mode\n"
+    out << "  ADI equations (3.64)-(3.70) covariance transform\n"
+        << "    lambda1 = " << std::setprecision(12) << adiTransform.lambda1 << "\n"
+        << "    lambda2 = " << adiTransform.lambda2 << "\n"
+        << "    rotated off-diagonal = " << r.adi_transform_off_diagonal << "\n"
+        << "    transform audit " << (adiTransformPass ? "PASS" : "FAIL") << "\n"
+        << "  ADI equation (3.71) manufactured mode\n"
         << "    scalar center = " << std::setprecision(12) << r.adi_reference_center << "\n"
         << "    MDSpan center = " << r.adi_dr3_center << "\n"
         << "    exact center  = " << r.adi_exact_center << "\n"
@@ -342,7 +357,8 @@ Chapter3RegressionSummary runChapter3Regression(std::ostream& out)
         << "    reference/MDSpan agreement " << (adiAgreement ? "PASS" : "FAIL") << "\n"
         << "    manufactured-solution error " << (adiAccuracy ? "PASS" : "FAIL") << "\n";
 
-    r.passed = p1 && p2 && p3 && p4 && p5 && adiAgreement && adiAccuracy;
+    r.passed = p1 && p2 && p3 && p4 && p5
+        && adiTransformPass && adiAgreement && adiAccuracy;
     out << "Chapter 3 regressions: " << (r.passed ? "PASS" : "FAIL") << "\n\n";
     return r;
 }
