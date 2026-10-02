@@ -263,10 +263,9 @@ Chapter3AdiResult chapter3AdiDr3(
                 next(j, k) = static_cast<Scalar>(solution[k - 1]);
         }
 
-        uStorage.swap(nextStorage);
-        // Swapping storage invalidates MDSpan's data pointers, so rebuild the views.
-        u = MDSpan<Scalar, Layout>(uStorage.data(), n, n);
-        next = MDSpan<Scalar, Layout>(nextStorage.data(), n, n);
+        // Keep the MDSpan views stable. The source-fidelity example favours
+        // auditability over avoiding this copy; the optimized realization can replace it.
+        std::copy(nextStorage.begin(), nextStorage.end(), uStorage.begin());
     }
 
     return measureAdiResult(
