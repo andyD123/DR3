@@ -286,49 +286,66 @@ Chapter3AdiResult chapter3AdiDr3(
     std::vector<double> rhs(n - 2);
     std::vector<double> solution;
 
+    // The finite-difference expression is deliberately kept as a small lambda,
+    // mirroring the Chapter 3 pseudo-code.  The line views decide whether the
+    // accesses are contiguous Span or StridedSpan operations.
+    auto secondDifference = [invDy2](auto plus, auto centre, auto minus)
+    {
+        return (plus - 2.0 * centre + minus) * invDy2;
+    };
+
     for (int step = 0; step < timeSteps; ++step)
     {
         std::fill(halfStorage.begin(), halfStorage.end(), Scalar(0));
 
-        // Rows/columns are deliberately accessed through MDSpan here. This is the
-        // Chapter 3 two-dimensional layout realization; later SIMD work can replace
-        // the scalar line solves without changing the numerical contract.
+        // Equation (3.72): y1 implicit, y2 explicit.  In row-major storage the
+        // y1 lines are columns, hence StridedSpan views.
         for (int k = 1; k < n - 1; ++k)
         {
+            auto minus = getColumnSpan<VecXX::INS>(u, k - 1);
+            auto centre = getColumnSpan<VecXX::INS>(u, k);
+            auto plus = getColumnSpan<VecXX::INS>(u, k + 1);
+            auto out = getColumnSpan<VecXX::INS>(half, k);
+
             for (int j = 1; j < n - 1; ++j)
             {
-                const double d2y2 =
-                    (static_cast<double>(u(j, k + 1))
-                     - 2.0 * static_cast<double>(u(j, k))
-                     + static_cast<double>(u(j, k - 1))) * invDy2;
                 rhs[j - 1] =
-                    2.0 / dt * static_cast<double>(u(j, k))
-                    + 0.5 * lambda1 * d2y2;
+                    2.0 / dt * static_cast<double>(centre[j])
+                    + 0.5 * lambda1 * secondDifference(
+                        static_cast<double>(plus[j]),
+                        static_cast<double>(centre[j]),
+                        static_cast<double>(minus[j]));
             }
 
             solveConstantTridiagonal(a, b, c, rhs, solution);
             for (int j = 1; j < n - 1; ++j)
-                half(j, k) = static_cast<Scalar>(solution[j - 1]);
+                out[j] = static_cast<Scalar>(solution[j - 1]);
         }
 
         std::fill(nextStorage.begin(), nextStorage.end(), Scalar(0));
 
+        // Equation (3.77): y2 implicit, y1 explicit.  These lines are rows and
+        // therefore ordinary contiguous Span views in the same layout.
         for (int j = 1; j < n - 1; ++j)
         {
+            auto minus = getRowSpan<VecXX::INS>(half, j - 1);
+            auto centre = getRowSpan<VecXX::INS>(half, j);
+            auto plus = getRowSpan<VecXX::INS>(half, j + 1);
+            auto out = getRowSpan<VecXX::INS>(next, j);
+
             for (int k = 1; k < n - 1; ++k)
             {
-                const double d2y1 =
-                    (static_cast<double>(half(j + 1, k))
-                     - 2.0 * static_cast<double>(half(j, k))
-                     + static_cast<double>(half(j - 1, k))) * invDy2;
                 rhs[k - 1] =
-                    2.0 / dt * static_cast<double>(half(j, k))
-                    + 0.5 * lambda1 * d2y1;
+                    2.0 / dt * static_cast<double>(centre[k])
+                    + 0.5 * lambda1 * secondDifference(
+                        static_cast<double>(plus[k]),
+                        static_cast<double>(centre[k]),
+                        static_cast<double>(minus[k]));
             }
 
             solveConstantTridiagonal(a, b, c, rhs, solution);
             for (int k = 1; k < n - 1; ++k)
-                next(j, k) = static_cast<Scalar>(solution[k - 1]);
+                out[k] = static_cast<Scalar>(solution[k - 1]);
         }
 
         // Keep the MDSpan views stable. The source-fidelity example favours
