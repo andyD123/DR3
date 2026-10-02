@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 
-//still broken ???
+// Crank-Nicolson American option example.
 double americanCrankNicholsonPricer(double S, double K, double sig, double r, double T, int N)
 {
 	if (N <= 0 || (N % 2) != 0)
