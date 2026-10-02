@@ -1,6 +1,10 @@
 #pragma once
 #include "instruction_traits.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <vector>
+
 // Span
 //  pretty much like std span with a few minor tweaks
 // 
