@@ -1,11 +1,14 @@
 #include "../Vectorisation/VecX/dr3.h"
 #include "utils.h"
 #include "pricers.h"
+#include <stdexcept>
 
 
 
 double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r, double T, double H, double rebate, int N)
 {
+	if (N <= 0 || (N % 2) != 0)
+		throw std::invalid_argument("americanTrinomialPricerUpAndOut requires a positive even N");
 
 	double y = 0.0;// 0.03; //div yield
 
@@ -31,9 +34,9 @@ double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r,
 	auto trinomialRollBack = [=](TrinomialSampler<VecXX::INS>& sampler)
 	{
 
-		auto X1 = sampler.X_Minus_1.value;
-		auto X0 = sampler.X_0.value;
-		auto X_1 = sampler.X_1.value;
+		const auto& X1 = sampler.X_1.value;
+		const auto& X0 = sampler.X_0.value;
+		const auto& X_1 = sampler.X_Minus_1.value;
 
 		return disc * (X1 * pu + X0 * pm + X_1 * pd);
 	};
@@ -71,26 +74,26 @@ double americanTrinomialPricerUpAndOut(double S, double K, double sig, double r,
 		return select(stockPrice < H, optPrice, rebate);
 	};
 
+	// The barrier is part of the terminal condition as well as every rollback slice.
+	transform(odd_slice, terminalAssetPrices, odd_slice, applyBarrier, identity_sampler, 0, 2 * N + 1);
 
 	auto even_slice = odd_slice;
 
-	int j = 2 * N + 1 - 1;
+	int j = 2 * N + 1;
 	int i = 0;
 	for (; i < N; i += 2)
 	{
 		transform(odd_slice, even_slice, trinomialRollBack, sampler, i, j);
-		// transform to get early excercise for american bit , iderntity sampler just passes values straight through
-	//	transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, i, j);
-		transform(even_slice, terminalAssetPrices, even_slice, applyBarrier, identity_sampler, i, j);
+		transform(even_slice, excerciseValue, even_slice, applyEarlyExcercise, identity_sampler, i + 1, j - 1);
+		transform(even_slice, terminalAssetPrices, even_slice, applyBarrier, identity_sampler, i + 1, j - 1);
 
 		transform(even_slice, odd_slice, trinomialRollBack, sampler, i + 1, j - 1);
-		//	transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, i + 1, j - 1);
-		transform(odd_slice, terminalAssetPrices, odd_slice, applyBarrier, identity_sampler, i + 1, j - 1);
+		transform(odd_slice, excerciseValue, odd_slice, applyEarlyExcercise, identity_sampler, i + 2, j - 2);
+		transform(odd_slice, terminalAssetPrices, odd_slice, applyBarrier, identity_sampler, i + 2, j - 2);
 
 		j -= 2;
 	}
 
-	ignore(applyEarlyExcercise);
 
 	return odd_slice[N];
 
