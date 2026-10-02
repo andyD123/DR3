@@ -26,6 +26,7 @@
 
 #include "lattice_tools.h"
 #include "pricers.h"
+#include "chapter3_examples.h"
 
                                                                    
 
@@ -267,6 +268,10 @@ void doTrinomialPricerWithInit()
 
 int main()
 {
+    const auto chapter3 = runChapter3Regression(std::cout);
+    if (!chapter3.passed)
+        return 2;
+
 	doBinomialPricer();
 
 	doTrinomialPricer();
