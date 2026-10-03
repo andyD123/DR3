@@ -1,6 +1,10 @@
 #pragma once
 #include "instruction_traits.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <vector>
+
 // Span
 //  pretty much like std span with a few minor tweaks
 // 
@@ -63,16 +67,18 @@ struct Span
 
 
 	template< size_t N>
-    Span<T> first() const 
+    Span<INS_VEC> first() const
 	{
-		return span(m_pstart, N);
+		const size_t count = std::min(N, m_extent);
+		return Span<INS_VEC>(m_pstart, count);
 	}
 
 
 	template< size_t N>
-	Span<T> last() const
+	Span<INS_VEC> last() const
 	{
-		return span(m_pstart + m_extent - N, N);
+		const size_t count = std::min(N, m_extent);
+		return Span<INS_VEC>(m_pstart + m_extent - count, count);
 	}
 
 	bool empty() const
@@ -196,7 +202,19 @@ struct StridedSpan
 		return *(m_pstart + pos * m_stride);
 	}
 
+	// Legacy algorithms interpret size()/paddedSize() as the physical extent
+	// covered by the strided view. logicalSize() exposes the element count.
 	size_t size() const
+	{
+		return m_extent;
+	}
+
+	size_t logicalSize() const
+	{
+		return m_extent == 0 ? 0 : 1 + (m_extent - 1) / m_stride;
+	}
+
+	size_t physicalExtent() const
 	{
 		return m_extent;
 	}
@@ -205,16 +223,21 @@ struct StridedSpan
 
 
 	template< size_t N>
-	StridedSpan<T> first() const
+	StridedSpan<INS_VEC> first() const
 	{
-		return StridedSpan(m_pstart, N * m_stride, m_stride);
+		const size_t count = std::min(N, logicalSize());
+		const size_t extent = count == 0 ? 0 : 1 + (count - 1) * m_stride;
+		return StridedSpan<INS_VEC>(m_pstart, extent, m_stride);
 	}
 
 
 	template< size_t N>
-	StridedSpan<T> last() const
+	StridedSpan<INS_VEC> last() const
 	{
-		return StridedSpan(m_pstart + m_extent - N * m_stride, N * m_stride);
+		const size_t count = std::min(N, logicalSize());
+		const size_t offset = (logicalSize() - count) * m_stride;
+		const size_t extent = count == 0 ? 0 : 1 + (count - 1) * m_stride;
+		return StridedSpan<INS_VEC>(m_pstart + offset, extent, m_stride);
 	}
 
 	bool empty() const
@@ -279,33 +302,42 @@ struct Layout2D
 
 	bool isRowOrder;
 
-	T* dataRef() 
-	{ 
+	T* dataRef()
+	{
 		return m_pAlignedStart;
 	}
-	
-	Layout2D(T* pdata, size_t  rows, size_t cols):m_pAlignedStart(pdata),m_rows(rows),m_cols(cols)
+
+	const T* dataRef() const
 	{
-		if constexpr  (aligned_extent == 0)
+		return m_pAlignedStart;
+	}
+
+	size_t rows() const { return m_rows; }
+	size_t cols() const { return m_cols; }
+	size_t storageSize() const { return m_extent; }
+	size_t rowStride() const { return isRowOrder ? m_SimdSize : 1; }
+	size_t columnStride() const { return isRowOrder ? 1 : m_SimdSize; }
+	
+	Layout2D(T* pdata, size_t rows, size_t cols):m_pAlignedStart(pdata),m_rows(rows),m_cols(cols)
+	{
+		if constexpr (aligned_extent == 0)
 		{
+			// Row-major storage pads the contiguous column extent.
 			isRowOrder = true;
+			numSIMDS = static_cast<int>(m_cols / SIMD_SZ);
+			if (m_cols % SIMD_SZ > 0) numSIMDS++;
+			m_SimdSize = numSIMDS * SIMD_SZ;
+			m_extent = m_SimdSize * m_rows;
+		}
+		else
+		{
+			// Column-major storage pads the contiguous row extent.
+			isRowOrder = false;
 			numSIMDS = static_cast<int>(m_rows / SIMD_SZ);
 			if (m_rows % SIMD_SZ > 0) numSIMDS++;
 			m_SimdSize = numSIMDS * SIMD_SZ;
 			m_extent = m_SimdSize * m_cols;
 		}
-		else
-		{
-			isRowOrder = false;
-			numSIMDS =  static_cast<int>(m_cols / SIMD_SZ);
-			if (m_cols % SIMD_SZ > 0) numSIMDS++;
-
-			m_SimdSize = numSIMDS * SIMD_SZ;
-			m_extent = m_SimdSize * m_rows;
-
-		}
-
-		
 	}
 
 	inline size_t stride(size_t extent) const
@@ -326,7 +358,7 @@ struct Layout2D
 	}
 
 
-	 inline size_t getArrayPos(size_t  row, size_t col)
+	 inline size_t getArrayPos(size_t row, size_t col) const
 	{
 		 if constexpr  (aligned_extent == 0)
 		{
@@ -392,20 +424,69 @@ private:
 
 
 
-template<typename INS_VEC, size_t SIMD_SZ = InstructionTraits<INS_VEC>::width, size_t EXTENT = 0>
-StridedSpan<INS_VEC>  getStridedSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType, Layout2D< typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout, size_t  extent, size_t pos)
+template<typename INS_VEC>
+StridedSpan<INS_VEC> makeStridedSpanFromCount(
+	typename InstructionTraits<INS_VEC>::FloatType* start,
+	size_t count,
+	size_t stride)
 {
-	return StridedSpan<INS_VEC>(layout.dataRef() + layout.getArrayPos(0, pos),
-		layout.m_extent - pos, 
-		layout.isRowOrder ? layout.m_SimdSize : layout.m_cols);
+	const size_t extent = count == 0 ? 0 : 1 + (count - 1) * stride;
+	return StridedSpan<INS_VEC>(start, extent, stride);
 }
 
 
+// Explicit matrix views. Row-major storage gives contiguous rows and strided
+// columns; column-major storage gives the inverse. The numerical code can name
+// the axis it wants without knowing the physical layout.
+template<typename INS_VEC, size_t SIMD_SZ = InstructionTraits<INS_VEC>::width, size_t EXTENT = 0>
+auto getRowSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType,
+	Layout2D<typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout,
+	size_t row)
+{
+	if constexpr (EXTENT == 0)
+		return Span<INS_VEC>(layout.dataRef() + layout.getArrayPos(row, 0), layout.m_cols);
+	else
+		return makeStridedSpanFromCount<INS_VEC>(
+			layout.dataRef() + layout.getArrayPos(row, 0), layout.m_cols, layout.m_SimdSize);
+}
+
 
 template<typename INS_VEC, size_t SIMD_SZ = InstructionTraits<INS_VEC>::width, size_t EXTENT = 0>
-Span<INS_VEC>  getSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType, Layout2D< typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout, size_t pos)
+auto getColumnSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType,
+	Layout2D<typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout,
+	size_t col)
 {
-	return Span<INS_VEC>(layout.dataRef() + layout.getArrayPos(pos, 0),
-		layout.isRowOrder ? layout.m_rows : layout.m_cols);
+	if constexpr (EXTENT == 0)
+		return makeStridedSpanFromCount<INS_VEC>(
+			layout.dataRef() + layout.getArrayPos(0, col), layout.m_rows, layout.m_SimdSize);
+	else
+		return Span<INS_VEC>(layout.dataRef() + layout.getArrayPos(0, col), layout.m_rows);
+}
+
+
+// Compatibility helpers retain the old names. getSpan selects the contiguous
+// axis and getStridedSpan selects the orthogonal axis. The legacy extent
+// argument is retained for source compatibility.
+template<typename INS_VEC, size_t SIMD_SZ = InstructionTraits<INS_VEC>::width, size_t EXTENT = 0>
+StridedSpan<INS_VEC> getStridedSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType,
+	Layout2D<typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout,
+	size_t /*extent*/, size_t pos)
+{
+	if constexpr (EXTENT == 0)
+		return getColumnSpan<INS_VEC>(layout, pos);
+	else
+		return getRowSpan<INS_VEC>(layout, pos);
+}
+
+
+template<typename INS_VEC, size_t SIMD_SZ = InstructionTraits<INS_VEC>::width, size_t EXTENT = 0>
+Span<INS_VEC> getSpan(MDSpan<typename InstructionTraits<INS_VEC>::FloatType,
+	Layout2D<typename InstructionTraits<INS_VEC>::FloatType, SIMD_SZ, EXTENT> >& layout,
+	size_t pos)
+{
+	if constexpr (EXTENT == 0)
+		return getRowSpan<INS_VEC>(layout, pos);
+	else
+		return getColumnSpan<INS_VEC>(layout, pos);
 }
 

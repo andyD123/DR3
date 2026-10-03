@@ -2,10 +2,13 @@
 #include "../Vectorisation/VecX/zip_utils.h"
 #include "utils.h"
 #include "pricers.h"
+#include <stdexcept>
 
 
 double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, double r, double T, int N)
 {
+	if (N <= 0 || (N % 2) != 0)
+		throw std::invalid_argument("americanImplicitFiniteDiffPricerFast requires a positive even N");
 
 
 	double y = 0.0;//dividend yield
@@ -47,8 +50,8 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 
 
 	//derivative boundary condition
-	double  lambda_L = -1. * (terminalAssetPrices[1] - terminalAssetPrices[0]);
-	double  lambda_U = 0.0;
+	double  lambda_L = 0.0;
+	double  lambda_U = terminalAssetPrices[2 * N] - terminalAssetPrices[2 * N - 1];
 
 	auto odd_slice = excerciseValue;
 	//	vdbg = odd_slice;
@@ -98,7 +101,7 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 			pp[j] = odd_slice[j] - pp[j - 1] * pd_inv_pmp[j - 1];
 		}
 
-		even_slice[1] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		even_slice[J] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
 		even_slice[J - 1] = even_slice[J] - lambda_U;
 
 
@@ -107,6 +110,7 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 		{
 			even_slice[j] = (pp[j] - pu * even_slice[j + 1]) * inv_pmp[j];
 		}
+		even_slice[0] = even_slice[1] - lambda_L;
 
 		//american excercise bit
 		even_slice = transform(american, even_slice, (const VecXX&)excerciseValue);
@@ -122,7 +126,7 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 			pp[j] = even_slice[j] - pp[j - 1] * pd_inv_pmp[j - 1];
 		}
 
-		odd_slice[1] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		odd_slice[J] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
 		odd_slice[J - 1] = odd_slice[J] - lambda_U;
 
 
@@ -131,6 +135,7 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 		{
 			odd_slice[j] = (pp[j] - pu * odd_slice[j + 1]) * inv_pmp[j];
 		}
+		odd_slice[0] = odd_slice[1] - lambda_L;
 
 		//american excercise bit
 		odd_slice = transform(american, odd_slice, (const VecXX&)excerciseValue);
@@ -141,6 +146,8 @@ double americanImplicitFiniteDiffPricerFast(double S, double K, double sig, doub
 
 double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r, double T, int N)
 {
+	if (N <= 0 || (N % 2) != 0)
+		throw std::invalid_argument("americanImplicitFiniteDiffPricer requires a positive even N");
 
 	//dividend yield
 	double y = 0.0;// 0.03;// 0.03; //div yield
@@ -182,8 +189,8 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 	auto excerciseValue = transform(payOffFunc, terminalAssetPrices);
 
 	//derivative boundary condition
-	double  lambda_L = -1. * (terminalAssetPrices[1] - terminalAssetPrices[0]);
-	double  lambda_U = 0.0;
+	double  lambda_L = 0.0;
+	double  lambda_U = terminalAssetPrices[2 * N] - terminalAssetPrices[2 * N - 1];
 
 	auto odd_slice = excerciseValue;
 	vdbg = odd_slice;
@@ -214,7 +221,7 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 			pp[j] = odd_slice[j] - pp[j - 1] * pd / pmp[j - 1];
 		}
 
-		even_slice[1] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		even_slice[J] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
 		even_slice[J - 1] = even_slice[J] - lambda_U;
 
 
@@ -223,7 +230,7 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 		{
 			even_slice[j] = (pp[j] - pu * even_slice[j + 1]) / pmp[j];
 		}
-
+		even_slice[0] = even_slice[1] - lambda_L;
 
 
 		// american
@@ -249,7 +256,7 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 			pp[j] = even_slice[j] - pp[j - 1] * pd / pmp[j - 1];
 		}
 
-		odd_slice[1] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
+		odd_slice[J] = (pp[J - 1] + pmp[J - 1] * lambda_U) / (pu + pmp[J - 1]);
 		odd_slice[J - 1] = odd_slice[J] - lambda_U;
 
 
@@ -258,6 +265,7 @@ double americanImplicitFiniteDiffPricer(double S, double K, double sig, double r
 		{
 			odd_slice[j] = (pp[j] - pu * odd_slice[j + 1]) / pmp[j];
 		}
+		odd_slice[0] = odd_slice[1] - lambda_L;
 
 
 		//american
