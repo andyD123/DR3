@@ -198,16 +198,26 @@ class AllAllocators
 {
 	static int lastSize_N;
 	static AllocPolicy<T>* pAllocPolicy;
-	static std::unordered_map<int, AllocPolicy<T>*>  m_map_sizeToAllocPolicy;
+
+	// Heap-allocated so the map outlives AllAllocatorsGuard destructors in
+	// other TUs. Static std::unordered_map members are destroyed in an
+	// unspecified order relative to those guards and caused heap-use-after-free
+	// / segfault after gtest had already reported all tests passed.
+	static std::unordered_map<int, AllocPolicy<T>*>& policies()
+	{
+		static auto* map = new std::unordered_map<int, AllocPolicy<T>*>();
+		return *map;
+	}
 
 
 	static 	void setUpPolicy(int size_N)
 	{
-		auto itr = m_map_sizeToAllocPolicy.find(size_N);
-		if (m_map_sizeToAllocPolicy.end() == itr)
+		auto& map = policies();
+		auto itr = map.find(size_N);
+		if (map.end() == itr)
 		{
 			pAllocPolicy = new AllocPolicy<T>(size_N);
-			m_map_sizeToAllocPolicy[size_N] = pAllocPolicy;
+			map[size_N] = pAllocPolicy;
 		}
 	}
 
@@ -217,23 +227,32 @@ public:
 
 	static 	void removePolicy(int size_N)
 	{
-		auto itr = m_map_sizeToAllocPolicy.find(size_N);
-		if (m_map_sizeToAllocPolicy.end() != itr)
+		auto& map = policies();
+		auto itr = map.find(size_N);
+		if (map.end() != itr)
 		{
-			auto policyPtr = m_map_sizeToAllocPolicy[size_N];
+			auto policyPtr = itr->second;
+			if (pAllocPolicy == policyPtr)
+			{
+				pAllocPolicy = nullptr;
+				lastSize_N = -1;
+			}
 			delete policyPtr;
-			m_map_sizeToAllocPolicy.erase(itr);
+			map.erase(itr);
 		}
 		
 	}
 
 	static 	void freeAll()
 	{
-		for (auto& item : m_map_sizeToAllocPolicy)
+		auto& map = policies();
+		for (auto& item : map)
 		{
 			delete item.second;
 		}
-		m_map_sizeToAllocPolicy.clear();
+		map.clear();
+		pAllocPolicy = nullptr;
+		lastSize_N = -1;
 	}
 
 
@@ -246,7 +265,7 @@ public:
 
 		setUpPolicy(size_N);
 
-		pAllocPolicy = m_map_sizeToAllocPolicy[size_N];
+		pAllocPolicy = policies()[size_N];
 		lastSize_N = size_N;
 		return pAllocPolicy->alloc();
 	}
@@ -263,7 +282,7 @@ public:
 		}
 
 		setUpPolicy(sz_N);
-		pAllocPolicy = m_map_sizeToAllocPolicy[sz_N];
+		pAllocPolicy = policies()[sz_N];
 		lastSize_N = sz_N;
 		return pAllocPolicy->free(pMem);
 

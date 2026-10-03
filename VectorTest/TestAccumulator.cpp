@@ -581,4 +581,69 @@ TEST(TestAccumulator, bivariate_pairwise_transformReduce)
 
 }
 
+TEST(TestAccumulator, scalar_pairwise_transformReduce_applies_transform)
+{
+	VecXX scalar(asNumber(3.0));
+	auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+	auto AddOne = [](auto value) { return value + asNumber(1.0); };
 
+	EXPECT_NUMERIC_EQ(
+		pairwise_transformReduce(scalar, AddOne, Sum),
+		asNumber(4.0));
+}
+
+TEST(TestAccumulator, pairwise_transformReduce_excludes_padded_unary_lanes)
+{
+	const int width = static_cast<int>(VecXX::INS::size());
+	const int firstRecursiveBlockWithTail = 33;
+	const int sizes[] = { width - 1, width + 1, firstRecursiveBlockWithTail };
+	auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+	auto AddOne = [](auto value) { return value + asNumber(1.0); };
+
+	for (int size : sizes)
+	{
+		std::vector<Numeric> values(static_cast<size_t>(size));
+		std::iota(values.begin(), values.end(), asNumber(1.0));
+		VecXX input(values);
+
+		Numeric expected = asNumber(0.0);
+		for (Numeric value : values)
+		{
+			expected += value + asNumber(1.0);
+		}
+
+		EXPECT_NUMERIC_EQ(
+			pairwise_transformReduce(input, AddOne, Sum),
+			expected);
+	}
+}
+
+TEST(TestAccumulator, pairwise_transformReduce_excludes_padded_bivariate_lanes)
+{
+	const int width = static_cast<int>(VecXX::INS::size());
+	const int firstRecursiveBlockWithTail = 33;
+	const int sizes[] = { width - 1, width + 1, firstRecursiveBlockWithTail };
+	auto Sum = [](auto lhs, auto rhs) { return lhs + rhs; };
+	auto Add = [](auto lhs, auto rhs) { return lhs + rhs + asNumber(1.0); };
+
+	for (int size : sizes)
+	{
+		std::vector<Numeric> lhsValues(static_cast<size_t>(size));
+		std::vector<Numeric> rhsValues(static_cast<size_t>(size));
+		std::iota(lhsValues.begin(), lhsValues.end(), asNumber(1.0));
+		std::iota(rhsValues.begin(), rhsValues.end(), asNumber(2.0));
+		VecXX lhs(lhsValues);
+		VecXX rhs(rhsValues);
+
+		Numeric expected = asNumber(0.0);
+		for (int i = 0; i < size; ++i)
+		{
+			expected += lhsValues[static_cast<size_t>(i)]
+				+ rhsValues[static_cast<size_t>(i)] + asNumber(1.0);
+		}
+
+		EXPECT_NUMERIC_EQ(
+			pairwise_transformReduce(lhs, rhs, Add, Sum),
+			expected);
+	}
+}
