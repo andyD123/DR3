@@ -11,7 +11,15 @@
 *****************************************************************************/
 #include "alloc_policy.h"
 #include "alloc_policy_imp.h"
-#include <unordered_map>
+
+bool dr3AllocatorDiagnosticsEnabled() noexcept
+{
+#ifdef NDEBUG
+	return false;
+#else
+	return true;
+#endif
+}
 
 template<>
 int AllAllocators<long double>::lastSize_N = -1;
@@ -30,14 +38,6 @@ template<>
 AllocPolicy<float>* AllAllocators<float>::pAllocPolicy = nullptr;
 template<>
 AllocPolicy<unsigned int>* AllAllocators<unsigned int>::pAllocPolicy = nullptr;
-template<>
-std::unordered_map<int, AllocPolicy<long double>*>  AllAllocators<long double>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<long double>*>();
-template<>
-std::unordered_map<int, AllocPolicy<double>*>  AllAllocators<double>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<double>*>();
-template<>
-std::unordered_map<int, AllocPolicy<float>*>  AllAllocators<float>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<float>*>();
-template<>
-std::unordered_map<int, AllocPolicy<unsigned int>*>  AllAllocators<unsigned int>::m_map_sizeToAllocPolicy = std::unordered_map<int, AllocPolicy<unsigned int>*>();
 
 
 

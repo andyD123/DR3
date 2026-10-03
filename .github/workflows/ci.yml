@@ -6,37 +6,80 @@ on:
   pull_request:
     branches: [ "main" ]
 
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
-
 jobs:
-  example_matrix:
+  build-and-test:
+    name: ${{ matrix.os }} ${{ matrix.compiler }} ${{ matrix.build_type }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            compiler: msvc
+            build_type: Release
+          - os: windows-latest
+            compiler: msvc
+            build_type: Debug
+          - os: ubuntu-latest
+            compiler: gcc
+            build_type: Release
+          - os: ubuntu-latest
+            compiler: gcc
+            build_type: Debug
+          - os: ubuntu-latest
+            compiler: clang
+            build_type: Release
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-    - uses:  symbitic/install-cmake@master
+      - uses: actions/checkout@v4
 
-    - name: CMake Configure and Build on Ubuntu
-      if: matrix.os == 'Ubuntu-latest'
-      run: |      
-        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-  
-    - name: CMake  Configure and Build on Windows
-      if: matrix.os == 'windows-latest'
-      run: |
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
-        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      shell: cmd
-    
-    #- name: Test
-    #  working-directory: ${{github.workspace}}/build
-    #  # Execute tests defined by the CMake configuration.  
-    #  # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-    #  run: ctest -C ${{env.BUILD_TYPE}}
-     
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -S . -B build -DDR3_BUILD_TESTS=ON -DDR3_BUILD_EXAMPLES=ON -DDR3_ISA=AVX2
+
+      - name: Configure (Ubuntu GCC)
+        if: runner.os == 'Linux' && matrix.compiler == 'gcc'
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DDR3_BUILD_TESTS=ON \
+            -DDR3_BUILD_EXAMPLES=ON \
+            -DDR3_ISA=AVX2
+
+      - name: Configure (Ubuntu Clang)
+        if: runner.os == 'Linux' && matrix.compiler == 'clang'
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DDR3_BUILD_TESTS=ON \
+            -DDR3_BUILD_EXAMPLES=ON \
+            -DDR3_ISA=AVX2
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }}
+
+      - name: Test
+        run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure --timeout 120
+
+  sanitizers:
+    name: ubuntu gcc Debug ASan/UBSan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDR3_BUILD_TESTS=ON \
+            -DDR3_BUILD_EXAMPLES=OFF \
+            -DDR3_ENABLE_SANITIZERS=ON \
+            -DDR3_ISA=AVX2
+      - name: Build
+        run: cmake --build build --config Debug
+      - name: Test
+        run: ctest --test-dir build -C Debug --output-on-failure --timeout 180
+        env:
+          ASAN_OPTIONS: detect_leaks=0:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1
