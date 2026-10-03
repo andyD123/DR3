@@ -45,7 +45,7 @@ public:
 	{
 		if (m_pData != nullptr)
 		{
-			freePool(m_size, m_pData);
+			freePool(m_implSize, m_pData);
 		}
 	}
 
@@ -138,4 +138,3 @@ public:
 	}
 
 };
-
