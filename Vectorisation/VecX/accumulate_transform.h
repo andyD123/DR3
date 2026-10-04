@@ -882,6 +882,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyAccumulate2UR_X_pairwise(con
 
 
 
+// The short prefix consumed below can move the recursive block pointer away
+// from its allocator-provided alignment, so block loads must be unaligned.
 //experimental pairwise unrolled version  avx512
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP_TRANSFORM,typename OP_REDUCE>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pairwise(const VEC_TYPE<INS_VEC>& rhs1, OP_TRANSFORM& tfrm, OP_REDUCE& oper)
@@ -893,7 +895,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 
 		INS_VEC RHS0 = rhs1.getScalarValue();
 		auto res = tfrm(RHS0);
-		return RHS0[0];
+		return res[0];
 	}
 
 	long sz = static_cast<long>(rhs1.size());
@@ -918,20 +920,20 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 	auto accum_8 = [&](Float* pRhs1)
 	{
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
 		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
 		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
 
 		INS_VEC RES = oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 4);
-		RHS1.load_a(pRhs1 + width * 5);
-		RHS2.load_a(pRhs1 + width * 6);
-		RHS3.load_a(pRhs1 + width * 7);
+		RHS0.load(pRhs1 + width * 4);
+		RHS1.load(pRhs1 + width * 5);
+		RHS2.load(pRhs1 + width * 6);
+		RHS3.load(pRhs1 + width * 7);
 
 		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
 		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
@@ -945,38 +947,38 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 	auto accum_16 = [&](Float* pRhs1)
 	{
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
 		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
 		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
 		INS_VEC RES = oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 4);
-		RHS1.load_a(pRhs1 + width * 5);
-		RHS2.load_a(pRhs1 + width * 6);
-		RHS3.load_a(pRhs1 + width * 7);
+		RHS0.load(pRhs1 + width * 4);
+		RHS1.load(pRhs1 + width * 5);
+		RHS2.load(pRhs1 + width * 6);
+		RHS3.load(pRhs1 + width * 7);
 
 		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
 		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
 		RES = oper(RES, oper(RES0, RES1));
 
 
-		RHS0.load_a(pRhs1 + width * 8);
-		RHS1.load_a(pRhs1 + width * 9);
-		RHS2.load_a(pRhs1 + width * 10);
-		RHS3.load_a(pRhs1 + width * 11);
+		RHS0.load(pRhs1 + width * 8);
+		RHS1.load(pRhs1 + width * 9);
+		RHS2.load(pRhs1 + width * 10);
+		RHS3.load(pRhs1 + width * 11);
 
 		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
 		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
 		INS_VEC RES_T = oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 12);
-		RHS1.load_a(pRhs1 + width * 13);
-		RHS2.load_a(pRhs1 + width * 14);
-		RHS3.load_a(pRhs1 + width * 15);
+		RHS0.load(pRhs1 + width * 12);
+		RHS1.load(pRhs1 + width * 13);
+		RHS2.load(pRhs1 + width * 14);
+		RHS3.load(pRhs1 + width * 15);
 
 		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
 		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
@@ -991,10 +993,10 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 	auto accum_4 = [&](Float* pRhs1)
 	{
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
 		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
 		RES1 = oper(tfrm(RHS2), tfrm(RHS3));
@@ -1007,8 +1009,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 
 	auto accum_2 = [&](Float* pRhs1)
 	{
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
 
 		RES0 = oper(tfrm(RHS0), tfrm(RHS1));
 		return RES0;
@@ -1044,7 +1046,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 		val.load_partial(remainder, pRhs);
 		val = tfrm(val);
 		RES = scanN(val, ZERO, oper);
-		whole_reg_sum += RES[remainder];
+		whole_reg_sum += RES[remainder - 1];
 		pRhs += remainder;
 	}
 
@@ -1108,6 +1110,8 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 
 
 
+// The short prefix consumed below can move both recursive block pointers away
+// from their allocator-provided alignment, so block loads must be unaligned.
 //experimental pairwise unrolled version  avx512
 template<  template <class> typename VEC_TYPE, typename INS_VEC, typename OP_TRANSFORM, typename OP_REDUCE>
 typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pairwise(const VEC_TYPE<INS_VEC>& lhs, const VEC_TYPE<INS_VEC>& rhs, OP_TRANSFORM& tfrm, OP_REDUCE& oper)
@@ -1152,30 +1156,30 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 	auto accum_8 = [&](Float* pLhs1, Float* pRhs1)
 	{
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
-		LHS0.load_a(pLhs1);
-		LHS1.load_a(pLhs1 + width);
-		LHS2.load_a(pLhs1 + width * 2);
-		LHS3.load_a(pLhs1 + width * 3);
+		LHS0.load(pLhs1);
+		LHS1.load(pLhs1 + width);
+		LHS2.load(pLhs1 + width * 2);
+		LHS3.load(pLhs1 + width * 3);
 
 		RES0 = oper(tfrm(LHS0,RHS0), tfrm(LHS1,RHS1));
 		RES1 = oper(tfrm(LHS2,RHS2), tfrm(LHS3,RHS3));
 
 		INS_VEC RES = oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 4);
-		RHS1.load_a(pRhs1 + width * 5);
-		RHS2.load_a(pRhs1 + width * 6);
-		RHS3.load_a(pRhs1 + width * 7);
+		RHS0.load(pRhs1 + width * 4);
+		RHS1.load(pRhs1 + width * 5);
+		RHS2.load(pRhs1 + width * 6);
+		RHS3.load(pRhs1 + width * 7);
 
-		LHS0.load_a(pLhs1 + width * 4);
-		LHS1.load_a(pLhs1 + width * 5);
-		LHS2.load_a(pLhs1 + width * 6);
-		LHS3.load_a(pLhs1 + width * 7);
+		LHS0.load(pLhs1 + width * 4);
+		LHS1.load(pLhs1 + width * 5);
+		LHS2.load(pLhs1 + width * 6);
+		LHS3.load(pLhs1 + width * 7);
 
 
 		RES0 = oper(tfrm(LHS0, RHS0), tfrm(LHS1, RHS1));
@@ -1190,30 +1194,30 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 	auto accum_16 = [&](Float* pLhs1, Float* pRhs1)
 	{
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
-		LHS0.load_a(pLhs1);
-		LHS1.load_a(pLhs1 + width);
-		LHS2.load_a(pLhs1 + width * 2);
-		LHS3.load_a(pLhs1 + width * 3);
+		LHS0.load(pLhs1);
+		LHS1.load(pLhs1 + width);
+		LHS2.load(pLhs1 + width * 2);
+		LHS3.load(pLhs1 + width * 3);
 
 		RES0 = oper(tfrm(LHS0, RHS0), tfrm(LHS1, RHS1));
 		RES1 = oper(tfrm(LHS2, RHS2), tfrm(LHS3, RHS3));
 
 		INS_VEC RES = oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 4);
-		RHS1.load_a(pRhs1 + width * 5);
-		RHS2.load_a(pRhs1 + width * 6);
-		RHS3.load_a(pRhs1 + width * 7);
+		RHS0.load(pRhs1 + width * 4);
+		RHS1.load(pRhs1 + width * 5);
+		RHS2.load(pRhs1 + width * 6);
+		RHS3.load(pRhs1 + width * 7);
 
-		LHS0.load_a(pLhs1 + width * 4);
-		LHS1.load_a(pLhs1 + width * 5);
-		LHS2.load_a(pLhs1 + width * 6);
-		LHS3.load_a(pLhs1 + width * 7);
+		LHS0.load(pLhs1 + width * 4);
+		LHS1.load(pLhs1 + width * 5);
+		LHS2.load(pLhs1 + width * 6);
+		LHS3.load(pLhs1 + width * 7);
 
 
 		RES0 = oper(tfrm(LHS0, RHS0), tfrm(LHS1, RHS1));
@@ -1226,15 +1230,15 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 
 
 
-		RHS0.load_a(pRhs1 + width * 8);
-		RHS1.load_a(pRhs1 + width * 9);
-		RHS2.load_a(pRhs1 + width * 10);
-		RHS3.load_a(pRhs1 + width * 11);
+		RHS0.load(pRhs1 + width * 8);
+		RHS1.load(pRhs1 + width * 9);
+		RHS2.load(pRhs1 + width * 10);
+		RHS3.load(pRhs1 + width * 11);
 
-		LHS0.load_a(pLhs1 + width * 8);
-		LHS1.load_a(pLhs1 + width * 9);
-		LHS2.load_a(pLhs1 + width * 10);
-		LHS3.load_a(pLhs1 + width * 11);
+		LHS0.load(pLhs1 + width * 8);
+		LHS1.load(pLhs1 + width * 9);
+		LHS2.load(pLhs1 + width * 10);
+		LHS3.load(pLhs1 + width * 11);
 
 
 		RES0 = oper(tfrm(LHS0, RHS0), tfrm(LHS1, RHS1));
@@ -1243,15 +1247,15 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 
 		INS_VEC RES_T = oper(RES0, RES1);
 
-		RHS0.load_a(pRhs1 + width * 12);
-		RHS1.load_a(pRhs1 + width * 13);
-		RHS2.load_a(pRhs1 + width * 14);
-		RHS3.load_a(pRhs1 + width * 15);
+		RHS0.load(pRhs1 + width * 12);
+		RHS1.load(pRhs1 + width * 13);
+		RHS2.load(pRhs1 + width * 14);
+		RHS3.load(pRhs1 + width * 15);
 
-		LHS0.load_a(pLhs1 + width * 12);
-		LHS1.load_a(pLhs1 + width * 13);
-		LHS2.load_a(pLhs1 + width * 14);
-		LHS3.load_a(pLhs1 + width * 15);
+		LHS0.load(pLhs1 + width * 12);
+		LHS1.load(pLhs1 + width * 13);
+		LHS2.load(pLhs1 + width * 14);
+		LHS3.load(pLhs1 + width * 15);
 
 
 		RES0 = oper(tfrm(LHS0, RHS0), tfrm(LHS1, RHS1));
@@ -1269,15 +1273,15 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 	{
 
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
-		RHS2.load_a(pRhs1 + width * 2);
-		RHS3.load_a(pRhs1 + width * 3);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
+		RHS2.load(pRhs1 + width * 2);
+		RHS3.load(pRhs1 + width * 3);
 
-		LHS0.load_a(pLhs1);
-		LHS1.load_a(pLhs1 + width);
-		LHS2.load_a(pLhs1 + width * 2);
-		LHS3.load_a(pLhs1 + width * 3);
+		LHS0.load(pLhs1);
+		LHS1.load(pLhs1 + width);
+		LHS2.load(pLhs1 + width * 2);
+		LHS3.load(pLhs1 + width * 3);
 
 		RES0 = oper(tfrm(LHS0, RHS0), tfrm(LHS1, RHS1));
 		RES1 = oper(tfrm(LHS2, RHS2), tfrm(LHS3, RHS3));
@@ -1292,11 +1296,11 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 	auto accum_2 = [&](Float* pLhs1, Float* pRhs1)
 	{
 
-		RHS0.load_a(pRhs1);
-		RHS1.load_a(pRhs1 + width);
+		RHS0.load(pRhs1);
+		RHS1.load(pRhs1 + width);
 
-		LHS0.load_a(pLhs1);
-		LHS1.load_a(pLhs1 + width);
+		LHS0.load(pLhs1);
+		LHS1.load(pLhs1 + width);
 
 		RES0 = oper(tfrm(LHS0, RHS0), tfrm(LHS1, RHS1));
 
@@ -1338,7 +1342,7 @@ typename InstructionTraits<INS_VEC>::FloatType ApplyTransformAccumulate2UR_X_pai
 		val_lhs.load_partial(remainder, pLhs1);
 		val = tfrm(val_lhs, val_rhs);
 		RES = scanN(val, ZERO, oper);
-		whole_reg_sum += RES[remainder];
+		whole_reg_sum += RES[remainder - 1];
 		pRhs1 += remainder;
 		pLhs1 += remainder;
 	}

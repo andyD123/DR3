@@ -13,6 +13,11 @@
 
 #include <cstddef>
 
+// Invalid pool returns are diagnosed when the DR3 library itself was built
+// with Debug diagnostics. Keeping this decision out of public template bodies
+// avoids different behavior when a Release library is consumed by Debug code.
+bool dr3AllocatorDiagnosticsEnabled() noexcept;
+
 void freePool(size_t N, long double* pOld);
 void freePool(size_t N, double* pOld);
 void freePool(size_t N, float* pOld);
@@ -27,7 +32,6 @@ int  getAllignedSize(size_t N, long double* pOld);
 int  getAllignedSize(size_t N, double* pOld);
 int  getAllignedSize(size_t N, float* pOld);
 int  getAllignedSize(size_t N, unsigned int* pOld);
-
 
 
 
