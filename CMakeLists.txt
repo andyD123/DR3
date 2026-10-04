@@ -58,7 +58,7 @@ function(dr3_enable_tsan target)
         target_compile_options(${target} PRIVATE
             -fsanitize=thread
             -fno-omit-frame-pointer)
-        target_link_options(${target} PRIVATE
+        target_link_options(${target} PUBLIC
             -fsanitize=thread)
     endif()
 endfunction()
