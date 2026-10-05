@@ -6,11 +6,14 @@ on:
     paths:
       - 'curveExample/**'
       - '.github/workflows/curve-pricing.yml'
-      - 'CMakeLists.txt'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    shell: bash
 
 concurrency:
   group: curve-pricing-${{ github.ref }}
@@ -19,32 +22,54 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Archive exact source for local reproduction
+      - name: Archive exact source for reproduction
         run: git archive --format=tar.gz HEAD -o dr3-source.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: curve-pricing-source-${{ github.sha }}
           path: dr3-source.tar.gz
           retention-days: 7
-      - name: Configure existing regression suite
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDR3_BUILD_TESTS=ON -DDR3_BUILD_EXAMPLES=OFF -DDR3_ISA=AVX2
-      - name: Build and run existing regressions
+      - name: Install optional QuantLib dependency
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libquantlib0-dev pkg-config
+      - name: Record environment
+        run: |
+          { git rev-parse HEAD; g++ --version; cmake --version; pkg-config --modversion quantlib; lscpu; } > curve-environment.txt
+      - name: Existing regression suite
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDR3_BUILD_TESTS=ON -DDR3_BUILD_EXAMPLES=OFF -DDR3_ISA=AVX2
           cmake --build build --parallel 2
-          ctest --test-dir build --output-on-failure --timeout 180
-      - name: Curve tests and pricing demonstration
-        if: ${{ hashFiles('curveExample/CMakeLists.txt') != '' }}
+          ctest --test-dir build --output-on-failure --timeout 180 | tee existing-tests.txt
+      - name: Build curve tools and QuantLib adapter
         run: |
-          cmake -S curveExample -B build-curve -DCMAKE_BUILD_TYPE=Release -DDR3_CURVE_ISA=AVX2
+          cmake -S curveExample -B build-curve -DCMAKE_BUILD_TYPE=Release -DDR3_CURVE_ISA=AVX2 -DDR3_CURVE_ENABLE_QUANTLIB=ON
           cmake --build build-curve --parallel 2
-          ctest --test-dir build-curve --output-on-failure
-          ./build-curve/curveExample --bonds 2000 --scenarios 65 --repeats 3 | tee curve-report.txt
+      - name: Reconcile and demonstrate
+        run: |
+          ctest --test-dir build-curve -V --timeout 180 | tee curve-tests.txt
+          ./build-curve/curveExample --bonds 2000 --scenarios 65 --repeats 3 | tee native-curve-report.txt
+          ./build-curve/quantlib_curve_demo --bonds 2000 --scenarios 65 --repeats 3 | tee quantlib-curve-report.txt
+      - name: Check new native targets under ASan and UBSan
+        run: |
+          cmake -S curveExample -B build-curve-asan -DCMAKE_BUILD_TYPE=Debug -DDR3_CURVE_ISA=AVX2 -DDR3_CURVE_SANITIZERS=ON
+          cmake --build build-curve-asan --parallel 2
+          ctest --test-dir build-curve-asan -V --timeout 180 | tee curve-sanitizers.txt
+        env:
+          ASAN_OPTIONS: detect_leaks=0:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1
       - uses: actions/upload-artifact@v4
-        if: ${{ always() && hashFiles('curve-report.txt') != '' }}
+        if: always()
         with:
-          name: curve-pricing-report-${{ github.sha }}
-          path: curve-report.txt
+          name: curve-pricing-evidence-${{ github.sha }}
+          path: |
+            curve-environment.txt
+            existing-tests.txt
+            curve-tests.txt
+            native-curve-report.txt
+            quantlib-curve-report.txt
+            curve-sanitizers.txt
           retention-days: 14
