@@ -1,0 +1,50 @@
+name: Curve pricing validation
+
+on:
+  push:
+    branches: [fix/curve-pricing-tools]
+    paths:
+      - 'curveExample/**'
+      - '.github/workflows/curve-pricing.yml'
+      - 'CMakeLists.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: curve-pricing-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive exact source for local reproduction
+        run: git archive --format=tar.gz HEAD -o dr3-source.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: curve-pricing-source-${{ github.sha }}
+          path: dr3-source.tar.gz
+          retention-days: 7
+      - name: Configure existing regression suite
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDR3_BUILD_TESTS=ON -DDR3_BUILD_EXAMPLES=OFF -DDR3_ISA=AVX2
+      - name: Build and run existing regressions
+        run: |
+          cmake --build build --parallel 2
+          ctest --test-dir build --output-on-failure --timeout 180
+      - name: Curve tests and pricing demonstration
+        if: ${{ hashFiles('curveExample/CMakeLists.txt') != '' }}
+        run: |
+          cmake -S curveExample -B build-curve -DCMAKE_BUILD_TYPE=Release -DDR3_CURVE_ISA=AVX2
+          cmake --build build-curve --parallel 2
+          ctest --test-dir build-curve --output-on-failure
+          ./build-curve/curveExample --bonds 2000 --scenarios 65 --repeats 3 | tee curve-report.txt
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && hashFiles('curve-report.txt') != '' }}
+        with:
+          name: curve-pricing-report-${{ github.sha }}
+          path: curve-report.txt
+          retention-days: 14
