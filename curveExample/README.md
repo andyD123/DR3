@@ -23,7 +23,7 @@ allocation for the entire matrix. Prepared cash flows address those rows by inde
 
 ## Build and run
 
-The directory builds standalone from a complete DR3 checkout. QuantLib is optional;
+The directory builds standalone or through the repository root. QuantLib is optional;
 the base library does not acquire a mandatory QuantLib dependency.
 
 ```sh
@@ -37,6 +37,21 @@ ctest --test-dir build-curve --output-on-failure
 ./build-curve/quantlib_curve_demo --bonds 2000 --scenarios 65 --repeats 3
 ./build-curve/curveExample --bonds 2000 --scenarios 65 --repeats 3
 ```
+
+The ordinary root build now includes native curve regression tests whenever
+`DR3_BUILD_TESTS=ON`, and the native demo whenever `DR3_BUILD_EXAMPLES=ON`.
+Enable `DR3_CURVE_ENABLE_QUANTLIB=ON` at the root to include the adapter too:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDR3_BUILD_TESTS=ON \
+  -DDR3_BUILD_EXAMPLES=OFF -DDR3_CURVE_ENABLE_QUANTLIB=ON
+cmake --build build --parallel 2
+ctest --test-dir build --output-on-failure
+```
+
+A fresh root build defaults `DR3_CURVE_ISA` to `DR3_ISA`; the standalone default
+remains AVX2. Disabling tests or examples suppresses those corresponding targets
+rather than silently re-enabling them. QuantLib is never fetched automatically.
 
 On multi-configuration generators use `--config Release` to build, `-C Release`
 with CTest, and executables under `build-curve/Release/`. A CMake/pkg-config-visible
@@ -55,7 +70,9 @@ For new-target memory/UB checking, configure a second build with
 `-DDR3_CURVE_SANITIZERS=ON -DCMAKE_BUILD_TYPE=Debug`. The scoped CI disables leak
 reporting for the inherited DR3 allocation-pool lifetime policy; address and
 undefined-behaviour checking remain enabled. The dependency-free core tests can
-run with leak detection enabled.
+run with leak detection enabled. The scoped CI now also builds and runs the
+QuantLib adapter and demo with ASan/UBSan instrumentation. The installed QuantLib
+shared library itself is not rebuilt or instrumented.
 
 ## What the demonstration measures
 
@@ -91,9 +108,12 @@ stated numerical tolerance (`demo_support.h`) rather than claiming bit identity.
   ex-coupon decisions, redemption amounts, notional and accrued interest come
   from QuantLib. `Prices` reports NPV and per-100 prices distinctly.
 - A snapshot is an explicitly **frozen valuation**. It owns its discount values.
-  Updating a quote, relinking a curve, rolling the date or changing an instrument
-  requires rebuilding the snapshot AND re-adapting the instruments. Existing
-  pricers intentionally retain their old valuation and have no observer hooks.
+  Updating a quote, relinking a curve, rolling the date, changing an instrument,
+  or changing the effective `includeTodaysCashFlows` setting requires rebuilding
+  the snapshot AND re-adapting the instruments. Existing pricers intentionally retain their old valuation and have no observer hooks.
+  Mixing an old snapshot with a new evaluation-date cash-flow setting during
+  adaptation is rejected. QuantLib's explicit override for today's cash flows
+  is honoured; the benchmark deliberately sets it to false.
 - Snapshot creation and QuantLib access require a stable market/settings state.
   Snapshot reads can be shared, but concurrent DR3 allocation is subject to the
   underlying runtime contract; this example does not establish multithread scaling.
@@ -108,8 +128,10 @@ The scalar/vector native `Curve` and `Curve2` APIs originated in branch `Curve`
 than replacing its newer vector and allocator fixes with the old branch.
 
 Endpoint queries no longer access `pos+1` past the last pillar. Integer-date
-interpolation converts before division. Invalid, empty, duplicated, unordered,
-nonfinite or width-mismatched inputs are rejected without replacing a valid curve.
+interpolation forms overflow-safe unsigned differences before floating conversion,
+so adjacent 64-bit dates above 2^53 do not collapse. Floating-date intervals with
+opposite-sign endpoints whose difference overflows are scaled before division.
+Invalid, empty, duplicated, unordered, nonfinite or width-mismatched inputs are rejected without replacing a valid curve.
 Single-pillar curves work. Cache updates invalidate interpolation and extrapolation
 results. LRU copies rebuild their iterator index. `valueAtRef` exposes cache hits
 without vector copies, with explicit eviction/reset lifetimes; `valueAt` retains
@@ -133,13 +155,19 @@ row. No pointers into temporary vectors and no raw result-array allocation remai
 `curve_core_tests`: endpoints, validation, integer interpolation, cache lifecycle,
 copy/move, zero/negative rates and extrapolation.
 
+`curve_edge_tests`: adjacent signed/unsigned 64-bit dates, signed range-crossing,
+extreme finite floating dates and subnormal intervals, with cached/uncached parity.
+
 `curve_vector_tests`: scalar-reference reconciliation at scenario widths 1, 3, 7,
 8, 9, 17, 65 and 200; fixed and floating coupon expressions; frozen rows and invalid
 sizes/discounts.
 
 `quantlib_adapter_tests`: full bond/scenario price comparisons, reference-date and
 settlement-date flows, ex-coupon dates, expired bonds, different curve types/grids,
-negative rates, quote refresh/frozen snapshots, and invalid adapter inputs.
+negative rates, quote refresh/frozen snapshots, today's cash-flow setting changes,
+and invalid adapter inputs. Every output vector is checked before writing any
+prices, including independently resized/scalar buffers; rejected buffers retain
+their original contents.
 
 A test definition is not evidence of a passing run. See the scoped CI logs and
 attached run report for the commit actually executed.

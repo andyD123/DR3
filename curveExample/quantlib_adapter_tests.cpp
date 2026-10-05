@@ -52,6 +52,45 @@ int main() {
         check(boundaries[3]->isExpired(),"Fixture did not cover expired bond");
         reconcilePortfolio(fixture::scenarioCurves(today,9),boundaries);
 
+        // Today's cash-flow override is part of the valuation context. Test
+        // both actual QuantLib prices and refusing mixed old/new settings.
+        const auto boundaryCurves=fixture::scenarioCurves(today,3);
+        const auto frozen=adapter::snapshotCurves(boundaryCurves,boundaries);
+        const auto frozenPricer=adapter::adaptBond(*boundaries[0],frozen);
+        const double excludedNpv=frozenPricer.prices().npv[0];
+        ql::Settings::instance().includeTodaysCashFlows()=true;
+        rejects([&]{adapter::adaptBond(*boundaries[0],frozen);});
+        check(frozenPricer.prices().npv[0]==excludedNpv,"Frozen cash-flow policy changed");
+        const auto including=adapter::snapshotCurves(boundaryCurves,boundaries);
+        const auto included=adapter::adaptBond(*boundaries[0],including).prices();
+        check(included.npv[0]>excludedNpv,"Reference-date coupon not included");
+        reconcilePortfolio(boundaryCurves,boundaries);
+        ql::Settings::instance().includeTodaysCashFlows()=false;
+        rejects([&]{adapter::adaptBond(*boundaries[0],including);});
+
+        // A malformed public output buffer must be rejected before ANY write.
+        // Exercise all three independently mutable result vectors.
+        for(int member=0;member<3;++member) {
+            adapter::Prices output(3);
+            dr3_curve::Vector* buffers[]{&output.npv,&output.dirty,&output.clean};
+            for(auto* buffer:buffers) std::fill(buffer->begin(),buffer->end(),123.0);
+            *buffers[member]=dr3_curve::Vector(123.0,2);
+            rejects([&]{frozenPricer.priceInto(output);});
+            for(const auto* buffer:buffers)
+                for(int i=0;i<buffer->size();++i)
+                    check((*buffer)[i]==123.0,"Invalid output modified another result");
+            *buffers[member]=123.0;
+            rejects([&]{frozenPricer.priceInto(output);});
+            check(buffers[member]->getScalarValue()==123.0,"Scalar output was modified");
+            for(int other=0;other<3;++other) if(other!=member)
+                for(int i=0;i<buffers[other]->size();++i)
+                    check((*buffers[other])[i]==123.0,"Scalar output failure partially wrote results");
+        }
+        rejects([&]{adapter::prepareCashflows(ql::Leg{ql::ext::shared_ptr<ql::CashFlow>()},today,*frozen.discounts);});
+        auto inconsistent=frozen;
+        inconsistent.referenceDate=today-1;
+        rejects([&]{adapter::adaptBond(*boundaries[0],inconsistent);});
+
         // Frozen snapshots intentionally survive source quote updates. A fresh
         // snapshot must change and reconcile with fresh QuantLib prices.
         auto quote=ql::ext::make_shared<ql::SimpleQuote>(-.005);

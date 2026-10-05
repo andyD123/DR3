@@ -17,7 +17,27 @@ struct Snapshot {
     std::shared_ptr<const Table> discounts;
     QuantLib::Date referenceDate;
     QuantLib::Date evaluationDate;
+    bool includeTodaysCashFlows = false;
 };
+
+// CashFlow::hasOccurred can override an explicit false on the evaluation date.
+// Store its effective setting with the snapshot; unset and false are equivalent
+// for our DiscountingBondEngine(curve, false) contract.
+inline bool includesTodaysCashFlows() {
+    const auto& setting = QuantLib::Settings::instance().includeTodaysCashFlows();
+    return setting && *setting;
+}
+
+inline const Snapshot& checkedSnapshot(const Snapshot& snapshot) {
+    if (!snapshot.discounts) throw std::invalid_argument("Null snapshot");
+    if (snapshot.referenceDate == QuantLib::Date() ||
+        snapshot.referenceDate != snapshot.evaluationDate ||
+        snapshot.evaluationDate != QuantLib::Settings::instance().evaluationDate())
+        throw std::invalid_argument("Evaluation date changed or inconsistent: rebuild snapshot");
+    if (snapshot.includeTodaysCashFlows != includesTodaysCashFlows())
+        throw std::invalid_argument("Cash-flow settings changed: rebuild snapshot");
+    return snapshot;
+}
 
 // Not an Observer: an existing snapshot intentionally remains unchanged when a
 // quote or handle changes. Rebuild AND re-adapt after market/date/instrument updates.
@@ -43,7 +63,7 @@ inline Snapshot snapshotCurves(const std::vector<CurveHandle>& curves,
     return {Table::build(std::move(dates), curves.size(), [&](Serial date, std::size_t s) {
                 // Retain each curve's own interpolation and extrapolation policy.
                 return curves[s]->discount(QuantLib::Date(date));
-            }), ref, QuantLib::Settings::instance().evaluationDate()};
+            }), ref, QuantLib::Settings::instance().evaluationDate(), includesTodaysCashFlows()};
 }
 
 inline std::vector<Payment> prepareCashflows(const QuantLib::Leg& leg,
@@ -51,8 +71,9 @@ inline std::vector<Payment> prepareCashflows(const QuantLib::Leg& leg,
                                            const Table& table) {
     std::vector<Payment> result;
     for (const auto& cf : leg) {
-        // Explicitly exclude flows on the cutoff date, just like the benchmark
-        // DiscountingBondEngine(curve, false). QuantLib supplies ex-coupon rules.
+        if (!cf) throw std::invalid_argument("Null cash flow");
+        // Match DiscountingBondEngine(curve, false), including QuantLib's
+        // evaluation-date setting override. QuantLib also supplies ex-coupon rules.
         if (!cf->hasOccurred(cutoff, false) && !cf->tradingExCoupon(cutoff))
             result.push_back({table.index(cf->date().serialNumber()), cf->amount()});
     }
@@ -79,20 +100,21 @@ struct Prices {
 class AdaptedBond {
 public:
     AdaptedBond(const QuantLib::FixedRateBond& bond, const Snapshot& snapshot)
-        : snapshot_(snapshot),
-          npv_(snapshot.discounts, prepareCashflows(bond.cashflows(), snapshot.referenceDate, checkedTable(snapshot))),
-          settlement_(snapshot.discounts, prepareCashflows(bond.cashflows(), bond.settlementDate(), checkedTable(snapshot))),
-          settlementRow_(checkedTable(snapshot).index(bond.settlementDate().serialNumber())),
+        : snapshot_(checkedSnapshot(snapshot)),
+          npv_(snapshot_.discounts, prepareCashflows(bond.cashflows(), snapshot_.referenceDate, *snapshot_.discounts)),
+          settlement_(snapshot_.discounts, prepareCashflows(bond.cashflows(), bond.settlementDate(), *snapshot_.discounts)),
+          settlementRow_(snapshot_.discounts->index(bond.settlementDate().serialNumber())),
           notional_(bond.notional(bond.settlementDate())),
           accrued_(bond.accruedAmount(bond.settlementDate())) {
-        if (QuantLib::Settings::instance().evaluationDate() != snapshot_.evaluationDate)
-            throw std::invalid_argument("Evaluation date changed: rebuild snapshot");
         if (!std::isfinite(notional_) || notional_ < 0 || !std::isfinite(accrued_))
             throw std::invalid_argument("Unsupported notional/accrual");
     }
     void priceInto(Prices& out) const {
-        if (out.clean.isScalar() || static_cast<std::size_t>(out.clean.size()) != snapshot_.discounts->scenarios())
-            throw std::invalid_argument("Output scenario width differs");
+        // Validate ALL buffers before writing any result. Callers may resize or
+        // replace the public vectors independently between uses of the buffer.
+        for (const Vector* value : {&out.npv, &out.dirty, &out.clean})
+            if (value->isScalar() || static_cast<std::size_t>(value->size()) != snapshot_.discounts->scenarios())
+                throw std::invalid_argument("Output scenario width differs");
         // Frozen valuation: no observer registrations and no QuantLib calls here.
         npv_.priceInto(out.npv);
         settlement_.priceInto(out.dirty);

@@ -19,6 +19,24 @@ template<class T> void finite_date(T t) {
     if (!std::isfinite(static_cast<double>(t)))
         throw std::invalid_argument("Curve date is not finite");
 }
+// The caller guarantees lo < t < hi. Integer differences must be formed
+// before floating conversion, without signed overflow at either end of the range.
+template<class T> double interpolation_weight(T t, T lo, T hi) {
+    if constexpr (std::is_integral<T>::value && !std::is_same<T, bool>::value) {
+        using U = std::make_unsigned_t<T>;
+        const U numerator = static_cast<U>(static_cast<U>(t) - static_cast<U>(lo));
+        const U denominator = static_cast<U>(static_cast<U>(hi) - static_cast<U>(lo));
+        return static_cast<double>(numerator) / static_cast<double>(denominator);
+    } else {
+        const double left = static_cast<double>(lo), right = static_cast<double>(hi);
+        const double query = static_cast<double>(t);
+        const double denominator = right - left;
+        if (std::isfinite(denominator)) return (query - left) / denominator;
+        // Opposite-sign finite endpoints can overflow their difference. Scaling
+        // each operand first keeps the fraction finite (also on MSVC).
+        return (query * 0.5 - left * 0.5) / (right * 0.5 - left * 0.5);
+    }
+}
 template<class V> std::size_t width(const V& v) {
     if constexpr (std::is_arithmetic<V>::value) {
         if (!std::isfinite(static_cast<double>(v)))
@@ -70,9 +88,7 @@ template<class T, class V> struct LinearInterp {
         if (hi != xs.end() && *hi == t) return ys[static_cast<std::size_t>(hi - xs.begin())];
         if (hi == xs.begin() || hi == xs.end()) throw std::out_of_range("Interpolation outside pillars");
         const auto i = static_cast<std::size_t>(hi - xs.begin());
-        // Convert BEFORE subtraction/division: integer dates must not truncate fractions.
-        const double w = (static_cast<double>(t) - static_cast<double>(xs[i - 1])) /
-                         (static_cast<double>(xs[i]) - static_cast<double>(xs[i - 1]));
+        const double w = curve_detail::interpolation_weight(t, xs[i - 1], xs[i]);
         return ys[i - 1] + (ys[i] - ys[i - 1]) * w;
     }
     static V start(T t, const std::vector<V>& ys, const std::vector<T>& xs) {

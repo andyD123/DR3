@@ -101,3 +101,9 @@ if(DR3_BUILD_TESTS)
     dr3_enable_sanitizers(VectorTest)
     dr3_enable_tsan(VectorTest)
 endif()
+
+# Curve regression tests participate in ordinary root builds. QuantLib remains
+# opt-in; the native curve tests do not add an external dependency.
+if(DR3_BUILD_TESTS OR DR3_BUILD_EXAMPLES)
+    add_subdirectory(curveExample)
+endif()

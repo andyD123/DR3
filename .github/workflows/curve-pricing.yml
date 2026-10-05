@@ -4,7 +4,9 @@ on:
   push:
     branches: [fix/curve-pricing-tools]
     paths:
+      - 'CMakeLists.txt'
       - 'curveExample/**'
+      - 'Vectorisation/VecX/**'
       - '.github/workflows/curve-pricing.yml'
   workflow_dispatch:
 
@@ -39,9 +41,9 @@ jobs:
       - name: Record environment
         run: |
           { git rev-parse HEAD; g++ --version; cmake --version; pkg-config --modversion quantlib; lscpu; } > curve-environment.txt
-      - name: Existing regression suite
+      - name: Integrated root regression suite (including QuantLib)
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDR3_BUILD_TESTS=ON -DDR3_BUILD_EXAMPLES=OFF -DDR3_ISA=AVX2
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDR3_BUILD_TESTS=ON -DDR3_BUILD_EXAMPLES=OFF -DDR3_ISA=AVX2 -DDR3_CURVE_ENABLE_QUANTLIB=ON
           cmake --build build --parallel 2
           ctest --test-dir build --output-on-failure --timeout 180 | tee existing-tests.txt
       - name: Build curve tools and QuantLib adapter
@@ -53,9 +55,9 @@ jobs:
           ctest --test-dir build-curve -V --timeout 180 | tee curve-tests.txt
           ./build-curve/curveExample --bonds 2000 --scenarios 65 --repeats 3 | tee native-curve-report.txt
           ./build-curve/quantlib_curve_demo --bonds 2000 --scenarios 65 --repeats 3 | tee quantlib-curve-report.txt
-      - name: Check new native targets under ASan and UBSan
+      - name: Check native and QuantLib adapter targets under ASan and UBSan
         run: |
-          cmake -S curveExample -B build-curve-asan -DCMAKE_BUILD_TYPE=Debug -DDR3_CURVE_ISA=AVX2 -DDR3_CURVE_SANITIZERS=ON
+          cmake -S curveExample -B build-curve-asan -DCMAKE_BUILD_TYPE=Debug -DDR3_CURVE_ISA=AVX2 -DDR3_CURVE_SANITIZERS=ON -DDR3_CURVE_ENABLE_QUANTLIB=ON
           cmake --build build-curve-asan --parallel 2
           ctest --test-dir build-curve-asan -V --timeout 180 | tee curve-sanitizers.txt
         env:
